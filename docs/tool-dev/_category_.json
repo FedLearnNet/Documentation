@@ -1,0 +1,8 @@
+{
+  "label": "Tool Development",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Concepts and guides for creating PoSyMed/FL-Net tools. Covers tool types and lifecycle, configuration and I/O contracts, container/runtime requirements, telemetry and logging, versioning and provenance, and workflows for testing, packaging, and publishing tools."
+  }
+}

@@ -1,0 +1,51 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #1d6d62;
+  --ifm-color-primary-dark: #195f55;
+  --ifm-color-primary-darker: #17594f;
+  --ifm-color-primary-darkest: #134940;
+  --ifm-color-primary-light: #217b6f;
+  --ifm-color-primary-lighter: #248376;
+  --ifm-color-primary-lightest: #2d9a8b;
+  --ifm-background-color: #fbfaf7;
+  --ifm-navbar-background-color: rgba(251, 250, 247, 0.92);
+  --ifm-footer-background-color: #173e39;
+  --ifm-font-family-base: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --ifm-heading-font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #54c5b4;
+  --ifm-color-primary-dark: #3bb9a7;
+  --ifm-color-primary-darker: #31b4a0;
+  --ifm-color-primary-darkest: #279382;
+  --ifm-color-primary-light: #6dcdbc;
+  --ifm-color-primary-lighter: #79d1c2;
+  --ifm-color-primary-lightest: #9bdcd1;
+  --ifm-background-color: #0f1615;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+.button.button--primary {
+  border: none;
+  background: linear-gradient(135deg, #1d6d62, #287f73);
+  color: #fff;
+}
+
+.button.button--secondary {
+  border-color: rgba(23, 62, 57, 0.14);
+  background: rgba(255, 255, 255, 0.8);
+  color: #173e39;
+}
+
+.navbar {
+  backdrop-filter: blur(10px);
+}

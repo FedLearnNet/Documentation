@@ -1,0 +1,8 @@
+{
+  "label": "Extractors",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Guides for the supported file extractors. Each extractor covers supported file formats, configuration options, and multi-table merge setup."
+  }
+}

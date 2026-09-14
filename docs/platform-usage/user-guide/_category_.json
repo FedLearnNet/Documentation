@@ -1,0 +1,9 @@
+{
+  "label": "Data Scientist Guide",
+  "position": 999,
+  "key": "user-guilde-category-key",
+  "link": {
+    "type": "generated-index",
+    "description": "Walk through the main interface, execution flow, and result review patterns of the Platform."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "label": "Add data to your client",
+  "position": 4,
+  "link": {
+    "type": "doc",
+    "id": "client-usage/add-data/index"
+  }
+}

@@ -1,0 +1,10 @@
+services:
+    docusaurus-posymed:
+        image: gitlab.cosy.bio:5050/cosybio/federated-learning/federated_db/user-documentation/posymed-user-doc:latest
+        ports:
+          - "3002:80"
+
+    docusaurus-flnet:
+        image: gitlab.cosy.bio:5050/cosybio/federated-learning/federated_db/user-documentation/flnet-user-doc:latest
+        ports:
+          - "3003:80"

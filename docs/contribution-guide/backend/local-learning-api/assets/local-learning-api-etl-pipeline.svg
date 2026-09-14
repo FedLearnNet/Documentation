@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Local Learning API disk-backed ETL pipeline</title>
+  <desc id="desc">Diagram of extraction, disk cache, transformation, mapping, and patient-by-patient loading.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#293241"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#1f2937" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .bg { fill: #f7fafc; }
+      .title { font: 700 34px Arial, Helvetica, sans-serif; fill: #1f2937; }
+      .subtitle { font: 400 17px Arial, Helvetica, sans-serif; fill: #4b5563; }
+      .label { font: 700 18px Arial, Helvetica, sans-serif; fill: #111827; }
+      .body { font: 400 14px Arial, Helvetica, sans-serif; fill: #374151; }
+      .small { font: 400 12px Arial, Helvetica, sans-serif; fill: #4b5563; }
+      .box { fill: #ffffff; stroke-width: 2; rx: 12; filter: url(#shadow); }
+      .source { stroke: #2a9d8f; }
+      .disk { stroke: #457b9d; }
+      .work { stroke: #e9c46a; }
+      .map { stroke: #e76f51; }
+      .load { stroke: #6d6875; }
+      .note { fill: #fff7ed; stroke: #f4a261; stroke-width: 2; rx: 10; }
+      .arrow { stroke: #293241; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .thin { stroke: #6b7280; stroke-width: 2; fill: none; marker-end: url(#arrow); stroke-dasharray: 6 6; }
+      .badge { font: 700 13px Arial, Helvetica, sans-serif; fill: #ffffff; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1280" height="760"/>
+  <text class="title" x="56" y="58">Local Learning API ETL import pipeline</text>
+  <text class="subtitle" x="56" y="88">Large imports avoid heap pressure by spilling table rows to JSON Lines and loading one patient group at a time.</text>
+
+  <rect class="box source" x="56" y="140" width="190" height="150"/>
+  <circle cx="88" cy="173" r="16" fill="#2a9d8f"/>
+  <text class="badge" x="83" y="178">1</text>
+  <text class="label" x="112" y="178">Extract</text>
+  <text class="body" x="76" y="212">CSV, JSON, Excel,</text>
+  <text class="body" x="76" y="234">or ZIP sheets are read</text>
+  <text class="body" x="76" y="256">row by row.</text>
+
+  <rect class="box disk" x="316" y="126" width="230" height="178"/>
+  <circle cx="348" cy="159" r="16" fill="#457b9d"/>
+  <text class="badge" x="343" y="164">2</text>
+  <text class="label" x="372" y="164">Row store</text>
+  <text class="body" x="336" y="200">Small imports stay in RAM.</text>
+  <text class="body" x="336" y="222">Large imports append rows</text>
+  <text class="body" x="336" y="244">to temp JSONL files.</text>
+  <text class="small" x="336" y="276">Sparse byte-offset index</text>
+  <text class="small" x="336" y="294">supports random row reads.</text>
+
+  <rect class="box work" x="616" y="140" width="210" height="150"/>
+  <circle cx="648" cy="173" r="16" fill="#e9c46a"/>
+  <text class="badge" x="643" y="178">3</text>
+  <text class="label" x="672" y="178">Transform</text>
+  <text class="body" x="636" y="212">Built-in functions update</text>
+  <text class="body" x="636" y="234">rows by streaming rewrite.</text>
+  <text class="body" x="636" y="256">App transforms replace</text>
+  <text class="body" x="636" y="278">the table output.</text>
+
+  <rect class="box map" x="896" y="126" width="250" height="178"/>
+  <circle cx="928" cy="159" r="16" fill="#e76f51"/>
+  <text class="badge" x="923" y="164">4</text>
+  <text class="label" x="952" y="164">Map and validate</text>
+  <text class="body" x="916" y="200">Rows are grouped by</text>
+  <text class="body" x="916" y="222">external patient ID.</text>
+  <text class="small" x="916" y="256">patientId -> List&lt;rowIndex&gt;</text>
+  <text class="small" x="916" y="278">keeps grouping cheap.</text>
+
+  <rect class="box load" x="404" y="430" width="330" height="182"/>
+  <circle cx="436" cy="463" r="16" fill="#6d6875"/>
+  <text class="badge" x="431" y="468">5</text>
+  <text class="label" x="460" y="468">Load patient by patient</text>
+  <text class="body" x="424" y="506">Each patient group is mapped, checked,</text>
+  <text class="body" x="424" y="528">and imported as a compact batch.</text>
+  <text class="body" x="424" y="550">Flush and clear boundaries keep</text>
+  <text class="body" x="424" y="572">persistence memory bounded.</text>
+
+  <rect class="note" x="812" y="426" width="300" height="190"/>
+  <text class="label" x="836" y="466">Why this avoids OOM</text>
+  <text class="body" x="836" y="504">No huge List&lt;Map&lt;String, Object&gt;&gt;</text>
+  <text class="body" x="836" y="526">is carried through ETL.</text>
+  <text class="body" x="836" y="556">Only current rows, sparse offsets,</text>
+  <text class="body" x="836" y="578">and patient row indexes are retained.</text>
+
+  <path class="arrow" d="M246 215 H310"/>
+  <path class="arrow" d="M546 215 H610"/>
+  <path class="arrow" d="M826 215 H890"/>
+  <path class="arrow" d="M1021 304 C1000 390 746 410 664 430"/>
+  <path class="thin" d="M426 304 C420 358 456 400 500 430"/>
+  <path class="thin" d="M650 430 C644 380 706 330 736 290"/>
+
+  <rect x="56" y="656" width="1090" height="58" rx="10" fill="#edf2f4" stroke="#cbd5e1"/>
+  <text class="small" x="76" y="681">Main classes: TableDataFileHandler, FileHandlerBO, ConnectorRunETLBO, MappingBO, ConnectorLoadBO</text>
+  <text class="small" x="76" y="704">Tuning: flnet.connector.import-row-limit-for-disk-cache decides when rows spill from RAM to JSONL.</text>
+</svg>
