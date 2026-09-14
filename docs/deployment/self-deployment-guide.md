@@ -40,12 +40,11 @@ As username use the username, as password the PAT given.
 First make sure the [prerequisites](#prerequisites) are all met!
 Then, clone the repository containing the FLNet Platform setup:
 ```bash
-git clone https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/flnet-platform-deployment.git
+git clone https://github.com/FedLearnNet/FL-Net-Platform-Deployment.git
 ```
-[comment]: <> (TODO: This should be on Github!)
 And cd into the cloned folder
 ```bash
-cd flnet-platform-deployment/
+cd FL-Net-Platform-Deployment/
 ```
 
 #### Generate the SSL certificates
@@ -54,7 +53,7 @@ restarts the FLNet Platform after SSL cert renewal (Replace yourdomain.com!):
 ```bash
 sudo certbot certonly --standalone \
   -d <yourdomain.com> \
-  --deploy-hook "docker exec flnet_platform-reverse-proxy-encrypted-1 nginx -s reload && docker restart flnet_platform-relay-server-1"
+  --deploy-hook "docker exec fl-net-platform-reverse-proxy-encrypted-1 nginx -s reload && docker restart fl-net-platform-relay-server-1"
 ```
 
 Alternatively, you can use your own reverse proxy and deploy the FLNet Platform to `127.0.0.1`.
@@ -73,8 +72,8 @@ The FLNet Platform supports using the UMLS as an ontology to ensure a stable dat
 1. Make sure to get a license at the [umls homepage](https://www.nlm.nih.gov/research/umls/index.html).
 1. Download the [UMLS Metathesaurus Full Subset ](https://www.nlm.nih.gov/research/umls/licensedcontent/umlsknowledgesources.html)
 1. Extract the following files:
-- `MRCONSO.RRF` to `flnet-platform-deployment/flnet_platform/umls`
-- `MRREL.RRF` to `flnet-platform-deployment/flnet_platform/umls`
+- `MRCONSO.RRF` to `FL-Net-Platform-Deployment/FLNET_platform/umls`
+- `MRREL.RRF` to `FL-Net-Platform-Deployment/FLNET_platform/umls`
 
 These files are automatically provided on startup via mounting the `umls` folder and 
 the UMLS is automaically imported if these files are available. 
@@ -86,8 +85,8 @@ the ontology more efficient.
 1. You can request the files from the FLNet developer. you need the `tokenizer.json` and 
 the [sapbert model](https://github.com/cambridgeltl/sapbert/tree/main) in `onnx` format.
 1. Place the following files in the relevant folder:
-- `sapbert.onnx` to `flnet-platform-deployment/flnet_platform/sapbert`
-- `tokenizer.json` to `flnet-platform-deployment/flnet_platform/sapbert`
+- `sapbert.onnx` to `flnet-platform-deployment/FLNET_platform/sapbert`
+- `tokenizer.json` to `flnet-platform-deployment/FLNET_platform/sapbert`
 
 The model is automatically loaded and used to embedd all ontology nodes.
 
@@ -109,13 +108,13 @@ certificates plus end to end encryption. It needs another port then the main pla
 - The domain name used. 
 - The ssl certificate files.
 
-After running the installer, the `flnet_platform` folder is ready to be used.
+After running the installer, the `FLNET_platform` folder is ready to be used.
 The install script will provide you with the next steps, but they are also listed here.
 
 ### 2. Running your created FLNet Platform 
 To start the Platform, run the following:
 ```bash
-cd flnet_platform
+cd FLNET_platform
 docker compose up -d
 ```
 The first start up might take upto a few minutes.
@@ -125,7 +124,7 @@ The first start up might take upto a few minutes.
 Now you need to update the initial admin account created for you.
 The authentication service is available at `auth/`, so e.g. at `<your-domain>/auth/`
 In case you missed the initial password given by the initialization script, the initial
-username and the password can be found in `flnet_platform/env/keycloak-secrets.env` as the `KC_BOOTSTRAP_ADMIN_PASSWORD`.
+username and the password can be found in `FLNET_platform/env/keycloak-secrets.env` as the `KC_BOOTSTRAP_ADMIN_PASSWORD`.
 Use these credentials to log in.
 
 Please immediately change the password, this can be done via the upper right corner under manage account.
@@ -162,7 +161,7 @@ The deployment does neither automatically renew the SSL certificates nor reload 
 1. Make sure you take care of certificate renewal yourself. 
 2. On certificate renewal, make sure you reload the relevant services (the reverse proxy and the relay server) to use the new certificates.
 ```bash
-cd <path-to-flnet-platform-deployment-folder>/flnet_platform
+cd FL-Net-Platform-Deployment/FLNET_platform
 docker compose restart reverse-proxy-encrypted
 docker compose restart relay-server
 ```

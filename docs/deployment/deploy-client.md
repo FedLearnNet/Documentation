@@ -172,7 +172,7 @@ yourdomain.com with your own domain. This does NOT work with an IP address as do
 ```bash
 sudo certbot certonly --standalone \
   -d <yourdomain.com> \
-  --deploy-hook "docker exec flnet_client-reverse-proxy-encrypted-1 nginx -s reload"
+  --deploy-hook "docker exec fl-net-client-reverse-proxy-encrypted-1 nginx -s reload"
 ```
 This will generate the SSL certificates as well as take care of renewal.
 Please note that the deploy hook will initially fail as the %%DEPLOYED_PRODUCT_NAME%% Client has not been setup and
