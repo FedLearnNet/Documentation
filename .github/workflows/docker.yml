@@ -1,0 +1,98 @@
+name: Docker images
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "docs/**"
+      - "src/**"
+      - "static/**"
+      - "docusaurus.config.ts"
+      - "sidebars.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "Dockerfile"
+      - "nginx.conf"
+      - ".github/scripts/build-image.sh"
+      - ".github/workflows/docker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io/fedlearnnet/documentation
+
+jobs:
+  images:
+    name: Build and push images
+    # main -> latest, develop -> staging; other branches would overwrite those tags
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          # Videos and sample data in static/ are stored in Git LFS and must be part of the image
+          lfs: true
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: lts/*
+          cache: npm
+
+      # Both brands share one dependency install
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - uses: docker/setup-buildx-action@v4.3.0
+
+      - uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # New brand variables in docusaurus.config.ts must be added to both steps
+      - name: Build and push FL-Net documentation
+        env:
+          DEPLOYED_PRODUCT_NAME: Federated Learning Net
+          PRODUCT_SLUG: flnet
+          DEPLOYED_PRODUCT_URL: https://federated-learning.net
+          PRODUCT_TAGLINE: A secure, locally governed Federated Learning Network for healthcare, industry, and research
+          PRODUCT_LOGO_PATH: img/flnet/logo.svg
+          PRODUCT_LOGO_ALT: FLNet Logo
+          PRODUCT_FAVICON_PATH: img/flnet/logo.svg
+        run: bash .github/scripts/build-image.sh flnet-user-doc
+
+      - name: Build and push PoSyMed documentation
+        env:
+          DEPLOYED_PRODUCT_NAME: PoSyMed
+          PRODUCT_SLUG: posymed
+          DEPLOYED_PRODUCT_URL: https://posymed.featurecloud.ai
+          PRODUCT_BASE_URL: /posymed/documentation/
+          PRODUCT_TAGLINE: Workflow design and execution made easy, reproducible and robust
+          PRODUCT_LOGO_PATH: img/posymed/logo.svg
+          PRODUCT_LOGO_ALT: PoSyMed Logo
+          PRODUCT_FAVICON_PATH: img/posymed/logo.svg
+        run: bash .github/scripts/build-image.sh posymed-user-doc
+
+  # Vulnerability scan after every build (results under Security → Code scanning).
+  # Disabled for now, run the "Container scan" workflow manually instead. Uncomment to enable.
+  # scan:
+  #   needs: images
+  #   uses: ./.github/workflows/scan.yml
+  #   with:
+  #     tag: ${{ github.ref == 'refs/heads/main' && 'latest' || 'staging' }}
+  #   permissions:
+  #     contents: read
+  #     packages: read
+  #     security-events: write
