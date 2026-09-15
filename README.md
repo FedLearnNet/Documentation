@@ -34,7 +34,6 @@ Then start a development server
 npm start
 ```
 
-
 # How to change the styling via env
 You can on build time set multiple environment variables concerning the styling.
 You can checkout the [docusaurus.config.ts](./docusaurus.config.ts).
