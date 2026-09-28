@@ -41,15 +41,16 @@ Brand settings are environment variables read in [`docusaurus.config.ts`](docusa
 | `PRODUCT_LOGO_PATH`, `PRODUCT_FAVICON_PATH` | `img/logo.svg`, `img/favicon.ico` | `img/flnet/logo.svg` | `img/posymed/logo.svg`       |
 
 `PRODUCT_TAGLINE` and `PRODUCT_LOGO_ALT` complete the branding. Try a brand locally with e.g.
-`DEPLOYED_PRODUCT_NAME="PoSyMed" PRODUCT_SLUG=posymed npm start`. A new variable must also be added to both brand
-steps in [`.github/workflows/docker.yml`](.github/workflows/docker.yml).
+`DEPLOYED_PRODUCT_NAME="PoSyMed" PRODUCT_SLUG=posymed npm start`. A new variable must also be added to the
+build step in [`.github/workflows/docker.yml`](.github/workflows/docker.yml).
 
 ## Deployment
 
 Pushes to `main` publish `latest`, pushes to `develop` publish `staging`:
 
 - `ghcr.io/fedlearnnet/documentation/flnet-user-doc` → https://federated-learning.net/documentation/
-- `ghcr.io/fedlearnnet/documentation/posymed-user-doc` → https://posymed.featurecloud.ai/documentation/
+
+Only `latest` is scanned for vulnerabilities, after every `main` build and weekly.
 
 Keep the `/documentation/` path when deploying or proxying, otherwise pages reload endlessly. Run both images
 locally with `docker compose up` (FL-Net on port 3003, PoSyMed on 3002).
