@@ -19,7 +19,7 @@ All values are secrets — never commit real values to version control.
 | `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` | | ✓ | | |
 | `UMLS_API_KEY` | | | ✓ | |
 | `ORCH_DOCKER__GITLAB__REGISTRY_PASSWORD` | ✓ | ✓ | | ✓ |
-| `ORCH_DOCKER__FEATURECLOUD__REGISTRY_PASSWORD` | ✓ | ✓ | | ✓ |
+| `ORCH_DOCKER__GHCR__REGISTRY_PASSWORD` | ✓ | ✓ | | ✓ |
 | `PIPELINE_DOCKER_PASSWORD` | ✓ | ✓ | | ✓ |
 | `PIPELINE_REPO_TOKEN` | ✓ | ✓ | | ✓ |
 
@@ -67,7 +67,9 @@ The `orch-api` project also requires the same set.
 
 ```env
 ORCH_DOCKER__GITLAB__REGISTRY_PASSWORD=TOKEN
-ORCH_DOCKER__FEATURECLOUD__REGISTRY_PASSWORD=TOKEN
+# only needed while the pipeline image on ghcr.io is private
+ORCH_DOCKER__GHCR__REGISTRY_USERNAME=USER
+ORCH_DOCKER__GHCR__REGISTRY_PASSWORD=TOKEN
 
 PIPELINE_DOCKER_PASSWORD=TOKEN
 PIPELINE_REPO_TOKEN=TOKEN
