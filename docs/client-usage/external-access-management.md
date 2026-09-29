@@ -1,6 +1,7 @@
 ---
 title: Controlling federated data analysis settings
 sidebar_position: 4
+displayed_sidebar: clientUsageSidebar
 ---
 # Controlling federated data access via your Clients interface
 
@@ -64,4 +65,4 @@ See [the permission table above](#permissions) for a description of the settings
 
 - [Deploy your client](../deployment/deploy-client.md)
 - [Authentication](../contribution-guide/auth.md)
-- [Add data to your client](add-data/index.md)
+- [Add data to a cohort](add-data/index.md)
