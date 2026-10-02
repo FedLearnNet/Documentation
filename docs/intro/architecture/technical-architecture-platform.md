@@ -40,7 +40,7 @@ This inventory serves as the deployment view of the Platform. The interaction se
 
 ### Overview
 
-The Platform is the central, user-facing layer and orchestration hub. The Frontend is its single public entry point, acting as a reverse proxy that routes requests to Keycloak, the Global Learning API, and the Data Modeler API. Every other Platform service is internal and reachable only by other services — the one exception being the externally deployed Tool registry, which the Global Learning API and any Orch API (Platform or Client) reach directly to pull or push Tool images. Pushing is only done by the Global Learning API and requires authentication.
+The Platform is the central, user-facing layer and orchestration hub. The Frontend is its single public entry point, acting as a reverse proxy that routes requests to Keycloak, the Global Learning API, and the Data Modeler API. Every other Platform service is internal and reachable only by other services — the one exception being the Tool registry. It is served under `/v2/` of the Platform domain, and any Orch API (Platform or Client) pulls Tool images from it without a login. Pushing is only done by the build pipeline and requires authentication.
 
 ```mermaid
 flowchart LR

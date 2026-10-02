@@ -58,6 +58,7 @@ Instead:
 - The %%DEPLOYED_PRODUCT_NAME%% networks platform builds the container itself.
 - The platform verifies the result.
 - Only verified images are released.
+- Released images are stored in the platform's own registry. Everyone can pull them, but only the pipeline can push, so nobody can replace a tool image afterwards.
 
 This ensures:
 
@@ -221,7 +222,7 @@ Users will later see vulnerability details before using the tool.
 
 ### PUSH_IMAGE - "Publish the image”
 
-If everything mandatory succeeded, the image is pushed to the configured Docker registry.
+If everything mandatory succeeded, the image is pushed to the Tool registry of the Platform. Everyone can pull from it, only the pipeline can push.
 
 The image name is:
 

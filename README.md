@@ -1,11 +1,10 @@
 # FL-Net Documentation
 
-[Docusaurus](https://docusaurus.io/) site with the public documentation of FL-Net and its deployments, such as
-PoSyMed. The content is shared; product name, URLs and logo are set per brand at build time.
+This repository is used for the documentation of FL-Net. 
+- If you just want to see the documentation, visit [federated-learning.net/documentation](https://federated-learning.net/documentation/).
+- If you want to contribute to the documentation, this is the right repository. Please read the [contribution guidelines](https://federated-learning.net/documentation/docs/contribution-guide/welcome) first.
 
-## Documentation
-
-- [FL-Net documentation](https://federated-learning.net/documentation/)
+The documentation uses [Docusaurus](https://docusaurus.io/).
 
 ## Quick start
 
@@ -25,6 +24,10 @@ Pages live in `docs/` (Markdown/MDX), the navigation in `sidebars.ts`, React com
 Never hardcode product-specific values in pages. These placeholders are replaced at build time:
 `%%DEPLOYED_PRODUCT_NAME%%`, `%%DEPLOYED_PRODUCT_URL%%`, `%%DEPLOYED_PRODUCT_WS_URL%%`,
 `%%DEPLOYED_PRODUCT_TCP_PORT%%`.
+
+This is mostly used to differentiate PosyMed and FL-Net.
+However if you wish to deploy your own FL-Net instance and want branding in your documentation, 
+you can use this repository as a template and set the environment variables when building using `Dockerfile`.
 
 ## Brands
 
