@@ -32,12 +32,16 @@ A run involves several distinct identifiers that are easy to confuse:
 
 | Service | Repo / Module | Inside clinic? | Role |
 |---|---|---|---|
-| **global-learning-api** | `learning-apis/global-learning-api` | no | Coordinates experiments: acceptance counting, coordinator selection, relay setup, step synchronization, stop/finish. |
-| **local-learning-api** | `learning-apis/local-learning-api` | yes | Connects to the global over a websocket, drives the local workflow, starts app containers via orch-api, registers learnings on the controller, hosts the app run socket. |
-| **orch-api** | `orch-api` | yes | Docker orchestrator: pulls images, creates volumes, starts/stops app containers, streams container logs to its DB. |
-| **controller** (FeatureCloud) | `feature-cloud-controller` | yes | Relay gateway: REST `:8000` (learning registration, `flrunmanagerport`), AppCommunicatorV2 `:8001` (app data exchange). Holds the relay credentials after registration and speaks TCP to the relay. |
+| **global-learning-api** | `Learning-APIs/global-learning-api` | no | Coordinates experiments: acceptance counting, coordinator selection, relay setup, step synchronization, stop/finish. |
+| **local-learning-api** | `Learning-APIs/local-learning-api` | yes | Connects to the global over a websocket, drives the local workflow, starts app containers via orch-api, registers learnings on the controller, hosts the app run socket. |
+| **orch-api** | `Orchestration-API` | yes | Docker orchestrator: pulls images, creates volumes, starts/stops app containers, streams container logs to its DB. |
+| **controller** (FeatureCloud) | `Federated-Learning-Communication-API` | yes | Relay gateway: REST `:8000` (learning registration, `flrunmanagerport`), AppCommunicatorV2 `:8001` (app data exchange). Holds the relay credentials after registration and speaks TCP to the relay. |
 | **relay** | global deployment (`GLOBAL_RELAY_TCP_ADDRESS`, e.g. `…:9150`) | no | Message broker between the controllers of all clinics for one channel. |
-| **app** (e.g. `us-130-fl`) | `apps/us-130-fl` + `pyfedappwrap` | yes (ephemeral) | The federated tool. One container per clinic per workflow node, started by orch-api. |
+| **app** (e.g. `us-130-fl`) | `apps/us-130-fl` + `pyfedappwrap` (`Python-Tool-API`) | yes (ephemeral) | The federated tool. One container per clinic per workflow node, started by orch-api. |
+
+:::note
+The `meta` repository referenced in this page for the clinic-dind deployment was not moved to GitHub. See [Local Docker-in-Docker deployment](../../deployment/deploy-local-dind.md) for the current documentation of this setup.
+:::
 
 In the **clinic-dind** deployment (`meta/deployment/clinic-dind`) each clinic is one
 docker-in-docker container running an inner compose stack on the network
@@ -139,7 +143,7 @@ sequenceDiagram
     G->>G: ProjectFederatedExperimentBO.startLearning()<br/>picks random coordinator
     G->>L: WS START_LEARNING (coordinatorId)
     L->>L: FederatedLearningSyncBO.handleStartLearningRequest()
-    L->>O: POST /container/workflow (StartWorkflowDTO)
+    L->>O: POST /container/workflow (StartWorkflowNodeDTO)
     O->>O: pull image (skip if present),<br/>create input/output volumes
     O->>A: create + start container, join clinic network
     L->>O: export + upload input data to volume
@@ -235,7 +239,7 @@ is not.
      step), marks the experiment running, finds the matching step entity by `nodeId`,
      checks `canBeStartedStatus(step.stepStatus)` — a non-startable step throws
      *"… is in status X which is not startable"* (this also guards duplicate starts).
-   - sets the current node (`ao.setCurrentWorkflowNode`) and builds the `StartWorkflowDTO`
+   - sets the current node (`ao.setCurrentWorkflowNode`) and builds the `StartWorkflowNodeDTO`
      (image, container name, env, volume names, node hyperparams).
 
    **`executeWorkflow`** (`core-learning-api …/orch/WorkflowOrchestrator.java`) calls orch-api

@@ -3,6 +3,10 @@ title: ETL Pipeline
 description: Detailed guide to local connector extraction, table storage, transformation, mapping, and patient loading.
 ---
 
+:::caution Not yet on `main`
+This page describes the disk-backed connector import (`TableDataFileHandler`, `ConnectorLoadModeBO`), which currently only exists on the unmerged `feature/etl-file-based` branch. This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so class names, file paths, and behavior may differ from the current code.
+:::
+
 # ETL Pipeline
 
 The Local Learning API connector import is an ETL pipeline:

@@ -52,7 +52,7 @@ This is the right starting point for researchers, analysts, and project leads.
 
 ## I want to create or integrate tools
 
-Read [Tool development](../contribution-guide/backend/global-learning-api/intro.md). That path covers:
+Read [Tool development](../tool-dev/create-tool.md). That path covers:
 - The runtime model for tools.
 - How to define inputs, outputs, and parameters.
 - How to package a reproducible analysis workflow.

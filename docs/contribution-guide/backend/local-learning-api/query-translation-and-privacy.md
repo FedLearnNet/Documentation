@@ -3,6 +3,10 @@ title: Query translation & privacy
 sidebar_position: 5
 ---
 
+:::caution Not yet on `main`
+This page describes the temporal query model and its SQL translation (`TemporalQueryBuilderBO`, `CreateTemporalQueryDTO`, `QueryGroup`, `TemporalRelation`). This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so class names, file paths, and behavior may differ from the current code.
+:::
+
 This page describes how the local-learning-api turns a temporal query into parameterised SQL against `patient_data`, and how the result count is post-processed by privacy rounding before it leaves the client.
 
 ## Source files

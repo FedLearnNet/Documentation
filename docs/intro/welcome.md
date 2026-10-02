@@ -52,7 +52,7 @@ However, we recommend instead the following reading order for new users, underst
    - [Client deployment](../deployment/deploy-client.md)
    - [Client usage](../client-usage/welcome.md)
    - [Platform usage](../platform-usage/welcome.md)
-   - [Tool development](../contribution-guide/backend/global-learning-api/intro.md)
+   - [Tool development](../tool-dev/create-tool.md)
 
 ## Relationship to PoSyMed
 FL-Net does not implement Workflow or Tool execution itself — instead, it builds on [**PoSyMed<sup>1</sup>**](https://arxiv.org/abs/2604.20906), a workflow execution engine. In PoSyMed, Tools are assembled into a directed acyclic graph describing a Workflow, with clear input and output mapping between Tools. Tools are instances with clearly defined Inputs, Outputs, and Hyperparameters. PoSyMed also includes a Tool and Workflow Store, along with an isolated execution engine.

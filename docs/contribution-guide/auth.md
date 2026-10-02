@@ -1,5 +1,6 @@
 ---
 title: Authentication
+sidebar_position: 6
 description: Overview of the KeyCloak-based authentication system used across the Client and Platform
 ---
 
@@ -10,8 +11,8 @@ use their own deployed KeyCloak instance for authentication:
 - between the frontend and the backend
 
 For more information, the easiest is to look at the keycloak realms imported by the relevant keycloak:
-- Client: can be found in the [repo for client deployment](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/feddb-client-deployment)
-- Platform: right now is very temporary, for now look at this [realm export](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/meta/-/blob/main/deployment/currently-deployed/staging.featurecloud.ai/dev.federated-learning.net/keycloak-realms/realm-export.json?ref_type=heads)
+- Client: [`FLNet_client/keycloak-realms/realm-export.json`](https://github.com/FedLearnNet/FL-Net-Client-Deployment/blob/main/FLNet_client/keycloak-realms/realm-export.json) in the Client deployment repository
+- Platform: [`FLNET_platform/keycloak-realms/realm-export.json`](https://github.com/FedLearnNet/FL-Net-Platform-Deployment/blob/main/FLNET_platform/keycloak-realms/realm-export.json) in the Platform deployment repository
 
 # Clients
 
@@ -20,16 +21,16 @@ For more information, the easiest is to look at the keycloak realms imported by 
 | Client | Type | Flows | Auth usage |
 |---|---|---|---|
 | `frontend` | Public | Authorization Code + PKCE (S256) | Angular frontend - needs to authenticate the user for interactions |
-| `data-importer-api` | Confidential | None (validates bearer tokens only) | Data importer backend - only has a client as introspection needs a confidential client |
 | `local-learning-api` | Confidential | Client Credentials (service account) | Local learning backend - needs the service account to receive tokens to give to apps |
 
-## %%DEPLOYED_PRODUCT_NAME%% Platform (`FederatedLearningNet_Global` realm)
+## %%DEPLOYED_PRODUCT_NAME%% Platform (`FLNet-Platform` realm)
 
 | Client | Type | Flows | Auth usage |
 |---|---|---|---|
-| `frontend` | Public | Authorization Code | Angular frontend - needs to authenticate the user for interactions |
-| `database-api` | Confidential | Client Credentials (service account), Direct Access Grants | General global backend - needs the service account to receive tokens to give to apps  |
-| `datamodeler-api` | Confidential | - | Datamodeler API | Currently doesn't use Auth at all, added already for the future
+| `frontend` | Public | Authorization Code + PKCE (S256), Direct Access Grants | Angular frontend - needs to authenticate the user for interactions |
+| `database-api` | Confidential | Authorization Code, Client Credentials (service account) | General global backend (the `global-learning-api`) - needs the service account to receive tokens to give to apps |
+| `datamodeler-api` | Confidential | Authorization Code | Datamodeler API - currently doesn't use Auth at all, added already for the future |
+| `fl-net-clients` | Public | Direct Access Grants | Used by the FL-Net Clients to authorize towards the Global Learning API of this Platform |
 
 # Auth Flows used
 
@@ -37,11 +38,8 @@ All tokens are signed with RS256.
 
 ## Authorization Code Flow (user login) in the frontend
 
-Both `frontend` clients use the **Authorization Code Flow**: the user is redirected to Keycloak,
+Both `frontend` clients use the **Authorization Code Flow** with **PKCE (S256)**: the user is redirected to Keycloak,
 authenticates, and the resulting authorization code is exchanged for an access token and refresh token.
-
-The Client realm `frontend` additionally enforces **PKCE (S256)** to protect against code interception.
-The Platform realm `frontend` does not yet have PKCE configured.
 
 ## Client Credentials Grant (service-to-service) for the backend services
 
@@ -51,20 +49,20 @@ Both have a dedicated service account in their realm.
 
 # Security
 - **Token signing:** RS256 on both realms
-- **PKCE:** Enforced (S256) on the Client realm `frontend`; not yet configured on the Platform realm `frontend`
-- **Access token lifetime:** 5 min (Client realm) / 5 hours (Platform realm - temporary, to be reduced)
+- **PKCE:** Enforced (S256) on the `frontend` client of both realms
+- **Access token lifetime:** 2 hours on both realms
 - **Self-registration:** Disabled on both realms - users must be created by an admin
 - **Password reset:** Disabled on the Client realm (admin must reset passwords); enabled on the Platform realm
 - **SSL:** Required for all external connections on both realms
-- **Client secrets:** Injected at deploy time via environment variables (`${DATA_IMPORTER_SECRET}`, `${LOCAL_LEARNING_SECRET}`) - not stored in the realm export
+- **Client secrets:** Injected at deploy time via environment variables (`${LOCAL_LEARNING_SECRET}` on the Client, `${DATABASE_API_SECRET}` and `${DATAMODELER_API_SECRET}` on the Platform) - not stored in the realm export
 
 
 # Role System (and groups)
 We define for the %%DEPLOYED_PRODUCT_NAME%% client and platform specific realm roles over all keycloak clients (these are the specific backend services).
 The idea is that these realm roles represent specific personas.
 
-We also have predefined groups that mirror the realm roles one-to-one (e.g. the group `admin`
-has the realm role `admin` mapped to it). This simplifies user management: when creating a user,
+We also have predefined groups that mirror the realm roles one-to-one (e.g. the group `Admin`
+has the realm role `Admin` mapped to it). This simplifies user management: when creating a user,
 an operator only needs to assign the appropriate group - the required realm roles are then
 automatically inherited, without having to manage individual role assignments.
 
@@ -78,17 +76,13 @@ These are deployed in the FLNet-Client realm. Please consider that changing anyt
 must be communicated with every already deployed client instance, so it should be avoided.
 
 ## %%DEPLOYED_PRODUCT_NAME%% Platform roles
-This system is still not developed. The current temporary roles are:
-- admin
+- Admin
 - Data-Scientist
+- Auditor
 
-These are deployed in the temporary FederatedLearningNet_Global realm.
+These are deployed in the FLNet-Platform realm.
 
 ## Further TODOs
-- have deployment repos and correctly link them here
-- clean up the platform initial realm, still contains unused flows etc.
-    - should ONLY have 
-        - auth code flow for frontend (enforce pkce on the platform frontend)
-        - Client credentials for the service account of the local/global learning api
+- clean up the platform realm, still contains unused flows etc.
 - clean up the token lifetime
 - password reset - disable on the platform initially as we don't give a smtp server
