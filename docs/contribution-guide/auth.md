@@ -11,8 +11,8 @@ use their own deployed KeyCloak instance for authentication:
 - between the frontend and the backend
 
 For more information, the easiest is to look at the keycloak realms imported by the relevant keycloak:
-- Client: [`FLNet_client/keycloak-realms/realm-export.json`](https://github.com/FedLearnNet/FL-Net-Client-Deployment/blob/main/FLNet_client/keycloak-realms/realm-export.json) in the Client deployment repository
-- Platform: [`FLNET_platform/keycloak-realms/realm-export.json`](https://github.com/FedLearnNet/FL-Net-Platform-Deployment/blob/main/FLNET_platform/keycloak-realms/realm-export.json) in the Platform deployment repository
+- Client: [`FLNet_client/keycloak-realms/realm-export.json`](https://github.com/FedLearnNet/FL-Net-CLI/blob/main/src/main/resources/bundles/client/keycloak-realms/realm-export.json) in the Client deployment repository
+- Platform: [`FLNET_platform/keycloak-realms/realm-export.json`](https://github.com/FedLearnNet/FL-Net-CLI/blob/main/src/main/resources/bundles/platform/keycloak-realms/realm-export.json) in the Platform deployment repository
 
 # Clients
 
@@ -21,7 +21,7 @@ For more information, the easiest is to look at the keycloak realms imported by 
 | Client | Type | Flows | Auth usage |
 |---|---|---|---|
 | `frontend` | Public | Authorization Code + PKCE (S256) | Angular frontend - needs to authenticate the user for interactions |
-| `local-learning-api` | Confidential | Client Credentials (service account) | Local learning backend - needs the service account to receive tokens to give to apps |
+| `local-learning-api` | Confidential | Client Credentials (service account) | Local learning backend - needs the service account to know which users exist for the cohort membership feature where users can add other users to their cohort |
 
 ## %%DEPLOYED_PRODUCT_NAME%% Platform (`FLNet-Platform` realm)
 
