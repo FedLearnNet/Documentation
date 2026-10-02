@@ -8,3 +8,4 @@ the move.
 - Simon Süwer
 - Zsolt Bedő
 - Balazs Orban
+- Andreas Maier
