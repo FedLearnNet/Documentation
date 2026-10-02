@@ -1,10 +1,10 @@
 ---
 title: Input data formatting guidelines
-sidebar_position: 2
+sidebar_position: 4
 ---
 # Input data formatting guidelines
 
-Use this as a short checklist before adding data. Detailed normalization and validation rules are described in the [detailed normalization and validation documentation](input_validation).
+Use this as a short checklist before adding data. Detailed normalization and validation rules are described in the [detailed normalization and validation documentation](../input_validation.md).
 
 - For CSV input, use `utf-8` encoding (usually this is the default encoding).
 - Excel files with different encodings are supported as this is internally translated to `utf-8`.
@@ -13,7 +13,7 @@ We do not recommend to use other encodings than `utf-8` due to possible encoding
 - We recommend using ISO date/datetime strings:
 	- date: `2025-02-02`
 	- datetime: `2025-02-02T10:00:00Z`
-    Other formats are supported, see the [detailed normalization and validation documentation](input_validation).
+    Other formats are supported, see the [detailed normalization and validation documentation](../input_validation.md).
 - For `BOOLEAN` fields, use `true` or `false` strings (case-insensitive).
 - If you use an extraction or transformation tool, check the tool documentation for additional input rules.
 - For missing values (`null`/`nan`), leave the cell empty.

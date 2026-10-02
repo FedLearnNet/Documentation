@@ -7,13 +7,13 @@ sidebar_position: 1
 
 A **Client** is the self-hosted node a data holder operates within the %%DEPLOYED_PRODUCT_NAME%% network.
 
-It's where local data is prepared, governed, and made available for discovery or analysis — according to rules you define. In short: the Client lets an institution join the network without giving up control over its own data.
+The Client provides an environment for preparing and managing local data and making it available for discovery or analysis under institution-defined access rules. It enables an institution to participate in the network while retaining control over its data.
 
 This documentation may use the term "FL-Net Client" or simply "Client" because it applies to any network built on the FL-Net software stack. When you join %%DEPLOYED_PRODUCT_NAME%% specifically, your Client is a %%DEPLOYED_PRODUCT_NAME%% Client.
 
 ## What a client is responsible for
 
-A client typically handles four things:
+A client's main responsibilities are:
 
 1. **Hosting local metadata and data access logic**
 2. **Running connectors to import and normalize data**
@@ -26,11 +26,11 @@ The client is not just a passive storage endpoint. It is the governance boundary
 
 With a client deployment, you can:
 
-- describe your local schema using a shared data standard
-- import datasets through connectors
+- create cohorts based on available schemas
+- manage data within each cohort
+- control access to data
 - keep your site visible to the network for discovery
-- participate in federated analysis when it is allowed
-- manage users and permissions locally
+- participate in federated analysis
 
 ## When you need a client
 
@@ -45,13 +45,17 @@ If you only need to use already available data and tools, start with [Platform u
 
 ## Recommended next steps
 
-As the IT adiminstrator of the Client:
-1. [Deploy your client](docs/deployment/deploy-client.md)
-2. [Backup your client](docs/deployment/backup-client.md)
+As the IT administrator of the Client:
+
+1. [Deploy your client](../deployment/deploy-client.md)
+2. [Back up your client](../deployment/backup-client.md)
 
 As the data administrator adding and managing data:
-1. [Create a data standard](create-data-standard.md)
-2. [Add data through connectors](add-data/index.md)
+
+1. [Create a cohort](cohorts.md#create-a-cohort).
+2. [Import data](add-data/index.md).
+3. [Create and edit data records manually](add-data/manual-patient-management.md).
 
 As the data access manager handling access and permissions:
-1. [Control federated access settings](external-access-management.md)
+
+1. [Manage requests, access permissions, and trainings](governance.md).
