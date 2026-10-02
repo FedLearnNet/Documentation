@@ -6,7 +6,8 @@ sidebar_position: 8
 
 # Deploy your own Platform
 ## Prerequisites
-- python3 (>= 3.6)
+- either Linux or MacOS. On Windows, you can use WSL2 with e.g. Ubuntu 22.04 or later.
+- curl (for downloading the CLI installation shell script, you can delete it after the installation)
 - docker
 - docker compose
 - A registered domain
@@ -19,33 +20,18 @@ The network is star shaped with the FLNet Platform instance as the central coord
 Without your FLNet Platform instance your whole FLNet is not available!
 
 
-### Special prerequisites to take during development
-[comment]: <> (TODO: We need to clean up the secrets and make the images publically available plus publish the deployment repo to github!)
-As the docker registry is not yet public, the images for the FLNet Platform as well as
-tool images used by the FLNet Platform are currently behind an auth check.
 
-Therefore please contact a FLNet developer to provide you with credentials:
-- A username
-- A Gitlab Personal Access Token (PAT)
-You will be provided with credentials that can pull images from the FLNet registry. 
-Given this PAT, please do the following:
-```bash
-docker login gitlab.cosy.bio:5050
-```
-As username use the username, as password the PAT given.
 
 ## How to deploy
 ### 0. Prepare
-#### Get the deployment folder
+#### Install the CLI
 First make sure the [prerequisites](#prerequisites) are all met!
-Then, clone the repository containing the FLNet Platform setup:
+Then, install the `flnet` CLI tool by running the following command:
 ```bash
-git clone https://github.com/FedLearnNet/FL-Net-Platform-Deployment.git
+curl -fsSL https://raw.githubusercontent.com/FedLearnNet/FL-Net-CLI/main/install.sh | sh
 ```
-And cd into the cloned folder
-```bash
-cd FL-Net-Platform-Deployment/
-```
+This will download the relevant binary for your system and place it in `~/.local/bin` (Linux/Mac) 
+for non root users and /usr/local/bin as `root`.
 
 #### Generate the SSL certificates
 Generate the SSL certificates to use with the FLNet Platform and setup the deploy hook that
@@ -67,33 +53,10 @@ correctly proxy TCP, not HTTP to this, e.g. via the stream module in nginx.
 1. The HOST header is used my multiple services of the FLNet Platform for either security or
 creating redirect URIs. Please make sure to preserve the original Host header.
 
-#### Optional: Get the UMLS ontology
-The FLNet Platform supports using the UMLS as an ontology to ensure a stable data standard.
-1. Make sure to get a license at the [umls homepage](https://www.nlm.nih.gov/research/umls/index.html).
-1. Download the [UMLS Metathesaurus Full Subset ](https://www.nlm.nih.gov/research/umls/licensedcontent/umlsknowledgesources.html)
-1. Extract the following files:
-- `MRCONSO.RRF` to `FL-Net-Platform-Deployment/FLNET_platform/umls`
-- `MRREL.RRF` to `FL-Net-Platform-Deployment/FLNET_platform/umls`
-
-These files are automatically provided on startup via mounting the `umls` folder and 
-the UMLS is automaically imported if these files are available. 
-
-#### Optional: Getting the sapbert model for better ontology search
-We support the use of the sapbert model for embedding the ontology, making search through
-the ontology more efficient.
-
-1. You can request the files from the FLNet developer. you need the `tokenizer.json` and 
-the [sapbert model](https://github.com/cambridgeltl/sapbert/tree/main) in `onnx` format.
-1. Place the following files in the relevant folder:
-- `sapbert.onnx` to `flnet-platform-deployment/FLNET_platform/sapbert`
-- `tokenizer.json` to `flnet-platform-deployment/FLNET_platform/sapbert`
-
-The model is automatically loaded and used to embedd all ontology nodes.
-
 ### 1. Creating the FLNet Platform folder
-Simply run the initialization script and follow the command line prompts:
+Simply run the initialization command and follow the command line prompts:
 ```bash
-python3 platform_installer.py
+flnet platform init
 ``` 
 You will need to specify:
 - The IP the Platform should listen on. Choose 127.0.0.1 if you use your own reverse proxy, otherwise
@@ -108,15 +71,43 @@ certificates plus end to end encryption. It needs another port then the main pla
 - The domain name used. 
 - The ssl certificate files.
 
-After running the installer, the `FLNET_platform` folder is ready to be used.
+Use `flnet platform info` to see the path of your platform folder.
 The install script will provide you with the next steps, but they are also listed here.
+
+#### Optional: Get the UMLS ontology
+The FLNet Platform supports using the UMLS as an ontology to ensure a stable data standard.
+1. Make sure to get a license at the [umls homepage](https://www.nlm.nih.gov/research/umls/index.html).
+1. Download the [UMLS Metathesaurus Full Subset ](https://www.nlm.nih.gov/research/umls/licensedcontent/umlsknowledgesources.html)
+1. Extract the following files:
+- `MRCONSO.RRF` to `<path-to-platform-folder>/umls`
+- `MRREL.RRF` to `<path-to-platform-folder>/umls`
+
+These files are automatically provided on startup via mounting the `umls` folder and 
+the UMLS is automaically imported if these files are available. 
+
+#### Optional: Getting the sapbert model for better ontology search
+We support the use of the sapbert model for embedding the ontology, making search through
+the ontology more efficient.
+
+1. You can request the files from the FLNet developer. you need the `tokenizer.json` and 
+the [sapbert model](https://github.com/cambridgeltl/sapbert/tree/main) in `onnx` format.
+1. Place the following files in the relevant folder:
+- `sapbert.onnx` to `<path-to-platform-folder>/sapbert`
+- `tokenizer.json` to `<path-to-platform-folder>/sapbert`
+
+The model is automatically loaded and used to embedd all ontology nodes.
 
 ### 2. Running your created FLNet Platform 
 To start the Platform, run the following:
 ```bash
-cd FLNET_platform
+flnet platform up
+```
+You can also run the underlying `docker compose` command yourself.
+```bash
+cd <path-to-platform-folder>
 docker compose up -d
 ```
+
 The first start up might take upto a few minutes.
 
 ### 3. The initial setup of the FLNet Platform
@@ -161,9 +152,7 @@ The deployment does neither automatically renew the SSL certificates nor reload 
 1. Make sure you take care of certificate renewal yourself. 
 2. On certificate renewal, make sure you reload the relevant services (the reverse proxy and the relay server) to use the new certificates.
 ```bash
-cd FL-Net-Platform-Deployment/FLNET_platform
-docker compose restart reverse-proxy-encrypted
-docker compose restart relay-server
+flnet platform restart
 ```
 Alternatively check the exact container names.
 If you use certbot, you can use the `--deploy-hook` option to automatically reload the services after cert renewal.

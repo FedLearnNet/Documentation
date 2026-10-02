@@ -1,149 +1,99 @@
 ---
 title: Repository Map
-sidebar_position: 2
-description: Orientation guide for the multi-repo dAIbetes and PosyMed workspace.
+sidebar_position: 3
+description: Which FedLearnNet repository owns which part of FL-Net.
 ---
 
 # Repository map
 
-This workspace is **not a single monorepo**.
-Use this page when you want to answer one practical question quickly:
+FL-Net is **not a single monorepo**. All repositories live in the [FedLearnNet GitHub organization](https://github.com/FedLearnNet).
+Use this page to answer one practical question quickly:
 
-- where should a code change go?
-- which repository owns which part of the platform?
-- which folders are active code versus examples or legacy material?
+- which repository owns the part of FL-Net you want to change?
 
-If you want the product-level architecture first, start with [Understanding the Platform architecture](../intro/architecture/network-architecture.md). If you already know you are touching the Angular UI, also see [Frontend workspace map](frontend/workspace-map.md).
+If you want the product-level architecture first, start with [Understanding the network architecture](../intro/architecture/network-architecture.md). If you already know you are touching the Angular UI, also see the [Frontend workspace map](frontend/workspace-map.md).
 
 ## Mental model
 
-The workspace is easiest to understand as four layers:
+The repositories are easiest to understand as five layers:
 
-1. **Docs and operations**
-2. **Frontend**
-3. **Platform services**
-4. **Tooling and example apps**
+1. **Documentation**
+2. **Deployment**
+3. **Frontend**
+4. **Platform and Client services**
+5. **Tool development**
 
 ```mermaid
 flowchart LR
-  subgraph DocsOps["Docs and operations"]
-    DOCS["user-documentation"]
-    META["meta"]
+  subgraph Docs["Documentation"]
+    DOCS["Documentation"]
+  end
+
+  subgraph Deploy["Deployment"]
+    CLI["FL-Net-CLI"]
   end
 
   subgraph Frontend["Frontend"]
-    FE["frontend-shared"]
+    FE["Frontends"]
   end
 
-  subgraph Services["Platform services"]
-    CORE["core-api"]
-    IMPORT["data-importer-api"]
-    LEARN["learning-apis\n(local/global learning + Java schema services)"]
-    ORCH["orch-api"]
-    CTRL["feature-cloud-controller"]
+  subgraph Services["Platform and Client services"]
+    LEARN["Learning-APIs\n(local/global learning, datamodeler)"]
+    ORCH["Orchestration-API"]
+    COMM["Federated-Learning-Communication-API"]
   end
 
-  subgraph Tooling["Tooling and apps"]
-    STARTER["pyappstarter"]
-    WRAP["pyfedappwrap"]
-    PIPE["app-build-pipeline"]
-    APPS["apps/"]
-    EXAMPLES["example-apps"]
-    SIM["pyclientsimulation"]
+  subgraph Tooling["Tool development"]
+    PYAPI["Python-Tool-API"]
+    PIPE["Tool-Build-Pipeline"]
   end
 
-  FE --> IMPORT
-  FE --> LEARN
-  CORE --> IMPORT
-  CORE --> LEARN
-  CORE --> ORCH
-  IMPORT --> LEARN
-  LEARN --> ORCH
-  ORCH --> CTRL
-  STARTER --> ORCH
-  WRAP --> APPS
-  PIPE --> APPS
-  DOCS -.documents.-> FE
-  DOCS -.documents.-> LEARN
-  META -.deploys.-> FE
-  META -.deploys.-> SCHEMA
-  META -.deploys.-> IMPORT
-  META -.deploys.-> LEARN
-  META -.deploys.-> ORCH
+  DOCS -.documents.-> Deploy
+  DOCS -.documents.-> Frontend
+  DOCS -.documents.-> Services
+  DOCS -.documents.-> Tooling
+  CLI -.deploys.-> Services
+  CLI -.deploys.-> Frontend
 ```
 
-This diagram is intentionally simplified. It is meant as a repo ownership map, not a full runtime diagram.
-
-## How to read this workspace
-
-- A top-level folder with its own `.git` directory is an **independent repository** with its own history and CI.
-- `apps/` is a **shared collection of tool/app folders**, not a single Git repo in this checkout.
-- `deprecated/` is a **reference area for older services** and should not be your default target for new work.
-- Most active repos point to the same GitLab namespace: `cosybio/federated-learning/federated_db`.
+This diagram is intentionally simplified. It does not contain repository interactions.
 
 ## Core product repositories
 
-| Folder | What it owns | When you usually change it | Link |
-| --- | --- | --- | --- |
-| `user-documentation` | Docusaurus site for product, deployment, user, and contributor docs | Writing or restructuring docs | [user-documentation](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/user-documentation) |
-| `frontend-shared` | Angular workspace for the local and global frontends plus the shared UI library and brand themes | UI flows, components, routes, frontend integrations, brand variants such as dAIbetes and PosyMed | [frontend-shared](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/frontend-shared) |
-| `core-api` | Python DTOs, serializers, and helpers used on the Python service side | In practice this is mainly relevant for `data-importer-api`; the Java services use their own Maven-based shared modules | [core-api](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/core-api) |
-| `learning-apis` | Parent repo for the active Java backend modules, including the local/global learning APIs and the Java schema services | Federated learning flows, query handling, workflow execution state, local/global backend behavior, and the active datamodeler implementation | [global-learning-apis](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/global-learning-apis) |
-| `data-importer-api` | Connector and ETL backend for ingesting site data, applying transformers, and previewing import results | Local ingestion, connector runs, data mapping, transformation previews | [data-importer-api](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/data-importer-api) |
-| `orch-api` | Orchestration backend for controlled tool execution and run lifecycle management | Starting runs, tracking execution, runtime coordination | [orch-api](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/orch-api) |
-| `feature-cloud-controller` | Go-based controller and relay pieces used by the federated execution stack | Controller behavior, relay process, lower-level execution coordination | [feature-cloud-controller](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/feature-cloud-controller) |
-| `meta` | Deployment definitions, infra templates, C4/Structurizr docs, Keycloak exports, helper scripts | Environment setup, deployment changes, operational wiring, internal architecture assets | [meta](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/meta) |
+| Repository | What it owns | When you usually change it |
+| --- | --- | --- |
+| [Documentation](https://github.com/FedLearnNet/Documentation) | Docusaurus site for Client/Platform usage and deployment documentation. Also contains Tool development and contributors documentation | Writing or restructuring docs, see [Documentation workflow](documentation-workflow.md) |
+| [Frontends](https://github.com/FedLearnNet/Frontends) | Angular workspace with the local (Client) and global (Platform) frontends, the shared UI library, and project themes | UI flows, components, routes, frontend integrations, brand variants, see [Frontend](frontend/overview.md) |
+| [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs) | Multi-module Quarkus project: `core-learning-api` (shared logic and DTOs), `global-learning-api` (Platform), `local-learning-api` (Client, including data import and the patient store), `datamodeler-api` (data models (schemas) with ontologies and datatypes) | Federated learning flows, queries, workflows, data import, schema and ontology handling |
+| [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API) | Runs Tools as Docker containers: pulls images, creates an isolated network and volume per run, starts Tool builds, and tracks the run lifecycle. Also handles the tool build pipeline execution. | Starting runs, container isolation, run lifecycle |
+| [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API) | Go services for federated communication: one controller per Client and one relay server per network | Controller and relay behavior, encryption, SMPC and DP message flows |
 
-## Tooling and app-development repositories
+## Tool development repositories
 
-| Folder | What it owns | Notes | Link |
-| --- | --- | --- | --- |
-| `apps/` | Example/import/transformer apps and data assets used by the platform | This folder is a workspace collection, not a standalone repo in this checkout | None in this checkout |
-| `pyappstarter` | Python helper that starts containerized apps and streams run updates over WebSockets | Useful for local app execution and transformer-style workflows | [pyappstarter](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/pyappstarter) |
-| `pyfedappwrap` | Python wrapper for local FEDDB app development | Lightweight support package for app authoring and local workflows | [pyfedappwrap](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/pyfedappwrap) |
-| `app-build-pipeline` | Remote build-and-publish pipeline client for app images | Clones repos, injects files, builds images, runs pytest, scans images, pushes artifacts | [app-build-pipeline](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/app-build-pipeline) |
-| `pyclientsimulation` | Python simulator for local-learning websocket clients | Handy for testing the global-learning flow without full local servers | [pyclientsimulation](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/pyclientsimulation) |
-| `example-apps` | Example project space, currently including a digital-twin-oriented example | Good starting point when you need reference app material | [example-apps](https://gitlab.cosy.bio/cosybio/federated-learning/federated_db/example-apps) |
+| Repository | What it owns | Notes |
+| --- | --- | --- |
+| [Python-Tool-API](https://github.com/FedLearnNet/Python-Tool-API) | Python SDK and runtime for FL-Net Tools, published as the `FL-Net-Python-Tool-API` package | Imported as `pyfedappwrap` |
+| [Tool-Build-Pipeline](https://github.com/FedLearnNet/Tool-Build-Pipeline) | Containerized pipeline that builds, tests, scans, and publishes Tool images | Normally started by the Orchestration API when a Tool is published |
 
-## Shared folders that are not top-level repos
+See [Tool development](../tool-dev/create-tool.md) for how to use these repositories to create a Tool.
 
-### `apps/`
+## Deployment repositories
 
-This folder currently holds small platform tools and sample material such as:
+| Repository | What it owns |
+| --- | --- |
+| [FL-Net-CLI](https://github.com/FedLearnNet/FL-Net-CLI) | The `flnet` command line for setting up and operating Clients and Platforms and for scaffolding new Tools |
 
-- SQL extraction
-- train/test splitting
-- row combination and splitting
-- date normalization
-- imported diabetes example data
-
-Treat `apps/` as a toolbox area. If you are changing a reusable platform service, this is usually **not** the right place. If you are changing a concrete tool's behavior, it often is.
-
-### `deprecated/`
-
-This folder keeps older services such as `harmonized-api`, `meta-api`, `query-controller`, and other archived components. Use it mainly for historical reference or migration context.
-
-## Alternative or legacy implementations worth noticing
-
-- `py-datamodeler-api` is deprecated. Current schema and datamodel work runs on the Java side.
-- `learning-apis` is the active home for the Java services, including the current datamodeler implementation used now.
-- `datamodeler-api` exists separately in this workspace as a Java/Quarkus service checkout, but this local folder does not currently have a Git remote configured.
-- `feature-cloud-controller/README_relay.md` is focused on relay certificate operations, so the code tree itself is more informative than the README for understanding that repo.
+See the [Deployment section](../deployment/overview.md) for how these are used.
 
 ## Fast path: where should I change what?
 
-- **Documentation**: `user-documentation`
-- **Angular UI or shared frontend components**: `frontend-shared`
-- **Python-side DTOs for the importer stack**: `core-api`
-- **Schema, ontology, or metadata modeling in the current stack**: `learning-apis`
-- **Legacy Python schema service work only**: `py-datamodeler-api`
-- **Local ingestion, connectors, or transformation preview flow**: `data-importer-api`
-- **Federated learning or local/global backend behavior**: `learning-apis`
-- **Run orchestration and execution lifecycle**: `orch-api`
-- **Controller or relay internals**: `feature-cloud-controller`
-- **Deployment, docker-compose, Keycloak, or environment glue**: `meta`
-- **Tool/app authoring support**: `pyappstarter`, `pyfedappwrap`, `app-build-pipeline`
+- **Documentation**: `Documentation`
+- **Angular UI or shared frontend components**: `Frontends`
+- **Platform backend behavior (projects, queries, workflows, federated runs)**: `global-learning-api` in `Learning-APIs`, potentially also the `local-learning-api` as the federated runs are executed there.
+- **Client backend behavior (data import, patient store, local queries, Tool runs)**: `local-learning-api` in `Learning-APIs`
+- **Schema, ontology, or data model work**: `datamodeler-api` in `Learning-APIs`
+- **Tool container and pipeline execution and run lifecycle**: `Orchestration-API`
+- **Federated communication layer (Controller or relay internals)**: `Federated-Learning-Communication-API`
+- **Tool development support**: `Python-Tool-API`, `Tool-Build-Pipeline`
+- **Deployment including proxy (NGINX) and oauth (KeyCloak) handling**: `FL-Net-CLI`
 
-## Source of truth for this page
-
-This overview was assembled from the local checkout structure, each repo's configured Git remote, and the README files currently present in this workspace. If a repo's role changes, update this page together with the relevant README so the map stays trustworthy.

@@ -7,6 +7,8 @@ The frontend workspace is straightforward to install, but not every screen is us
 
 ## 1. Install dependencies
 
+Requirements: Node.js 22 LTS (or another version supported by the Angular version used) and npm.
+
 ```sh
 npm install
 ```
@@ -19,11 +21,11 @@ The workspace builds different combinations of:
 - product variant: `FLNet`, `dAIbetes`, `microb-AI-ome`, `posymed`
 - target: development, staging, or production
 
-For day-to-day work, start with the dev server script that matches the app and brand you are changing:
+For day-to-day work, start with the dev server script that matches the app and brand you are changing. For the default FL-Net brand:
 
 ```sh
-npm run start-local-dAIbetes
-npm run start-global-dAIbetes
+npm run start-local-fl-net     # http://localhost:4200
+npm run start-global-fl-net    # http://localhost:4201
 ```
 
 Use the matching script if your task is tied to another brand.
@@ -43,10 +45,10 @@ If the UI boots but a page stays empty, verify the backend dependency before ass
 
 Environment files live under:
 
-- `projects/local-app/src/environments`
-- `projects/global-app/src/environments`
+- `projects/local-app/src/environments/<brand>/`
+- `projects/global-app/src/environments/<brand>/`
 
-There are separate files per product variant and per target. Do not edit them casually unless the task is explicitly about configuration.
+There are separate files per product variant and per target: `environment.ts` (development), `environment.staging.ts` (staging), and `environment.prod.ts` (production). Do not edit them casually unless the task is explicitly about configuration.
 
 Why this matters:
 

@@ -1,0 +1,8 @@
+{
+  "label": "Frontend",
+  "position": 7,
+  "link": {
+    "type": "doc",
+    "id": "contribution-guide/frontend/overview"
+  }
+}

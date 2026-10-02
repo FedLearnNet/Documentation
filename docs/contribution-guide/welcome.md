@@ -1,53 +1,53 @@
 ---
-title: Developer Guide - Welcome
+title: Welcome
 sidebar_position: 1
 ---
 
-# Contribution guide overview
+# Welcome
+Welcome to the **FL-Net contribution guide**.
 
-This section is for developers and operators who want to extend or maintain %%DEPLOYED_PRODUCT_NAME%% as a platform, not just use it as an application.
+This guide is for developers who want to change the **FL-Net software** itself: 
+- the Client and Platform services including the frontends
+- the federated communication layer
+- the Tool handling
+- this documentation itself
 
-The central architectural ideas, reflected in both the codebase and the paper, are:
+## Who this is for
+- **Backend developers** working on the Java/Quarkus services (Learning APIs, Orchestration API).
+- **Frontend developers** working on the Angular workspace that contains the local (Client) and global (Platform) frontends.
+- **Developers of the federated communication layer**, the Go-based controller and relay server.
+- **Developers of the Tool handling**, e.g. via the Python Tool API and the Tool Build Pipeline.
+- **Documentation writers** improving this site.
 
-- **formal tool descriptions**
-- **controlled build and execution**
-- **persistent run state and provenance**
-- **clear separation between platform control logic and runtime orchestration**
-- **bounded, human-supervised AI assistance**
+If you want to contribute by building a Tool for the network rather than changing FL-Net itself, see [Tool development](../tool-dev/create-tool.md) instead.
 
-## End-to-end platform flow
+## How the codebase is organized at a glance
+- FL-Net is **not a monorepo**. Each component lives in its own repository in the [FedLearnNet GitHub organization](https://github.com/FedLearnNet), with its own README, CI, and Docker images.
+- The **Client** and the **Platform** are built using shared repositories: for example, the `local-learning-api` and `global-learning-api` modules both live in [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs), and the local and global frontends both live in [Frontends](https://github.com/FedLearnNet/Frontends).
+- The **federated communication layer** also uses shared repositories: the `controller` and `relay-server` modules both live in [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API).
+-The [CLI](https://github.com/FedLearnNet/FL-Net-CLI) securely assembles the published Docker images into a running Client or Platform.
 
-```mermaid
-sequenceDiagram
-  participant UI as Frontend
-  participant API as Backend API
-  participant ORCH as Orchestration Layer
-  participant TOOL as Tool Runtime
-  participant DB as Persistence Layer
+See the [Repository map](repository-map.md) to find out which repository owns which part.
 
-  UI->>API: Create run / update project / request analysis
-  API->>DB: Persist specification and state
-  API->>ORCH: Start controlled execution
-  ORCH->>TOOL: Launch containerized tool
-  TOOL-->>API: Status, logs, outputs
-  API->>DB: Persist run history and artifacts
-  API-->>UI: Stream execution updates
-```
+## Quickstart
+*If you wish to contribute, please make sure you read in any case the [Development workflow](development-workflow.md)!*
 
-## What contributors should optimize for
+For a **Quickstart**, jump directly to what you need:
+- [Quickstart](quickstart.md): prerequisites, getting the code, and running and testing a component locally
+- [Repository map](repository-map.md): which repository to change
+- [Development workflow](development-workflow.md): issues, branches, pull requests, and CI
+- [Documentation workflow](documentation-workflow.md): changing this documentation site
 
-When contributing, prioritize:
-
-- reproducibility over convenience shortcuts
-- explicit interfaces over implicit behavior
-- typed configuration over loosely structured input
-- observability over hidden execution
-
-This is not just a product preference. It is the operating model that makes the platform scientifically usable.
-
-## Where to go next
-
-- [Repository map](repository-map.md)
-- [Deployment overview](deployment/overview.md)
-- [Security and privacy](../intro/architecture/security-model.md)
-- [Authentication](auth.md)
+However, we recommend the following reading order for new contributors:
+1. [Welcome (you are here)](welcome.md)
+2. [Read the general welcome page for FL-Net](../intro/welcome.md)
+3. [Optional: Understanding the architecture](../intro/architecture/welcome.md)
+4. [Repository map](repository-map.md)
+5. [Quickstart](quickstart.md)
+6. [Development workflow](development-workflow.md)
+7. [Documentation workflow](documentation-workflow.md)
+8. One of the detailed sections, depending on your change:
+   - [Frontend](frontend/overview.md)
+   - Backend: [Environment secrets](backend/env-secrets.md) and [Federated learning flow](backend/federated-learning-flow.md), followed by the `global-learning-api` and `local-learning-api` pages
+   - [Authentication](auth.md)
+   - [Documentation workflow](documentation-workflow.md)

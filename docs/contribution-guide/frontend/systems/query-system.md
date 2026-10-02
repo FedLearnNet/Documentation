@@ -3,6 +3,10 @@ title: Query System
 sidebar_position: 5
 ---
 
+:::caution Not yet on `main`
+This page describes the temporal query model (`CreateTemporalQueryDTO`, `QueryGroup`, `TemporalRelation`). This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so class names, file paths, and behavior may differ from the current code.
+:::
+
 The query system is split across both apps.
 
 - In `global-app`, it shows up as the `find-data` area with a query builder.
