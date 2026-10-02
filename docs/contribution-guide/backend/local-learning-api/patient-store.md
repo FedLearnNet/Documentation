@@ -3,6 +3,10 @@ title: Patient Store
 description: How connector imports write mapped patient data into the local patient store.
 ---
 
+:::caution Not yet on `main`
+This page describes the disk-backed connector import (`TableDataFileHandler`, `ConnectorLoadModeBO`), which currently only exists on the unmerged `feature/etl-file-based` branch. This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so class names, file paths, and behavior may differ from the current code.
+:::
+
 # Patient Store
 
 Connector imports load source rows into the cohort patient store by external patient ID. The importer now keeps source rows disk-backed when needed, but patient-store semantics remain patient oriented.

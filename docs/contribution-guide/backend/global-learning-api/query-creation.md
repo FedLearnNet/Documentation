@@ -3,6 +3,10 @@ title: Query creation & broadcasting
 sidebar_position: 7
 ---
 
+:::caution Not yet on `main`
+This page describes the temporal query model (`CreateTemporalQueryDTO`, `QueryGroup`, `TemporalRelation`). This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so class names, file paths, and behavior may differ from the current code.
+:::
+
 This page describes how the global-learning-api turns a `CreateTemporalQueryDTO` from the frontend into a persisted query and then broadcasts it to the federated local clients.
 
 ## Source files
