@@ -64,9 +64,9 @@ This diagram is intentionally simplified. It does not contain repository interac
 | --- | --- | --- |
 | [Documentation](https://github.com/FedLearnNet/Documentation) | Docusaurus site for Client/Platform usage and deployment documentation. Also contains Tool development and contributors documentation | Writing or restructuring docs, see [Documentation workflow](documentation-workflow.md) |
 | [Frontends](https://github.com/FedLearnNet/Frontends) | Angular workspace with the local (Client) and global (Platform) frontends, the shared UI library, and project themes | UI flows, components, routes, frontend integrations, brand variants, see [Frontend](frontend/overview.md) |
-| [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs) | Multi-module Quarkus project: `core-learning-api` (shared logic and DTOs), `global-learning-api` (Platform), `local-learning-api` (Client, including data import and the patient store), `datamodeler-api` (data models (schemas) with ontologies and datatypes) | Federated learning flows, queries, workflows, data import, schema and ontology handling |
-| [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API) | Runs Tools as Docker containers: pulls images, creates an isolated network and volume per run, starts Tool builds, and tracks the run lifecycle. Also handles the tool build pipeline execution. | Starting runs, container isolation, run lifecycle |
-| [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API) | Go services for federated communication: one controller per Client and one relay server per network | Controller and relay behavior, encryption, SMPC and DP message flows |
+| [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs) | Multi-module Quarkus project: `core-learning-api` (shared logic and DTOs), `global-learning-api` (Platform), `local-learning-api` (Client, including data import and the patient store), `datamodeler-api` (data models (schemas) with ontologies and datatypes) | Federated learning flows, queries, workflows, data import, schema and ontology handling, see [Backend](backend/overview.md) |
+| [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API) | Runs Tools as Docker containers: pulls images, creates an isolated network and volume per run, starts Tool builds, and tracks the run lifecycle. Also handles the tool build pipeline execution. | Starting runs, container isolation, run lifecycle, see [Backend](backend/overview.md) |
+| [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API) | Go services for federated communication: one controller per Client and one relay server per network | Controller and relay behavior, encryption, SMPC and DP message flows, see [Federated communication layer](federated-communication/overview.md) |
 
 ## Tool development repositories
 
@@ -93,7 +93,7 @@ See the [Deployment section](../deployment/overview.md) for how these are used.
 - **Client backend behavior (data import, patient store, local queries, Tool runs)**: `local-learning-api` in `Learning-APIs`
 - **Schema, ontology, or data model work**: `datamodeler-api` in `Learning-APIs`
 - **Tool container and pipeline execution and run lifecycle**: `Orchestration-API`
-- **Federated communication layer (Controller or relay internals)**: `Federated-Learning-Communication-API`
+- **Federated communication layer (Controller or relay internals)**: `Federated-Learning-Communication-API`, see [Federated communication layer](federated-communication/overview.md)
 - **Tool development support**: `Python-Tool-API`, `Tool-Build-Pipeline`
 - **Deployment including proxy (NGINX) and oauth (KeyCloak) handling**: `FL-Net-CLI`
 

@@ -3,7 +3,15 @@ title: Frontend Contribution Guide
 sidebar_position: 1
 ---
 
+# Frontend
 This section is for contributors working on the Angular frontend workspace behind %%DEPLOYED_PRODUCT_NAME%%.
+
+The workspace lives in the [Frontends](https://github.com/FedLearnNet/Frontends) repository and contains two applications and one shared library:
+- `local-app`: the frontend of the Client, which talks to the `local-learning-api`
+- `global-app`: the frontend of the Platform, which talks to the `global-learning-api` and the `datamodeler-api`
+- `shared-lib`: components, services, styles, and brand assets used by both apps
+
+The prerequisites and the commands to start the apps are in [Local setup](local-setup.md) and the [README](https://github.com/FedLearnNet/Frontends#readme); the checks to run before a review are in [Testing and review](testing-and-review.md).
 
 Most frontend changes come down to four questions:
 
@@ -22,6 +30,7 @@ Most frontend changes come down to four questions:
 | avoid wiring mistakes around builds and brands | [Builds and environments](builds-and-environments.md) |
 | follow implementation and UI guardrails | [Implementation guidelines](implementation-guidelines.md) |
 | jump straight to a feature area | [Systems overview](systems/overview.md) |
+| run the right checks before review | [Testing and review](testing-and-review.md) |
 
 ## Mental model
 

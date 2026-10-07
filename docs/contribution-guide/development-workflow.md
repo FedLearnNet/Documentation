@@ -32,7 +32,7 @@ Always open a pull request and let the CI checks run.
 
 ## Pull requests
 1. Push your branch and open a pull request against the **develop** branch.
-2. Reference the PR in the issue(s) it solves, e.g. `Fixes #137`.
+2. Reference the issue(s) it solves in the pull request description, e.g. `Fixes #137`.
 3. Make sure the CI checks pass (see below).
 4. Keep the pull request focused on one issue. Unrelated refactorings make review harder.
 5. If your change affects user facing behavior or anything that is documented here, update the [documentation](documentation-workflow.md) as well.
