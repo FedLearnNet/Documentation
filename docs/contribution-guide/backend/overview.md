@@ -9,7 +9,7 @@ This section is for contributors working on the Java/Quarkus backend services of
 | Repository | What it contains |
 |---|---|
 | [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs) | Multi-module Maven project: `core-learning-api` (shared logic and DTOs), `global-learning-api` (Platform), `local-learning-api` (Client, including data import and the patient store), `datamodeler-api` (data models, schemas, and ontologies) |
-| [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API) | Runs Tools as Docker containers and tracks their run lifecycle for the local and global Learning APIs |
+| [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API) | Runs Tools as Docker containers and tracks their run lifecycle for the local and global Learning APIs. Also used to run the Tool Build pipeline |
 
 ## Getting started
 The README of each repository is the source of truth for the commands below.
@@ -20,16 +20,15 @@ The README of each repository is the source of truth for the commands below.
 ```bash
 ./mvnw clean install                # build all modules and run the tests
 
+# example for the local-learning-api module, similar for the other modules
 cd local-learning-api
-cp .env.example .env                # fill in the secrets
-cp orch_secrets.env.example orch_secrets.env
+cp .env.example .env                         # fill in the secrets,
 ./mvnw compile quarkus:dev          # live reload, Dev UI at /q/dev/
 ```
 The same applies to `global-learning-api`. Development ports: `global-learning-api` 8080, `local-learning-api` 8081, `datamodeler-api` 8086.
 
 **Orchestration-API:**
 ```bash
-cp .env.example .env          # fill in the secrets
 ./mvnw compile quarkus:dev    # http://localhost:8082 · Dev UI /q/dev/ · Swagger UI /q/swagger-ui
 ```
 Alternatively, `docker compose up --build` runs the API together with PostgreSQL (API on port 8093).

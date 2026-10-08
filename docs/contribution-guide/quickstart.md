@@ -15,11 +15,7 @@ Every change starts with an issue.
 Security vulnerabilities must not be reported as public issues. See [Development workflow](development-workflow.md#issues) for how to report them privately.
 
 ## 2. Identify which repository needs to be changed
-FL-Net is split over several repositories, and an issue is usually solved in one of them. To find the responsible repository:
-
-1. Decide which part of FL-Net the issue is about: the user interface, the Client or Platform backend, the federated communication between Clients, Tool building and execution, deployment, or this documentation.
-2. Look it up in the **Fast path** list of the [Repository map](repository-map.md#fast-path-where-should-i-change-what).
-3. If the change needs several repositories, for example a new API used by the frontend, track it in an issue in [FedLearnNet/.github](https://github.com/FedLearnNet/.github), as described in step 1.
+FL-Net is split over several repositories, and an issue is usually solved in one of them. To find the responsible repository, simply check the **Fast path** list of the [Repository map](repository-map.md#fast-path-where-should-i-change-what) for guidance on which repository to change.
 
 ## 3. Go to the documentation of that repository
 Each repository has its own README, and the larger components have a section in this guide. Together they describe the prerequisites, the development setup, how to start the service, and how to test it:

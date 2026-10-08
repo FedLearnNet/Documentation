@@ -24,8 +24,8 @@ If you want to contribute by building a Tool for the network rather than changin
 ## How the codebase is organized at a glance
 - FL-Net is **not a monorepo**. Each component lives in its own repository in the [FedLearnNet GitHub organization](https://github.com/FedLearnNet), with its own README, CI, and Docker images.
 - The **Client** and the **Platform** are built using shared repositories: for example, the `local-learning-api` and `global-learning-api` modules both live in [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs), and the local and global frontends both live in [Frontends](https://github.com/FedLearnNet/Frontends).
-- The **federated communication layer** also uses shared repositories: the controller and the relay server both live in [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API).
-- The [CLI](https://github.com/FedLearnNet/FL-Net-CLI) securely assembles the published Docker images into a running Client or Platform.
+- The **federated communication layer** also uses one shared repository: the controller and the relay server both live in [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API).
+- The [CLI](https://github.com/FedLearnNet/FL-Net-CLI) securely assembles the published Docker images into a running Client or Platform and adds helper methods, e.g. backups.
 
 See the [Repository map](repository-map.md) to find out which repository owns which part.
 

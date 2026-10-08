@@ -7,7 +7,7 @@ The frontend workspace is straightforward to install, but not every screen is us
 
 ## 1. Install dependencies
 
-Requirements: Node.js 22 LTS (or another version supported by the Angular version used) and npm.
+Requirements: Node.js (version depends on the Angular version used) and npm.
 
 ```sh
 npm install
@@ -18,7 +18,7 @@ npm install
 The workspace builds different combinations of:
 
 - app type: `local-app` or `global-app`
-- product variant: `FLNet`, `dAIbetes`, `microb-AI-ome`, `posymed`
+- product variant: `FLNet`, `dAIbetes`, `microb-AI-ome`, `posymed` (use `FLNet` if you're unsure)
 - target: development, staging, or production
 
 For day-to-day work, start with the dev server script that matches the app and brand you are changing. For the default FL-Net brand:
@@ -34,12 +34,7 @@ Use the matching script if your task is tied to another brand.
 
 You can usually boot the shell without every backend running, but feature work often needs the matching APIs.
 
-In plain terms:
-
-- `global-app` depends on services around global learning, project data, and authentication
-- `local-app` depends on services around data import, local learning, and authentication
-
-If the UI boots but a page stays empty, verify the backend dependency before assuming the bug is in Angular.
+See the [Repository map](../repository-map.md) and check which service calls your change affects.
 
 ## 4. Be careful with environment files
 

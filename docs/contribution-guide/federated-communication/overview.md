@@ -6,7 +6,7 @@ sidebar_position: 1
 # Federated communication layer
 This section is for contributors working on the federated communication layer of FL-Net. It lives in the [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API) repository and consists of two Go services:
 
-- **Controller:** one per federated learning node (Client). It relays the data of a running federated Tool into the network and applies end-to-end encryption, SMPC, and DP.
+- **Controller:** one per federated learning node (participant and aggregator nodes, where the aggregator may either run on a Client or the Platform). It sends the data of a running federated Tool (e.g. model weights) via the Relay Server to other nodes and applies end-to-end encryption, SMPC, and DP. End to End encryption is not applies for broadcasts from the aggregator node for performance reasons.
 - **Relay server:** one per network, deployed with the Platform. All controllers connect to it, and it relays messages between them.
 
 Neither service orchestrates federated learning: the Learning APIs register and start runs. How the controller and relay server are used during a run is described step by step in the [Federated learning flow](../backend/federated-learning-flow.md).
