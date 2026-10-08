@@ -85,11 +85,13 @@ An empty cell is interpreted as `null`. Whether it is accepted depends on the co
 - If the field is optional, `null` is accepted and other validation rules are skipped for that value.
 - If the field is marked `REQUIRED`, a null or empty value is rejected.
 
-This allows the schema to require values for selected columns while permitting missing values in others. Placeholder strings are not automatically treated as nulls; transform them to empty values before import when appropriate.
+This allows the schema to require values for selected columns while permitting missing values in others.
+
+Only truly empty cells are treated as missing values. Text that people commonly type into spreadsheets to mean "no value", such as `-`, `NULL`, `null`, `N/A`, `NA`, `n.a.`, `none`, `unknown`, `?`, or `999`, is **not** treated as missing. Instead, it is validated like any other value and may be rejected (for example, `N/A` in a numeric column) or imported as literal text. Transform such placeholders to empty values before import when appropriate.
 
 ## Validation errors and import results
 
-A validation error for one value does not necessarily reject the complete import or the rest of the record. The invalid value is omitted and reported in the connector run, while valid values can still be imported.
+A validation error for one value does not necessarily reject the complete import or the rest of the record. The invalid value is omitted and reported in the connector run as a patient error, while the valid values of the record are still imported.
 
 For example, if a record contains an age of `420` and a BMI of `25`, and the schema permits ages only between `0` and `120`, the age is rejected while the valid BMI can still be imported.
 

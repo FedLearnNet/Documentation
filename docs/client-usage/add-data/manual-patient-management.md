@@ -17,7 +17,7 @@ Open **Cohort**, select the relevant cohort, and open the **Patients** tab. The 
 
 ## How the schema determines the form
 
-The creation and editing forms are generated dynamically from the cohort's selected schema. The schema defines the available fields and their organization, which fields are required, and the validation rules applied to entered values. Cohorts using different schemas therefore present different forms and require different information.
+The creation and editing forms are generated from the cohort's selected schema. The schema defines the available fields and their organization, which fields are required, and the validation rules applied to entered values. Cohorts using different schemas therefore present different forms and require different information.
 
 Complete the fields according to the selected schema's definitions, including expected data types, units, and allowed values where applicable. The same schema requirements apply when creating a record and when editing an existing one.
 
