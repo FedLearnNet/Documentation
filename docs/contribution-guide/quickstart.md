@@ -78,11 +78,19 @@ See [Documentation workflow](documentation-workflow.md).
 
 ## 4. Making a change
 1. Find or open an issue in the repository you are changing.
-2. Create a branch from the default branch of that repository.
-3. Make the smallest change that solves the issue. The detailed sections of this guide ([Frontend](frontend/overview.md), backend, [Authentication](auth.md)) explain where a change belongs.
+2. Create a branch from the develop branch of that repository. If the develop branch does not exist, create a branch from main. Use a descriptive name for the branch, if you work based on an image you can get the branch name from the issue, e.g. `5-fix-date-to-iso8601`.
+3. Make the smallest change that solves the issue. The documentation of each repository has further information on this.
 4. Run the checks below, then open a pull request.
 
 The full process is described in [Development workflow](development-workflow.md).
+
+**IMPORTANT**
+
+If you contribute also update the documentation if your change affects:
+- user-facing behavior, e.g. a new feature, a changed UI flow, or a changed API changing how the frontend behaves
+- If your change is internal please check the documentation of the service you changed. If your changes affect whats documented there, update the documentation accordingly. For example, if you change the learning flow in the `local-learning-api`, update the [federated learning flow](backend/federated-learning-flow.md) page.
+
+This helps keep the system usable over time!
 
 ## 5. Testing and building
 Run at least the checks that the CI of the repository runs:

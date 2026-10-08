@@ -11,7 +11,8 @@ This tutorial will guide you through the 5-10 minute process of deploying a %%DE
 on your own server or machine.
 
 ## Prerequisites
-- python3 (>= 3.6)
+- either Linux or MacOS. On Windows, you can use WSL2 with e.g. Ubuntu 22.04 or later.
+- curl (for downloading the CLI installation shell script, you can delete it after the installation)
 - docker
 - docker compose
 - at least 4 GB of RAM. This holds even for an empty client without data, as on startup the authentication service Keycloak uses a few GB.
@@ -28,34 +29,17 @@ If you only ever access the %%DEPLOYED_PRODUCT_NAME%% Client from the same machi
 in the initialization just run the %%DEPLOYED_PRODUCT_NAME%% Client on `127.0.0.1` (localhost) and a chosen port,
 accessing it from the browser on the same machine.
 
-### Special prerequisites to take during development
-[comment]: <> (TODO: We should have the images publically pullable and remove this section!)
-As the docker registry is not yet public, the images for the %%DEPLOYED_PRODUCT_NAME%% Client as well as
-tool images used by the %%DEPLOYED_PRODUCT_NAME%% Client for federated learning and the ETL process are currently
-behind an auth check.
-Therefore please contact a [%%DEPLOYED_PRODUCT_NAME%% developer](mailto:info@mail.federated-learning.net) to provide you with credentials:
-- A username
-- A Gitlab Personal Access Token (PAT)
-You will be provided with credentials that can pull images from the %%DEPLOYED_PRODUCT_NAME%% registry. 
-Given this PAT, please do the following:
-```bash
-docker login gitlab.cosy.bio:5050
-```
-When prompted for the password use the PAT provided to you.
-
 ## Deploying your %%DEPLOYED_PRODUCT_NAME%% Client 
 Please follow these steps to create, run and setup your %%DEPLOYED_PRODUCT_NAME%% Client in 5 to 15 minutes.
 
 ### 0. Prepare
 First make sure the [prerequisites](#prerequisites) are all installed!
-Then, clone the repository containing the %%DEPLOYED_PRODUCT_NAME%% Client setup:
+Then, install the `flnet` CLI tool by running the following command:
 ```bash
-git clone https://github.com/FedLearnNet/FL-Net-Client-Deployment.git
+curl -fsSL https://raw.githubusercontent.com/FedLearnNet/FL-Net-CLI/main/install.sh | sh
 ```
-And cd into the cloned folder
-```bash
-cd FL-Net-Client-Deployment/
-```
+This will download the relevant binary for your system and place it in `~/.local/bin` (Linux/Mac) 
+for non root users and /usr/local/bin as `root`.
 
 Please ask your Platform provider whether you require an account in the Network to join the network.
 If yes, please make sure to have the credentials ready, as you will need them in the next step.
@@ -64,19 +48,10 @@ We also recommend you first read relevant documentation:
 - [Welcome](../intro/welcome.md) to understand the Network you're joining.
 - [External access management to your Client](../client-usage/external-access-management.md) to understand how to manage access to your Client from the Network.
 
-#### Special step to take during development
-[comment]: <> (TODO: We should have the apps publically pullable and remove this section!)
-Currently, the apps used in the %%DEPLOYED_PRODUCT_NAME%% for importing data or federated learning are not publically available/pullable. You must therefore give the Client the username and PAT you got from the Federeated Learning Net dev team:
-1. Edit the file `FLNet_client/docker-compose.yml`. 
-2. In the service `orch-api` under `environment`, you must add the following:“
-```
-ORCH_DOCKER__GITLAB__REGISTRY_PASSWORD=<the given PAT>
-```
-
 ### 1. Initializing the Client folder
-Simply run the initialization script and follow the command line prompts:
+Simply run the initialization command and follow the command line prompts:
 ```bash
-python3 client_installer.py
+flnet client init
 ``` 
 This can be used to either to the initial setup, to reconfigure your client or to perform a 
 fresh installation of the Client. The script will ask you for the following information:
@@ -92,14 +67,20 @@ secure the connection.
 - The ssl certificate files. Refer to [this section on how to generate these files](#securing-your-client-access-to-the-client-from-other-machines).
 
 After running the installer, the `flnet_client` folder is ready to be used.
+By default this is stored at `~/fl-net/clients/`, use `flnet client info` to see the path of your client folder.
 The install script will provide you with the next steps, but they are also listed here.
 
 ### 2. Running your created Client 
 To start the Client, run the following:
 ```bash
-cd FLNet_client/
+flnet client up
+```
+You can also run the underlying `docker compose` command yourself.
+```bash
+cd <path-to-client-folder>
 docker compose up -d
 ```
+
 The first start up might take upto a few minutes.
 
 ### 3. The initial setup of the Client
@@ -189,8 +170,9 @@ You have multiple options:
 security warning will show, but traffic will be encrypted. 
 You can generate self signed SSL certificates via the provided helper:
 ```bash
-python3 create_self_signed_certs.py
+flnet client certs
 ```
+They will be stored in your client folder under `self_signed_certs/`.
 Make sure to (automatically) renew them before they expire or to set a high expiracy date. 
 The NGINX of the Client is setup strictly and by default not set for self signed certificates.
 Please go to the nginx https config file 
@@ -203,8 +185,7 @@ If you used an IP address as domain, please also follow the steps in the [sectio
 If you already started the Client, you need to run the
 following command for the %%DEPLOYED_PRODUCT_NAME%% Client to pick up the new certificates:
 ```bash
-cd FLNet_client/
-docker compose restart reverse-proxy-encrypted
+flnet client restart
 ```
 After generating the certificates you can [initialize and start the Client](#1-initializing-the-client-folder).
 2. You can also setup an entry in your domain that lets encrypt can use to verify your domain. 
@@ -320,8 +301,7 @@ restrictions, as docker might route anonymous image pull requests through other 
 Sometimes docker registers the shutdown of containers on shutdown as a manual stop and does not restart them on server restart.
 1. Try simply restarting the whole Client:
 ```bash
-cd FLNet_client/
-docker compose up -d
+flnet client restart
 ```
 2. If the issues persist, investigate the logs of the containers in the following order:
 - `reverse-proxy` (this routes all traffic to the Client).
