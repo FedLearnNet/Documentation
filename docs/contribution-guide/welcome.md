@@ -24,8 +24,8 @@ If you want to contribute by building a Tool for the network rather than changin
 ## How the codebase is organized at a glance
 - FL-Net is **not a monorepo**. Each component lives in its own repository in the [FedLearnNet GitHub organization](https://github.com/FedLearnNet), with its own README, CI, and Docker images.
 - The **Client** and the **Platform** are built using shared repositories: for example, the `local-learning-api` and `global-learning-api` modules both live in [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs), and the local and global frontends both live in [Frontends](https://github.com/FedLearnNet/Frontends).
-- The **federated communication layer** also uses shared repositories: the `controller` and `relay-server` modules both live in [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API).
--The [CLI](https://github.com/FedLearnNet/FL-Net-CLI) securely assembles the published Docker images into a running Client or Platform.
+- The **federated communication layer** also uses one shared repository: the controller and the relay server both live in [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API).
+- The [CLI](https://github.com/FedLearnNet/FL-Net-CLI) securely assembles the published Docker images into a running Client or Platform and adds helper methods, e.g. backups.
 
 See the [Repository map](repository-map.md) to find out which repository owns which part.
 
@@ -33,7 +33,7 @@ See the [Repository map](repository-map.md) to find out which repository owns wh
 *If you wish to contribute, please make sure you read in any case the [Development workflow](development-workflow.md)!*
 
 For a **Quickstart**, jump directly to what you need:
-- [Quickstart](quickstart.md): prerequisites, getting the code, and running and testing a component locally
+- [Quickstart](quickstart.md): the contribution workflow from the issue to the pull request
 - [Repository map](repository-map.md): which repository to change
 - [Development workflow](development-workflow.md): issues, branches, pull requests, and CI
 - [Documentation workflow](documentation-workflow.md): changing this documentation site
@@ -48,6 +48,6 @@ However, we recommend the following reading order for new contributors:
 7. [Documentation workflow](documentation-workflow.md)
 8. One of the detailed sections, depending on your change:
    - [Frontend](frontend/overview.md)
-   - Backend: [Environment secrets](backend/env-secrets.md) and [Federated learning flow](backend/federated-learning-flow.md), followed by the `global-learning-api` and `local-learning-api` pages
+   - [Backend](backend/overview.md)
+   - [Federated communication layer](federated-communication/overview.md)
    - [Authentication](auth.md)
-   - [Documentation workflow](documentation-workflow.md)

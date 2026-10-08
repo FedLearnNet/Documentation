@@ -4,7 +4,7 @@ sidebar_position: 5
 ---
 
 # Documentation workflow
-This documentation is a [Docusaurus](https://docusaurus.io/) site in the [`Documentation`](https://github.com/FedLearnNet/Documentation) repository. The content is shared between posymed and FL-Net; product name, URLs, and logo are set per project at build time.
+This documentation is a [Docusaurus](https://docusaurus.io/) site in the [`Documentation`](https://github.com/FedLearnNet/Documentation) repository. The content is shared between PoSyMed and FL-Net; product name, URLs, and logo are set per project at build time.
 
 ## When do I have to change the documentation?
 Please make sure if you contribute to also update the documentation if your change affects:
@@ -12,7 +12,7 @@ Please make sure if you contribute to also update the documentation if your chan
 - If your change is internal please check the documentation of the service you changed. If your changes affect whats documented there, update the documentation accordingly. For example, if you change the learning flow in the `local-learning-api`, update the [federated learning flow](backend/federated-learning-flow.md) page.
 
 ### Running the documentation locally
-Requirements: Node.js LTS and [Git LFS](https://git-lfs.com/) (videos and sample data in `static/` are stored in LFS).
+Requirements: Node.js (check the [docusaurus docs](https://docusaurus.io/docs/installation) for the required version) and [Git LFS](https://git-lfs.com/) (videos and sample data in `static/` are stored in LFS).
 
 ```bash
 git lfs install && git lfs pull
