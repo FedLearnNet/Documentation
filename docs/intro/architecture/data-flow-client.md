@@ -23,7 +23,7 @@ Please note that a user may hold more than one of these roles, with the Admin ro
 **Boundaries.** The Client's perimeter is crossed at exactly four points, and each data-flow section below states which one(s) apply:
 - **NGINX** — the single entry point for the Data Holder, via the Instance Manager Frontend and Keycloak.
 - **Local Learning API** — the outbound channel to the Platform used for federated queries, statistics, learning, and metrics requests, and their results.
-- **Orch API** — Pulls required Tool images from the Platform's registry.
+- **Orch API** — Pulls required Tool images from the Tool registry, which is part of the Platform and served under `/v2/` of the Platform domain.
 - **Controller** — a separate outbound channel to the Platform used only for the federated-learning training communication itself, once a run is underway.
 
 The full definition of each boundary, including what does *not* cross a network boundary at all (such as backups), is in [Boundaries of the Client](#boundaries-of-the-client) below.
@@ -87,24 +87,25 @@ flowchart LR
 
     subgraph PLATFORM[FL-Net Platform]
         GLA[Global Learning API]
-        subgraph REGISTRY[FL-Net Registry]
-            REG[Tool registry]
-        end
     end
+
+    subgraph CLIENTREGISTRY[FL-Net Client image registry]
+        GHCR["ghcr.io/fedlearnnet/"]
+        CHAIN["cgr.dev/chainguard"]
+        DOCKERIO["registry-1.docker.io"]
+    end
+    
 
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    classDef registry fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     class FE,KC,LLA client
     class GLA platform
-    class REG registry
 
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style PLATFORM fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    style REGISTRY fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
-    CLIENT -->|On startup pull service images| REGISTRY
+    CLIENT -->|On startup pull service images| CLIENTREGISTRY
     ADMIN -->|Login| FE
     FE -->|Create first users and change bootstrap password| KC
     LLA -->|Connect to Platform| GLA
@@ -333,27 +334,23 @@ flowchart LR
     end
 
     subgraph PLATFORM[FL-Net Platform]
-        subgraph REGISTRY[FL-Net Registry]
-            REG[Tool registry]
-        end
+        REG[Tool registry]
     end
 
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     classDef toolnet fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
-    classDef registry fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
 
     class LLA,ORCH,DATA,COPY,TVOL,DB2 client
     class TOOL toolnet
-    class REG registry
+    class REG platform
 
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style TOOLNETWORK fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     style PLATFORM fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    style REGISTRY fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     LLA -->|Workflow input| ORCH
-    ORCH -->|Pull ETL Tool image| REGISTRY
+    ORCH -->|Pull ETL Tool image| REG
     ORCH -->|Stage input files| DATA
     DATA -->|Copy in| COPY
     COPY -->|Write to Tool's own volume| TVOL
@@ -416,7 +413,7 @@ A federated learning request is also a formal **Request**: it arrives at the Loc
 
 Once approved, the flow into the Tool and it's execution is the one already described under [Local ETL Tool execution](#local-etl-tool-execution).
 In difference to an ETL Tool, the Controller is also attached to the Tool's network, and the Tool communicates with it to exchange model updates and other FL messages over the **federated communication channel**, connecting the participants of the FL. 
-This is the second and last outbound path a Client has, and it crosses the Controller boundary rather than the Local Learning API boundary:
+This is the second and last path over which data can leave a Client, and it crosses the Controller boundary rather than the Local Learning API boundary:
 As FL messages are inherently more sensitive than the the other request types, messages sent over the federated learning channel are additionally to the transport encryption also machine to machine encrypted, with only the sending Clients Controller and receiving aggregators/other Clients controller able to decrypt them.
 The request contains the information whether the aggregator is deployed on another participating Client or on the Platform. In case the aggregator is deployed on another Client, no information on the identify of the owner of that Client and therefore the aggregator is available.
 
@@ -437,9 +434,7 @@ flowchart LR
 
     subgraph PLATFORM[FL-Net Platform]
         PLATFORMNODE[Platform services]
-        subgraph REGISTRY[FL-Net Registry]
-            REG[Tool registry]
-        end
+        REG[Tool registry]
     end
     
     AGGREGATOR["Aggregator (Platform or Client)"]
@@ -447,20 +442,17 @@ flowchart LR
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     classDef toolnet fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    classDef registry fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     class LLA,ORCH,DATA,COPY,TVOL,CTRL client
     class TOOL toolnet
-    class PLATFORMNODE, platform
-    class REG registry
+    class PLATFORMNODE,REG platform
 
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style TOOLNETWORK fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     style PLATFORM fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    style REGISTRY fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     LLA -->|Workflow input| ORCH
-    ORCH -->|Pull FL Tool image| REGISTRY
+    ORCH -->|Pull FL Tool image| REG
     ORCH -->|Stage patient data| DATA
     DATA -->|Copy in| COPY
     COPY -->|Write to Tool's own volume| TVOL
@@ -549,9 +541,9 @@ Reasoning about Client data flow comes down to two different kinds of boundary: 
 | **NGINX** | Data Holder ↔ Client | All human/browser access: login, uploads, exports, admin actions |
 | **Local Learning API** | Client ↔ Platform | Schema pulls, anonymous schema subscriptions/unsubscriptions, federated queries, and federated statistics, learning, and metrics requests, plus their results |
 | **Controller** | Client ↔ Platform | Federated-learning training communication only (model updates), over its own dedicated channel |
-| **Orch API** | Client ↔ Platform | Pulls required Tool images from the Platform's registry |
+| **Orch API** | Client ↔ Platform | Pulls required Tool images from the Tool registry, which is part of the Platform and served under `/v2/` of the Platform domain |
 
-These are deliberately separate. NGINX is the Client's only exposure and may be limited to the Data Holder's own network only; the Local Learning API and Controller are the Client's only two outbound connections to the Platform, and they're kept apart so that the request/approval/result traffic (Local Learning API) never shares a channel with raw training communication (Controller). The Data Holder's browser also connects directly to the Platform frontend to load Tool descriptions; that browser-to-Platform path is outside the Client's four network boundaries. Internally, the Client's services sit behind Docker network isolation and are not reachable from the host network except through NGINX.
+These are deliberately separate. NGINX is the Client's only exposure and may be limited to the Data Holder's own network only; the Local Learning API and Controller are the Client's only two outbound connections to the Platform that carry requests, results, or training communication, and they're kept apart so that the request/approval/result traffic (Local Learning API) never shares a channel with raw training communication (Controller). The Orch API additionally downloads Tool images from the Platform's Tool registry; this connection sends no Client data. The Data Holder's browser also connects directly to the Platform frontend to load Tool descriptions; that browser-to-Platform path is outside the Client's four network boundaries. Internally, the Client's services sit behind Docker network isolation and are not reachable from the host network except through NGINX.
 
 ### The Tool sandbox — an internal boundary
 
@@ -589,25 +581,20 @@ flowchart LR
     subgraph PLATFORM[FL-Net Platform]
         GLA[Global Learning API]
         RELAY[Relay Server]
-        subgraph REGISTRY[FL-Net Registry]
-            REG[Tool registry]
-        end
+        REG[Tool registry]
     end
 
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     classDef toolnet fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    classDef registry fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     class NGINX,FE,KC,DB,ORCH,LLA,CTRL client
     class TOOL toolnet
-    class GLA,RELAY platform
-    class REG registry
+    class GLA,RELAY,REG platform
 
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style TOOLNETWORK fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     style PLATFORM fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    style REGISTRY fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     USER -->|Login and operate| NGINX
     NGINX --> FE
@@ -617,7 +604,7 @@ flowchart LR
     LLA --> DB
     LLA --> ORCH
     ORCH -->|Tool input and output| TOOL
-    ORCH -->|Pull Tool image| REGISTRY
+    ORCH -->|Orch API boundary: pull Tool image| REG
     TOOL -->|Model updates and FL messages| CTRL
     CTRL -->|Controller boundary: federated learning| RELAY
     LLA -->|Local Learning API boundary, authenticated*: queries, statistics, learning, and metrics| GLA

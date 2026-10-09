@@ -286,7 +286,8 @@ via `tcp` for federated learning.
 - Please make sure the system correctly keeps time (so has network time protocol access), 
 or issued authorization tokens might immediately expire.
 - Furthermore, the following domains must be whitelisted to pull the docker images used by the %%DEPLOYED_PRODUCT_NAME%% Client:
-  - `gitlab.cosy.bio:5050` (the %%DEPLOYED_PRODUCT_NAME%% registry)
+  - `ghcr.io/fedlearnnet/` (the %%DEPLOYED_PRODUCT_NAME%% Client images)
+    - If your firewall filters by host name only, also allow `pkg-containers.githubusercontent.com`, from which `ghcr.io` serves the image layers.
   - `docker.io` (the docker hub registry) and `docker.com` (May be used for authentication and pulling images)
     - Please also allow all subdomains, as docker uses multiple, e.g. `auth.docker.io` and `registry-1.docker.io`. Alternatively, you can follow the [docker allow list](https://docs.docker.com/desktop/setup/allow-list/), which may cover domains unused by the %%DEPLOYED_PRODUCT_NAME%% Client, but used by docker itself. 
   - `quay.io` (Red Hat registry for KeyCloak)

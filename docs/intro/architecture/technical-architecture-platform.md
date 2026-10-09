@@ -25,7 +25,7 @@ The Platform is a single-host deployment composed of a small set of runtime serv
 3. Orch API [Java;Quarkus]: the orchestration service for FL workflows. It prepares the execution environment, starts Tool containers, monitors their status, and returns results to the Global Learning API. As no ETL runs on the Platform, this is used for FL project runs if the aggregator runs on the Platform and not a Client. To manage Tool containers, it runs as root with access to the host's Docker socket. See the [security model](security-model.md) for the trust implications of this.
 4. Frontend [Angular]: the user-facing web interface for Data Scientists and Auditors. It provides access to the Platform UI, is used to perform DDQ, retrieve statistics, submit FL requests, manage Schemas, and manage and use models, and is also used by the Platform Admin to monitor service health.
 5. Relay Server [Go]: handles communication between the local Controllers of participating Clients (and the Platform's own Controller, when the aggregator runs there) to ensure the secure exchange of model parameters and other FL messages during FL project runs. It exposes an HTTP server for FL project run management, used exclusively by the Global Learning API, alongside a TCP server with custom framing used by FL-Net Clients.
-6. Controller [Go]: the Platform-side FL communication component. It handles the secure exchange of model updates and other FL messages between a locally running Tool and the Relay Server, and is deployed whenever the FL project run's aggregator is placed on the Platform rather than on a Client.
+6. Controller [Go]: the Platform-side FL communication component. It handles the secure exchange of model updates and other FL messages between a locally running Tool and the Relay Server, and is deployed whenever the FL project run's aggregator is placed on the Platform rather than on a Client.    
 7. Documentation: a static site serving the FL-Net user documentation. It is not part of the core request/response interactions described below. You are most likely accessing this right now.
 
 ### Third-party services
@@ -33,6 +33,7 @@ The Platform is a single-host deployment composed of a small set of runtime serv
 2. PostgreSQL database: the Platform deploys separate PostgreSQL instances for the Global Learning API (using a pgvector-enabled image to support Retrieval-Augmented Generation and LLM features), the Orch API, and Keycloak. These databases persist FL project, orchestration, and identity data.
 3. Neo4j database: a dedicated Neo4j instance backs the Data Modeler API, persisting Schemas, Ontologies, DataTypes, and their embeddings.
 4. NGINX reverse proxy: part of the Platform stack for TLS termination and routing incoming traffic from Data Scientists, Auditors, and Clients to the correct internal service.
+5. CNCF Distribution based Tool registry: a centralized repository for storing and managing FL-Net Tools. The orch API pulls images and the Global Learning API pushes images to this registry when building tools using the build pipeline. 
 
 This inventory serves as the deployment view of the Platform. The interaction section below explains how these services work together at runtime.
 
@@ -40,8 +41,9 @@ This inventory serves as the deployment view of the Platform. The interaction se
 
 ### Overview
 
-The Platform is the central, user-facing layer and orchestration hub. The Frontend is its single public entry point, acting as a reverse proxy that routes requests to Keycloak, the Global Learning API, and the Data Modeler API. Every other Platform service is internal and reachable only by other services — the one exception being the Tool registry. It is served under `/v2/` of the Platform domain, and any Orch API (Platform or Client) pulls Tool images from it without a login. Pushing is only done by the build pipeline and requires authentication.
-
+The Platform is the central, user-facing layer and orchestration hub. The Frontend is its single public entry point, acting as a reverse proxy that routes requests to Keycloak, the Global Learning API, and the Data Modeler API. Additionally the Tool registry is served under `/v2/` of the Platform domain, and any Orch API (Platform or Client) pulls Tool images from it without a login. Pushing is only done by the build pipeline and push endpoints are network isolated from the public, only available to the Global Learning API and the running build pipeline.
+Additionally, the Relay Server is reachable by participating Clients but protected via mTLS and application-layer authentication.
+Every other Platform service is internal and reachable only by other services
 ```mermaid
 flowchart LR
     subgraph Users["Users"]
@@ -55,6 +57,7 @@ flowchart LR
         GLA[Global Learning API]
         DMA[Data Modeler API]
         ORCH[Orch API]
+        TR[Tool Registry]
         TOOL[FL Tool]
         CTRL[Controller]
         RELAY[Relay Server]
@@ -78,6 +81,9 @@ flowchart LR
     GLA -->|🔒 OAuth protected, service account| ORCH
     ORCH --> DB3
     ORCH --> TOOL
+    ORCH -->|Pull Tool images| TR
+    GLA -->|Push built Tool images via build pipeline| TR
+    CLIENTS -->|Pull Tool images, no login| TR
     TOOL --> CTRL
     CTRL -->|TCP 🔒 mTLS + application-layer auth| RELAY
     GLA -->|FL project run orchestration, HTTP| RELAY
@@ -91,7 +97,7 @@ flowchart LR
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
 
     class DS,AU user
-    class FE,KC,GLA,DMA,ORCH,TOOL,CTRL,RELAY,DB1,DB2,DB3,DB4 platform
+    class FE,KC,GLA,DMA,ORCH,TR,TOOL,CTRL,RELAY,DB1,DB2,DB3,DB4 platform
     class CLIENTS client
 ```
 \* Whether Clients must authenticate via OAuth is set at deployment time of the Platform.

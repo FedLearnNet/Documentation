@@ -56,7 +56,7 @@ Host machine
 On the **build machine** (internet access required):
 
 - Docker installed and running
-- Access to the GitLab container registry (`gitlab.cosy.bio:5050`) — you need valid credentials
+- Access to `ghcr.io/fedlearnnet/` to pull the Client images
 - The `clinic-dind/` directory from the deployment repository
 
 On the **clinic machine** (target deployment):
@@ -163,10 +163,9 @@ When the DinD container starts, `entrypoint.sh` runs automatically:
 1. **Starts the inner Docker daemon** (`dockerd-entrypoint.sh`)
 2. **Waits** up to 60 seconds for the daemon to be ready
 3. **Loads pre-saved images** from `/compose/images.tar` into the inner Docker daemon (`docker load`)
-4. **Logs into the registry** using the `CI_REGISTRY_USER` and `CI_REGISTRY_PASSWORD` environment variables — required so `orch-api` can later pull federated learning tool images on demand
-5. **Resolves `host.docker.internal`** — auto-detects the host IP so the inner compose services can reach the host machine if needed
-6. **Writes a runtime `.env`** — merges the baked-in `.env` with any environment variables passed to the DinD container
-7. **Runs `docker compose up`** with the inner compose file, attaching logs from `controller`, `orch-api`, and `local-learning-api`
+4. **Resolves `host.docker.internal`** — auto-detects the host IP so the inner compose services can reach the host machine if needed
+5. **Writes a runtime `.env`** — merges the baked-in `.env` with any environment variables passed to the DinD container
+6. **Runs `docker compose up`** with the inner compose file, attaching logs from `controller`, `orch-api`, and `local-learning-api`
 
 ---
 
@@ -197,8 +196,6 @@ docker run -it \
   -e GLOBAL_SCHEMA_API_URL=https://your-global-server.com/data-modeler \
   -e GLOBAL_RELAY_HTTP_URL=https://your-global-server.com/relay \
   -e GLOBAL_RELAY_TCP_ADDRESS=your-global-server.com:9150 \
-  -e CI_REGISTRY_USER=your-gitlab-username \
-  -e CI_REGISTRY_PASSWORD=your-gitlab-pat \
   -v clinic-dind-docker:/var/lib/docker \
   -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
   -v /path/to/clinic.csv:/connectors/clinic.csv:ro \
@@ -291,7 +288,7 @@ The secrets files inside the DinD image contain default development passwords. *
 |---|---|
 | `env/keycloak-secrets.env` | `POSTGRES_PASSWORD`, `KC_DB_PASSWORD`, `KC_BOOTSTRAP_ADMIN_PASSWORD`, `LOCAL_LEARNING_SECRET`, `DATA_IMPORTER_SECRET` |
 | `env/local-learning-secrets.env` | `POSTGRES_PASSWORD`, `QUARKUS_DATASOURCE_PASSWORD`, `QUARKUS_OIDC_CREDENTIALS_SECRET` |
-| `env/orch-secrets.env` | `POSTGRES_PASSWORD`, `QUARKUS_DATASOURCE_PASSWORD`, `ORCH_DOCKER__GITLAB__REGISTRY_PASSWORD`, `PIPELINE_DOCKER_PASSWORD`, `PIPELINE_REPO_TOKEN` |
+| `env/orch-secrets.env` | `POSTGRES_PASSWORD`, `QUARKUS_DATASOURCE_PASSWORD`, `PIPELINE_DOCKER_PASSWORD`, `PIPELINE_REPO_TOKEN` |
 
 ---
 
@@ -319,9 +316,9 @@ docker exec clinic-dind docker compose logs controller
 
 Verify the `GLOBAL_RELAY_TCP_ADDRESS` is set correctly and that the relay TCP port is reachable from the clinic host.
 
-**Registry login fails / tool images can't be pulled**
+**Tool images can't be pulled**
 
-The `CI_REGISTRY_USER` and `CI_REGISTRY_PASSWORD` environment variables must be passed to the DinD container. These are used at startup to authenticate the inner Docker daemon with the GitLab registry (so `orch-api` can later pull federated learning tool images).
+`orch-api` pulls Tool images from the Tool registry of the Platform, served under `/v2/` of the Platform domain. No login is required. Verify that the Platform domain is reachable from the clinic host on port `443`.
 
 **Multiple clinics: port or volume conflicts**
 
