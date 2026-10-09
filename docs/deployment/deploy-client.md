@@ -46,7 +46,7 @@ If yes, please make sure to have the credentials ready, as you will need them in
 
 We also recommend you first read relevant documentation:
 - [Welcome](../intro/welcome.md) to understand the Network you're joining.
-- [External access management to your Client](../client-usage/external-access-management.md) to understand how to manage access to your Client from the Network.
+- [Requests and governance](../client-usage/governance.md) to understand how to manage access to your Client from the network.
 
 ### 1. Initializing the Client folder
 Simply run the initialization command and follow the command line prompts:

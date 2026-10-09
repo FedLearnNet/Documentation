@@ -1,180 +1,123 @@
 ---
-title: How is input normalized and validated
+title: Data validation and normalization
 sidebar_position: 4
 ---
-# How is input normalized and validated
 
-When a connector is run, the data goes through the following flow, being normalized and validated
-multiple times:
-## 1. Extraction Tool
-1. If selected, the extraction tool(s) run. 
-Extraction tools might implement their own normalization/validation logic 
-and do not apply the logic discussed here but their own logic. 
-1. The extraction tool outputs the data as one or multiple `csv` files
-## 2. Client software 
-1. The dataimporter reads in the `csv`/`xlsx`(excel) file using the python package `pandas`. 
-`pandas` does some normalization, e.g. detecting `nan` values and replacing them with it's own 
-representation of nan.
-1. If selected, the transformation tool receive the data as an `csv` export, runs it's logic, and send the data back as `csv`.
-Transformation tools might implement their own normalization/validation logic 
-and do not apply the logic discussed here but their own logic. 
-1. Finally, the data is sent to the local learning API. The normalization and validation done
-in this step is further discussed in this document.
+# Data validation and normalization
 
-## Encoding
-For `csv` files, you must provide them in `utf-8` (unicode) encoding. 
-Excel files support also other encodings, we strongly recommend `utf-8` but another encoding
-should work as `pandas.read_excel` automatically converts to `utf-8`.
-In most cases this will already be the case except for older files.
+Connectors can import data from multiple source types. The same validation and normalization rules apply regardless of whether the data comes from a file or a database. This page describes which validation rules are applied and gives recommendations on how to format and structure your data.
 
-## Data type normalization rules
+The cohort's selected schema defines how imported values are interpreted. It specifies the available fields, their data types, whether values are required, and any additional validation rules. During an import, source columns are mapped to these schema fields before the data is stored in the cohort.
 
-| Target type | Accepted input | Normalized result | Notes |
-|---|---|---|---|
-| `STRING` | Any value | `String` | Uses `toString()` |
-| `CATEGORICAL` | Any value | `String` | Uses `toString()`, then checked against allowed options (if configured) |
-| `INT` | Number or numeric string | `Long` | Must be a whole number (no decimal part or e.g. 5.0), and within Java `Long` range, see [below](#important-int-behavior) |
-| `FLOAT` | Number or numeric string | `Float` | Parsed as float |
-| `BOOLEAN` | `"true"`, `"false"` | `Boolean` | true/false (case-insensitive), see [below](#important-boolean-behavior) |
-| `DATE` | Date/time input (see below) | `LocalDate` | Must not contain time information that would be lost, see [below](#date-and-datetime-parsing)  |
-| `DATE_TIME` | Date/time input (see below) | `Instant` (UTC) | Stored as an exact UTC point in time. See [below](#date-and-datetime-parsing) |
-| `FILE` | - | - | Not implemented yet |
+## Prepare the source files
 
-TODO: should datetime support dates?
-### Important INT behavior
+- Encode CSV and TSV files as UTF-8.
+- Use a consistent delimiter and column structure in delimited files.
+- Represent missing values with empty cells rather than placeholder text such as `?`, `N/A`, or `unknown`, unless that text is an intended value.
+- Ensure that values can be converted to the data types defined by the schema.
 
-- `"42"` ✅ valid
-- `"42.0"` ✅ valid (no information loss)
-- `"42.5"` ❌ invalid (would lose decimal information)
-- Values outside `Long` range ❌ invalid
+Excel `.xlsx` workbooks are read directly and do not require a text-encoding selection. For format-specific requirements, see the [input data formatting guidelines](connectors/input-checklist.md), [delimited file extractor](connectors/extractors/csv-importer.md), and [Excel file extractor](connectors/extractors/excel-importer.md).
 
-### Important BOOLEAN behavior
-The given input is trimmed (white space before and after removed) and set to lowercase.
-Based on this, the values `true` and `false` are accepted.
-Values like `1`, `0`, `yes`, `no` are rejected.
+## Correct incompatible source values
 
-### Date and datetime parsing
+Extraction and transformation tools can prepare source data before schema validation. Use them when the source format or values do not match the representation required by the schema.
 
-For `DATE` and `DATE_TIME`, the importer supports:
+For example, a `BOOLEAN` field accepts `true` and `false`, while a source system may represent the same values as `1` and `0`. An extraction or transformation tool can convert every `1` to `true` and every `0` to `false` before the values are validated and imported.
 
-- **ISO date/time strings**
-	- With timezone, e.g. `2024-01-01T12:00:00+02:00`, `2024-01-01T12:00:00Z`
-	- Without timezone, e.g. `2024-01-01T12:00:00`, `2024-01-01`
-- **Epoch timestamps** (seconds or milliseconds)
-	- Numeric string or numeric value
-- **Java date/time objects** (internal/backend context)
-	- `Instant`, `ZonedDateTime`, `LocalDateTime`, `LocalDate`
+These tools may also standardize categories, convert units, parse dates, replace placeholder values with nulls, combine columns, or reorganize the input data. Their output must still conform to the cohort's schema.
 
-For a `DATE`, a given datetime normalized to UTC is only accepted if it's exactly
-`00:00:00`! 
+## Supported data organization
 
-For `DATETIME`, a simple date is also accepted and automatically set to `00:00:00` UTC.
-This is similar to the logic of accepting an integer for a float.
+Both horizontal and longitudinal data organizations are supported:
 
-#### Timezone handling
+- **Horizontal data** stores multiple properties for an entity in the same row. For example, each patient has exactly one row containing their sex, date of birth, and weight:
 
-- **Timezone-aware input** is converted to UTC.
-- **Timezone-naive input** is treated as already being UTC.
+  | Patient ID | Sex | Date of birth | Weight (kg) |
+  |---|---|---|---|
+  | P001 | female | 1980-04-12 | 68 |
+  | P002 | male | 1975-09-30 | 82 |
 
-### Epoch handling heuristic
-We **strongly** recommend to use iso datetime strings, but we still support epochs:
+- **Longitudinal data** stores repeated observations across rows and associates them with a visit, date, or timestamp. For example, a patient's weight is measured at several visits, and each measurement is a separate row:
 
-Epoch values are interpreted automatically:
+  | Patient ID | Visit date | Weight (kg) |
+  |---|---|---|
+  | P001 | 2025-01-15 | 68 |
+  | P001 | 2025-06-20 | 66 |
+  | P002 | 2025-02-03 | 82 |
 
-- Absolute value `<= 10,000,000,000` → treated as **seconds**
-- Absolute value `> 10,000,000,000` → treated as **milliseconds**
+If the source organization does not match the structure required for mapping, a transformation can convert horizontal data to a longitudinal representation. For repeated measurements, configure the connector's visit and visit time mappings so that observations are associated with the correct entity and point in time.
 
-This is a heuristic and may be ambiguous for very large second-based values.
-Generally if you use epochs, use **milliesconds** for current or future dates and **seconds** for
-historic dates. 
+Visit timestamps follow the general [date and timestamp rules](#dates-and-timestamps).
 
-## Validation rules
+## Data type normalization
 
-After normalization, these validations can apply (depending on field configuration):
-
-| Validation | Meaning | Supported types |
+| Schema type | Accepted input | Normalization and restrictions |
 |---|---|---|
-| `REQUIRED` | Value must be present (not null) | All types |
-| `MINLENGTH` | Minimum string length | `STRING` |
-| `MAXLENGTH` | Maximum string length | `STRING` |
-| `PATTERN` | Regex must match | `STRING` |
-| `MIN` | Minimum numeric/date/datetime value | `INT`, `FLOAT`, `DATE`, `DATE_TIME` |
-| `MAX` | Maximum numeric/date/datetime value | `INT`, `FLOAT`, `DATE`, `DATE_TIME` |
+| `STRING` | Text or another scalar value | Converted to text. Additional length or pattern rules may apply. |
+| `CATEGORICAL` | A value matching an allowed category | Converted to text and compared with the configured categories. |
+| `INT` | An integer or numeric text | Must represent a whole number. Values such as `42` and `42.0` are accepted; `42.5` is rejected. |
+| `FLOAT` | A number or numeric text | Converted to a floating-point number. |
+| `BOOLEAN` | `true` or `false` | Case-insensitive; surrounding whitespace is ignored. Values such as `1`, `0`, `yes`, and `no` must be transformed before import. |
+| `DATE`, `DATE_TIME` | A supported date or datetime value | Normalized to a UTC point in time. A date without a time is interpreted as start-of-day UTC. See [Dates and timestamps](#dates-and-timestamps). |
+| `FILE` | — | Not currently supported. |
 
-### Categorical options
+## Dates and timestamps
 
-For `CATEGORICAL` fields, if allowed options are configured, the value must be one of those exact options.
+ISO 8601 values are recommended because their interpretation is explicit. Supported examples include:
 
-## Null handling
+- Date: `2024-01-01`
+- Datetime with UTC: `2024-01-01T12:00:00Z`
+- Datetime with an offset: `2024-01-01T12:00:00+02:00`
+- Datetime without an offset: `2024-01-01T12:00:00`
 
-- `null` values are allowed by default.
-- If `REQUIRED` is configured, `null` is rejected.
-- For `null`, other validations (`MIN`, `MAX`, `PATTERN`, etc.) are skipped.
-- An empty string is considered a `null` value
+Datetime values with an offset are converted to UTC. Values without an offset are treated as UTC. A date without a time imported into a `DATE_TIME` field or used as a visit timestamp is interpreted as the start of that day in UTC. For example, `2025-12-12` becomes `2025-12-12T00:00:00Z`. A datetime can be imported into a `DATE` field only when its UTC time is exactly `00:00:00`, because otherwise the conversion would discard information.
 
-## Handling normalization/validation errors
-Any normalization or validation error does not lead to an data import failure.
-Instead the specific value that failed is not imported.
-As an example, if the input data contains an age of `420` years and a bmi of `25`, 
-and age is validated to be between `0` and `120` years, then only the bmi value is imported
-while the age value is rejected.
+Epoch timestamps expressed in seconds or milliseconds are also supported. Values with an absolute value up to `10,000,000,000` are interpreted as seconds; larger values are interpreted as milliseconds. Because this distinction is heuristic, ISO 8601 values are preferred.
 
-Rejected dataentries are logged and reported in the connector run!
+## Schema validation rules
 
-## Handling timeseries data
+After normalization, the schema may apply the following rules to each field:
 
-If you provide timeseries data and provide a `visitTimestamp`, please note that if you provide only a date without time information, it is normalized to start-of-day UTC:
-- `2025-12-12` → `2025-12-12T00:00:00Z`
-
-## Practical examples
-
-| Input | Target type | Result |
+| Rule | Meaning | Applicable types |
 |---|---|---|
-| `"abc"` | `STRING` | ✅ accepted as `"abc"` |
-| `123` | `STRING` | ✅ normalized to `"123"` |
-| `"42.5"` | `INT` | ❌ rejected (fractional) |
-| `"false"` | `BOOLEAN` | ✅ normalized to `false` |
-| `"yes"` | `BOOLEAN` | ❌ rejected |
-| `"2024-01-01"` | `DATE` | ✅ accepted |
-| `"2024-01-01T10:30:00"` | `DATE` | ❌ rejected (time would be lost) |
-| `"2024-01-01T10:30:00+02:00"` | `DATE_TIME` | ✅ converted to UTC `Instant`, so `"2024-01-01T08:30:00"` |
+| `REQUIRED` | A value must be present. | All types |
+| `MINLENGTH` | Minimum text length. | `STRING` |
+| `MAXLENGTH` | Maximum text length. | `STRING` |
+| `PATTERN` | The value must match a regular expression. | `STRING` |
+| `MIN` | Minimum accepted value. | `INT`, `FLOAT`, `DATE`, `DATE_TIME` |
+| `MAX` | Maximum accepted value. | `INT`, `FLOAT`, `DATE`, `DATE_TIME` |
 
-# Currently missing types
-We currently do not support the filetype but plan to do so in the future
+For a `CATEGORICAL` field with configured categories, the normalized value must match one of those categories.
 
-# TODO: To clarify
-- how should falling extractions be handled?
-- how should failing transformations be handled 
-	- if we stay with the philosophy of importing what's possible, we should then not run
-	the import on any of the columns that are normally affected/produced by the transformation function
-- what kind of transformations should we support?
-  - on cell 
-  - fixed columns to fixed output columns  
-  - file input and output?
-	We would have to check if the rerun produced the same columns than before!
-- how should we handle NaN/None values?
-- Should we remove the dataimporter validation (and normalization) logic and instead call endpoints in the
-learning-api?
-	- would prefer this eventhough it's effort as this would remove all weird bugs where the
-	normalization/validation is different accross services.
-- should we support time or advise users to represent time as a string?
-- how should we handle if two different patients have the same visit_id
-	- 2 entries, different patient, same visit_id
-		- could ignore?
-- how should we handle visit_ids with different visit_timestamps?
-	- 2 entries, same patient and same visit_id, different visit_timestamp
-		- could:
-			- throw an error
-			- update the timestamp if it's a new timestamp from the import and the current data has an old timestamp
-	- 2 entries, different patient and same visit_id, different visit_timestamp
-		- would be okay as different patient, id reuse basically, still unique as different patient
-- from index.md: If columns do not match, the upload is rejected and the existing data is preserved.
-	- we should clarify this further and implement this well:
-		- in theory only columns the followings columns are actually required for a rerun:
-			- mapped to a schema node
-			- input to a transformation tool/function AND the resulting column of the transformation
-			function is mapped to a schema node
-		- we could implement this logic and specify this further. For new columns in the new file
-		that were not in the previous file we could report something like:
-			- the file you added contains new information. Do you want to check if these new columns
-			can be mapped to the schema.
+## Null and empty values
+
+An empty cell is interpreted as `null`. Whether it is accepted depends on the corresponding schema field:
+
+- If the field is optional, `null` is accepted and other validation rules are skipped for that value.
+- If the field is marked `REQUIRED`, a null or empty value is rejected.
+
+This allows the schema to require values for selected columns while permitting missing values in others.
+
+Only truly empty cells are treated as missing values. Text that people commonly type into spreadsheets to mean "no value", such as `-`, `NULL`, `null`, `N/A`, `NA`, `n.a.`, `none`, `unknown`, `?`, or `999`, is **not** treated as missing. Instead, it is validated like any other value and may be rejected (for example, `N/A` in a numeric column) or imported as literal text. Transform such placeholders to empty values before import when appropriate.
+
+## Validation errors and import results
+
+A validation error for one value does not necessarily reject the complete import or the rest of the record. The invalid value is omitted and reported in the connector run as a patient error, while the valid values of the record are still imported.
+
+For example, if a record contains an age of `420` and a BMI of `25`, and the schema permits ages only between `0` and `120`, the age is rejected while the valid BMI can still be imported.
+
+After running the connector, review **Patient Errors**, **Run Errors**, and **Run Logs** on the run details page. These sections identify rejected values and execution problems. See [Import data by running a connector](import-data.md) for the complete review workflow.
+
+## Examples
+
+| Input | Schema type | Result |
+|---|---|---|
+| `abc` | `STRING` | Accepted as `abc`. |
+| `123` | `STRING` | Normalized to `123` as text. |
+| `42.0` | `INT` | Accepted as `42`. |
+| `42.5` | `INT` | Rejected because it is fractional. |
+| `false` | `BOOLEAN` | Accepted as `false`. |
+| `1` | `BOOLEAN` | Rejected unless transformed to `true`. |
+| `2024-01-01` | `DATE` | Accepted. |
+| `2024-01-01T10:30:00` | `DATE` | Rejected because the time would be lost. |
+| `2024-01-01T10:30:00+02:00` | `DATE_TIME` | Converted to `2024-01-01T08:30:00Z`. |
