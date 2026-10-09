@@ -28,7 +28,7 @@ With a client deployment, you can:
 
 - create cohorts based on available schemas
 - manage data within each cohort
-- control access to data
+- manage who can run federated analyses on your data
 - keep your site visible to the network for discovery
 - participate in federated analysis
 

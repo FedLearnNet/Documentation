@@ -5,7 +5,7 @@ sidebar_position: 4
 
 # Data validation and normalization
 
-Connectors can import data from multiple source types. This page describes validation and normalization for file-based imports.
+Connectors can import data from multiple source types. The same validation and normalization rules apply regardless of whether the data comes from a file or a database. This page describes which validation rules are applied and gives recommendations on how to format and structure your data.
 
 The cohort's selected schema defines how imported values are interpreted. It specifies the available fields, their data types, whether values are required, and any additional validation rules. During an import, source columns are mapped to these schema fields before the data is stored in the cohort.
 
@@ -30,24 +30,35 @@ These tools may also standardize categories, convert units, parse dates, replace
 
 Both horizontal and longitudinal data organizations are supported:
 
-- **Horizontal data** stores multiple properties for an entity in the same row.
-- **Longitudinal data** stores repeated observations across rows and associates them with a visit, date, or timestamp.
+- **Horizontal data** stores multiple properties for an entity in the same row. For example, each patient has exactly one row containing their sex, date of birth, and weight:
 
-If the source organization does not match the structure required for mapping, a transformation can convert horizontal data to a longitudinal representation or longitudinal data to a horizontal representation. For repeated measurements, configure the connector's visit and time mappings so that observations are associated with the correct entity and point in time.
+  | Patient ID | Sex | Date of birth | Weight (kg) |
+  |---|---|---|---|
+  | P001 | female | 1980-04-12 | 68 |
+  | P002 | male | 1975-09-30 | 82 |
 
-When a longitudinal record provides only a date for its visit timestamp, the value is normalized to the start of that day in UTC. For example, `2025-12-12` becomes `2025-12-12T00:00:00Z`.
+- **Longitudinal data** stores repeated observations across rows and associates them with a visit, date, or timestamp. For example, a patient's weight is measured at several visits, and each measurement is a separate row:
+
+  | Patient ID | Visit date | Weight (kg) |
+  |---|---|---|
+  | P001 | 2025-01-15 | 68 |
+  | P001 | 2025-06-20 | 66 |
+  | P002 | 2025-02-03 | 82 |
+
+If the source organization does not match the structure required for mapping, a transformation can convert horizontal data to a longitudinal representation. For repeated measurements, configure the connector's visit and visit time mappings so that observations are associated with the correct entity and point in time.
+
+Visit timestamps follow the general [date and timestamp rules](#dates-and-timestamps).
 
 ## Data type normalization
 
 | Schema type | Accepted input | Normalization and restrictions |
 |---|---|---|
 | `STRING` | Text or another scalar value | Converted to text. Additional length or pattern rules may apply. |
-| `CATEGORICAL` | A value matching an allowed category | Converted to text and compared with the configured options. |
+| `CATEGORICAL` | A value matching an allowed category | Converted to text and compared with the configured categories. |
 | `INT` | An integer or numeric text | Must represent a whole number. Values such as `42` and `42.0` are accepted; `42.5` is rejected. |
 | `FLOAT` | A number or numeric text | Converted to a floating-point number. |
 | `BOOLEAN` | `true` or `false` | Case-insensitive; surrounding whitespace is ignored. Values such as `1`, `0`, `yes`, and `no` must be transformed before import. |
-| `DATE` | A supported date value | Must not contain time information that would be lost. |
-| `DATE_TIME` | A supported date or datetime value | Normalized to a UTC point in time. A date without a time is interpreted as start-of-day UTC. |
+| `DATE`, `DATE_TIME` | A supported date or datetime value | Normalized to a UTC point in time. A date without a time is interpreted as start-of-day UTC. See [Dates and timestamps](#dates-and-timestamps). |
 | `FILE` | — | Not currently supported. |
 
 ## Dates and timestamps
@@ -59,7 +70,7 @@ ISO 8601 values are recommended because their interpretation is explicit. Suppor
 - Datetime with an offset: `2024-01-01T12:00:00+02:00`
 - Datetime without an offset: `2024-01-01T12:00:00`
 
-Datetime values with an offset are converted to UTC. Values without an offset are treated as UTC. A datetime can be imported into a `DATE` field only when its UTC time is exactly `00:00:00`, because otherwise the conversion would discard information.
+Datetime values with an offset are converted to UTC. Values without an offset are treated as UTC. A date without a time imported into a `DATE_TIME` field or used as a visit timestamp is interpreted as the start of that day in UTC. For example, `2025-12-12` becomes `2025-12-12T00:00:00Z`. A datetime can be imported into a `DATE` field only when its UTC time is exactly `00:00:00`, because otherwise the conversion would discard information.
 
 Epoch timestamps expressed in seconds or milliseconds are also supported. Values with an absolute value up to `10,000,000,000` are interpreted as seconds; larger values are interpreted as milliseconds. Because this distinction is heuristic, ISO 8601 values are preferred.
 
@@ -76,7 +87,7 @@ After normalization, the schema may apply the following rules to each field:
 | `MIN` | Minimum accepted value. | `INT`, `FLOAT`, `DATE`, `DATE_TIME` |
 | `MAX` | Maximum accepted value. | `INT`, `FLOAT`, `DATE`, `DATE_TIME` |
 
-For a `CATEGORICAL` field with configured options, the normalized value must match one of those options.
+For a `CATEGORICAL` field with configured categories, the normalized value must match one of those categories.
 
 ## Null and empty values
 

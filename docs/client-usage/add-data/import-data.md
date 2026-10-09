@@ -37,6 +37,19 @@ After execution, select **View Details** for the run in the connector's activity
 
 ![Connector run details showing the run summary, entity overview, result tabs, logs, and rollback action](/img/screenshots/tutorials/walkthrough/client-usage/run-details.png)
 
-Use the available tabs to inspect **Patient Results**, **Patient Errors**, **Run Errors**, and **Run Logs**. The logs can be searched and filtered by severity. A completed status confirms that execution finished; review the entity counts and errors to verify that the run produced the expected changes.
+A completed status only confirms that the execution finished. It does not mean that all data was imported. After every import, check all four tabs to see whether there are errors that must be addressed:
+
+| Tab | What to check |
+|---|---|
+| **Patient Results** | The patients processed by the run, with the time of processing, whether the result was committed to the cohort, whether it was part of a dry run, and the user who ran the connector. Use the entity overview for the numbers of new, updated, deleted, failed, and unchanged patients. |
+| **Patient Errors** | Values that were rejected during validation, listed by patient ID, field, and error message. Rejected values are **not** imported, while the patient's other valid values are. |
+| **Run Errors** | Problems that affected the execution of the run as a whole rather than individual patients. |
+| **Run Logs** | The detailed execution log of the run. The logs can be searched and filtered by severity. |
+
+Pay particular attention to **Patient Errors**. A run can complete successfully while many individual values were rejected, and these values are missing from the cohort until the problem is fixed.
+
+![Patient Errors tab listing rejected values by patient ID, field, and message, such as the value "?" not being allowed for the Weight bracket data type](/img/screenshots/tutorials/walkthrough/client-usage/run-details-patient-errors.png)
+
+In this example, the source file uses `?` to indicate an unknown weight. Because `?` is not a valid value for the weight field, it is rejected for every affected patient. To fix such errors, correct the source data or adjust the connector's transformations (for example, convert placeholder values such as `?` to empty values), then run the connector again.
 
 For accepted values and error handling, see [Data validation and normalization](input_validation.md).

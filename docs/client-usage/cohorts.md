@@ -40,8 +40,8 @@ Select a cohort from the overview to open its workspace.
 |---|---|
 | Review or edit cohort details | Open **Cohort Details** to review metadata, including status, purpose, citation, copyright information, and eligibility criteria. Use the cohort's edit action to update its details. |
 | Inspect the schema | Open **Schema** to review the structure and definitions used for the cohort's data. |
-| Federated access | Open **Queriability** to set, for each variable, whether a %%DEPLOYED_PRODUCT_NAME%% Platform user can query it and how. See the [federated access documentation](external-access-management.md) for more information. |
-| Manage access | Open **Access management** to configure permissions and disclosure controls. See [federated access settings](external-access-management.md). |
+| Federated access | Open **Queriability** to set, for each variable, whether a %%DEPLOYED_PRODUCT_NAME%% Platform user can query it and how. See the [federated access documentation](governance.md#manage-access-permissions) for more information. |
+| Manage access | Open **Access management** to configure permissions and disclosure controls. See [federated access settings](governance.md#manage-access-permissions). |
 | Review statistics | Open **Statistics** to inspect summaries of the cohort's data. |
 | Manage records | Open **Patients** to view, create, edit, or delete individual records. See [manual record management](add-data/manual-patient-management.md). |
 | Review cohort members | Open **Members** to review cohort membership. |

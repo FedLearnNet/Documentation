@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Connectors
 
-A **connector** is a reusable ETL configuration that imports data from a source into a cohort. It defines how source data is extracted, which transformations are applied, and how the resulting fields are mapped to the cohort's schema. Running a connector loads new records or updates existing records without requiring the configuration to be recreated for every import.
+A **connector** is a reusable import configuration that brings data from a source, such as an Excel file, a CSV file, or a database, into a cohort. It follows the ETL (extract, transform, load) pattern: it defines how data is read from the source, which transformations are applied (for example, converting weight from pounds to kilograms or renaming categories), and how the resulting fields are mapped to the cohort's schema. Running a connector loads new records or updates existing records without requiring the configuration to be recreated for every import.
 
 ## Connector overview
 

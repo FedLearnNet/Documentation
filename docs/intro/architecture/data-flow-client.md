@@ -28,7 +28,7 @@ Please note that a user may hold more than one of these roles, with the Admin ro
 
 The full definition of each boundary, including what does *not* cross a network boundary at all (such as backups), is in [Boundaries of the Client](#boundaries-of-the-client) below.
 
-**Federated request types.** The Platform can make four kinds of request against a Client's data. Three of them — statistics, learning, and metrics — are formal **Requests** in the sense used by the [access management documentation](../../client-usage/external-access-management.md) and require manual approval by a Data Holder (Data Access Manager). The fourth, federated queries, works differently: it is always answered automatically, shaped only by the disclosure-control settings configured for that cohort — there is no manual-approval step for a query. However, the automatic answer may also be an automatic rejection depending on how the disclosure control is set up.
+**Federated request types.** The Platform can make four kinds of request against a Client's data. Three of them — statistics, learning, and metrics — are formal **Requests** in the sense used by the [access management documentation](../../client-usage/governance.md) and require manual approval by a Data Holder (Data Access Manager). The fourth, federated queries, works differently: it is always answered automatically, shaped only by the disclosure-control settings configured for that cohort — there is no manual-approval step for a query. However, the automatic answer may also be an automatic rejection depending on how the disclosure control is set up.
 
 Deployments that explicitly enable the relevant Automatic Access permissions can approve matching statistics, learning, or metrics requests without manual review. Manual approval remains the default.
 
@@ -386,7 +386,7 @@ sequenceDiagram
     L->>L: Apply disclosure controls (per requesting user: is allowed, min. record count, rate limit) and log hit patient ids
     L-->>P: Permitted result
 ```
-How the query is treated, from applying privacy controls to rejecting it, depends on the setup permissions, see the [access management documentation](/docs/client-usage/external-access-management.md) for details. 
+How the query is treated, from applying privacy controls to rejecting it, depends on the setup permissions, see the [access management documentation](/docs/client-usage/governance.md) for details. 
 
 ## 5. Federated statistics
 
@@ -408,7 +408,7 @@ sequenceDiagram
     L-->>P: Permitted result
 ```
 
-The permission system handles the approval and privacy settings, see [access management documentation](/docs/client-usage/external-access-management.md) for details.
+The permission system handles the approval and privacy settings, see [access management documentation](/docs/client-usage/governance.md) for details.
 
 ## 6. Federated learning
 
@@ -632,9 +632,9 @@ For the network-level view, including the Client's connections to the Platform, 
 
 For details about the security controls and Tool restrictions, see the [security model](security-model.md).
 
-For details on how to setup the Client's access management, see the [access management documentation](/docs/client-usage/external-access-management.md).
+For details on how to setup the Client's access management, see the [access management documentation](/docs/client-usage/governance.md).
 
-*Please note that automatic approval of federated learning, statistics and metrics requests is supported if the Data Holder (Data Access Manager) setup a specific permission for them. The automatic approval permission system can be turned of on deployment, see the [access management documentation](/docs/client-usage/external-access-management.md) for details.*
+*Please note that automatic approval of federated learning, statistics and metrics requests is supported if the Data Holder (Data Access Manager) setup a specific permission for them. The automatic approval permission system can be turned of on deployment, see the [access management documentation](/docs/client-usage/governance.md#automatic-approval) for details.*
 
 ## Recommended next step
 

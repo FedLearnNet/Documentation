@@ -8,7 +8,7 @@ import saveConnectorImage from '@site/static/img/screenshots/tutorials/walkthrou
 
 # Create a connector from scratch
 
-A connector defines how data is extracted from a source, transformed into the required representation, and mapped to the schema selected for the cohort. An existing cohort is therefore required before a connector can be created.
+A connector defines how data is read from a source (such as an Excel file, a CSV file, or a database), transformed into the required representation (for example, converting weight from pounds to kilograms), and mapped to the schema selected for the cohort. An existing cohort is therefore required before a connector can be created.
 
 Open the cohort's [connector overview](index.md), select **Add Connector**, and choose **Create manually**. The configuration wizard guides you through source selection, source settings, header review, optional transformations, and schema mapping.
 
