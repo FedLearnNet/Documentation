@@ -58,4 +58,5 @@ As the data administrator adding and managing data:
 
 As the data access manager handling access and permissions:
 
-1. [Manage requests, access permissions, and trainings](governance.md).
+1. [Review incoming requests](requests/index.md).
+2. [Manage access permissions and trainings](governance/index.md).
