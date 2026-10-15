@@ -19,9 +19,6 @@ sidebar_position: 8
 The network is star shaped with the FLNet Platform instance as the central coordination hub. 
 Without your FLNet Platform instance your whole FLNet is not available!
 
-
-
-
 ## How to deploy
 ### 0. Prepare
 #### Install the CLI
@@ -126,6 +123,10 @@ If going to the account management page causes an infinite reload glitch, you ne
 
 #### 3.2 Managing users in KeyCloak
 The FLNet Platform is initialized without any users.
+**Please make sure to directly create the user with username `admin` with the password you want to use.**
+The Platform automatically loads and builds prevetted Tools and Workflows. 
+These are owned by the `admin` user, so make sure you create that user.
+
 You can create users manually, hook in your own authentication service (SAML or OpenID Connect) or 
 allow self registration of users. 
 Please refer to the KeyCloak documentation itself. 
