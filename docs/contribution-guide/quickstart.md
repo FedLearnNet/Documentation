@@ -25,7 +25,7 @@ Each repository has its own README, and the larger components have a section in 
 | `Frontends` | [Frontend](frontend/overview.md) | [README](https://github.com/FedLearnNet/Frontends#readme) |
 | `Learning-APIs`, `Orchestration-API` | [Backend](backend/overview.md) | [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs#readme), [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API#readme) |
 | `Federated-Learning-Communication-API` | [Federated communication layer](federated-communication/overview.md) | [README](https://github.com/FedLearnNet/Federated-Learning-Communication-API#readme) |
-| `Python-Tool-API`, `Tool-Build-Pipeline` | – (how Tools use them: [Tool development](../tool-dev/create-tool.md)) | [Python-Tool-API](https://github.com/FedLearnNet/Python-Tool-API#readme), [Tool-Build-Pipeline](https://github.com/FedLearnNet/Tool-Build-Pipeline#readme) |
+| `Python-Tool-API`, `Tool-Build-Pipeline` | [Tool development](../tool-dev/create-tool.md), [Pipeline integration and local testing](backend/tool-build-pipeline.md) | [Python-Tool-API](https://github.com/FedLearnNet/Python-Tool-API#readme), [Tool-Build-Pipeline](https://github.com/FedLearnNet/Tool-Build-Pipeline#readme) |
 | `FL-Net-CLI` | – (how to use the CLI: [Deployment](../deployment/overview.md)) | [README](https://github.com/FedLearnNet/FL-Net-CLI#readme) |
 | `Documentation` | [Documentation workflow](documentation-workflow.md) | [README](https://github.com/FedLearnNet/Documentation#readme) |
 

@@ -10,8 +10,14 @@ The frontend workspace is straightforward to install, but not every screen is us
 Requirements: Node.js (version depends on the Angular version used) and npm.
 
 ```sh
-npm install
+npm ci
 ```
+
+This installs the versions in `package-lock.json`. Repeat it after a dependency upgrade or branch
+change if `node_modules` still contains older Angular packages. For example, Angular 21 reports
+`$safeNavigationMigration` and `withXhr` as unknown when compiling code migrated to Angular 22.
+Both are supported by Angular 22; see its [template migration guide](https://angular.dev/guide/templates/expression-syntax#safe-navigation-migration)
+and [HTTP setup guide](https://angular.dev/guide/http/setup#withxhr).
 
 ## 2. Pick the app and product variant
 
@@ -29,6 +35,13 @@ npm run start-global-fl-net    # http://localhost:4201
 ```
 
 Use the matching script if your task is tied to another brand.
+
+For the dAIbetes global frontend, use:
+
+```sh
+npm run start-global-dAIbetes
+# Equivalent: ng serve --project=global-app --configuration=dAIbetes --port 4201
+```
 
 ## 3. Know which backend services your screen needs
 

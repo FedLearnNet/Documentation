@@ -12,7 +12,8 @@ This section is for contributors working on the Java/Quarkus backend services of
 | [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API) | Runs Tools as Docker containers and tracks their run lifecycle for the local and global Learning APIs. Also used to run the Tool Build pipeline |
 
 ## Getting started
-The README of each repository is the source of truth for the commands below.
+For tool builds, vulnerability rescans, and the locally built Orchestration API, follow
+[Pipeline integration and local testing](tool-build-pipeline.md).
 
 **Prerequisites:** Java 25 and Docker. The Maven wrapper is included in both repositories. Quarkus Dev Services use Docker to start the databases and, for the Learning APIs, the Orchestration API.
 
@@ -23,7 +24,7 @@ The README of each repository is the source of truth for the commands below.
 # example for the local-learning-api module, similar for the other modules
 cd local-learning-api
 cp .env.example .env                         # fill in the secrets,
-./mvnw compile quarkus:dev          # live reload, Dev UI at /q/dev/
+../mvnw compile quarkus:dev          # live reload, Dev UI at /q/dev/
 ```
 The same applies to `global-learning-api`. Development ports: `global-learning-api` 8080, `local-learning-api` 8081, `datamodeler-api` 8086.
 
@@ -39,6 +40,7 @@ The secrets of all backend services are described in [Environment secrets](env-s
 
 ## Detailed documentation
 - [Environment secrets](env-secrets.md): the secrets each service needs for local development
+- [Pipeline integration and local testing](tool-build-pipeline.md): SAST contracts, run modes, local registry and images, scheduled rescans, and container lifecycle cleanup
 - [Federated learning flow](federated-learning-flow.md): the complete life cycle of a federated learning run across all services
 - `global-learning-api`: [Configuration](global-learning-api/config.md), [Workflow system](global-learning-api/workflow-system.md), [Query creation](global-learning-api/query-creation.md), [Multi-agent analysis system](global-learning-api/data-analysis-agent.md)
 - `local-learning-api`: [Configuration](local-learning-api/config.md), [ETL pipeline](local-learning-api/etl-pipeline.md), [Patient store](local-learning-api/patient-store.md), [Query translation and privacy](local-learning-api/query-translation-and-privacy.md)

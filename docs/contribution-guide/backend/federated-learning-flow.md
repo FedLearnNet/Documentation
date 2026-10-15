@@ -432,7 +432,8 @@ For `startRunning=true`:
 
 Code: `pyfedappwrap/engine/worker/federated_worker_manager.py`,
 `engine/tests/federated/runner.py` (despite the path, this **is** the production runner),
-`engine/service/controller/common.py`, `engine/federated/models.py`.
+`engine/service/controller/common.py`, `engine/federated/models.py`. Threads, controller modes and
+the communicator API are described in [Federated Runtime](../python-tool-api/federated-runtime.md).
 
 `FederatedWorkerManager._run_federated(run_dto, run_type)` per message:
 
