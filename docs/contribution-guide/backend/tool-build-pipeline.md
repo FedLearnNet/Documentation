@@ -85,6 +85,7 @@ The development Compose file uses anonymous registry access and host-native buil
 | `%dev.flnet.pipeline.builder.image` | `localhost:5001/flnet/tool-build-pipeline:dev` | Select the locally built pipeline. |
 | `PIPELINE_IMAGE_PREFIX` | `localhost:5001/flnet/tool-build-pipeline` | Allow the Orchestration API to pull this builder repository. |
 | `ORCH_DOCKER__PRIVATE__REGISTRY_URL` | `localhost:5001` | Configure the local registry in the Orchestration API. |
+| `ORCH_DOCKER__PRIVATE__REGISTRY_API_URL` | `http://registry:5000` | Reach the registry's HTTP API from inside the Orchestration API container for the admin inventory. |
 | `PIPELINE_DOCKER_REGISTRY` | `localhost:5001` | Registry for built tool images. |
 | `PIPELINE_DOCKER_GROUP` | `flnet/tools` | Repository namespace for built tools. |
 | `PIPELINE_DOCKER_LOGIN` | `false` | Use the anonymous local registry. |
@@ -99,6 +100,17 @@ The local Compose configuration overrides registry credentials with empty values
 Use `localhost:5001` in image references because pull/push operations use the Docker host through
 the mounted socket. The Compose service name `registry` is only resolvable inside the Compose
 network. The registry's container port 5000 is exposed on host loopback port 5001.
+
+The frontend's **Admin → Docker & orchestration → Registry** tab lists repositories and tags from
+the private registry. The Orchestration API reads the [Registry V2 catalogue and tags endpoints](https://distribution.github.io/distribution/spec/api/#listing-repositories),
+following pagination links. The registry must expose these endpoints to the configured account;
+registries that disable catalogue access produce an error in the view.
+
+`orch.docker."private".registry-api-url` is optional and defaults to `registry-url` with HTTPS
+when no scheme is specified. Set it explicitly for HTTP registries or when the Orchestration API
+needs an internal address. Image references still use `registry-url`. Anonymous access and the
+configured `registry-username`/`registry-password` for HTTP Basic authentication are supported.
+No registry credentials are sent to the browser.
 
 The Orchestration API accepts a builder from its configured GHCR or private registry only when its
 repository matches `pipeline.image-prefix`; tags and digests are allowed. Keep this setting aligned
