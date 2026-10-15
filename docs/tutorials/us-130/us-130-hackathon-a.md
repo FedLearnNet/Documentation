@@ -134,7 +134,7 @@ files.
 The global server is the central coordination layer. It hosts the frontend, the global learning API, and the global relay
 server that local controllers use for federated app communication.
 
-→ Follow the [Global Server Deployment guide](../../deployment/deploy-global.md).
+→ Follow the [Global Server Deployment guide](../../deployment/self-deployment-guide.md).
 
 
 :::info
@@ -152,7 +152,7 @@ If you run the global server locally for the first time, wait until all services
 Each team gets one or more clinic nodes. A clinic node represents a local institution. It contains the local platform
 services and local patient data. It connects to the global server but keeps data access under local control.
 
-→ Follow the [Local Clinic Deployment (DinD) guide](../../deployment/deploy-local-dind.md).
+→ Follow the [Local Clinic Deployment (DinD) guide](../../deployment/client/deploy-local-dind.md).
 
 Quick start, assuming the `feddb-dind` image is already built:
 

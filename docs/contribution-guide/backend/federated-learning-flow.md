@@ -40,7 +40,7 @@ A run involves several distinct identifiers that are easy to confuse:
 | **app** (e.g. `us-130-fl`) | `apps/us-130-fl` + `pyfedappwrap` (`Python-Tool-API`) | yes (ephemeral) | The federated tool. One container per clinic per workflow node, started by orch-api. |
 
 :::note
-The `meta` repository referenced in this page for the clinic-dind deployment was not moved to GitHub. See [Local Docker-in-Docker deployment](../../deployment/deploy-local-dind.md) for the current documentation of this setup.
+The `meta` repository referenced in this page for the clinic-dind deployment was not moved to GitHub. See [Local Docker-in-Docker deployment](../../deployment/client/deploy-local-dind.md) for the current documentation of this setup.
 :::
 
 In the **clinic-dind** deployment (`meta/deployment/clinic-dind`) each clinic is one

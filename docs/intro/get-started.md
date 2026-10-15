@@ -27,7 +27,7 @@ There are two main components to help you understand FL-Net:
 
 To join the network you need to deploy your own client, either on your own infrastructure or in a cloud environment.
 
-Refer to [Client deployment](../deployment/deploy-client.md) for instructions on how to deploy a client. That path covers:
+Refer to [Client deployment](../deployment/client/deploy-client.md) for instructions on how to deploy a client. That path covers:
 - Requirements for deploying a Client.
 - Required configuration of the Client.
 
@@ -65,8 +65,8 @@ This is the right starting point for developers and research engineers.
 To self-host your own deployment of FL-Net, you need to deploy your own platform and, optionally, one or more clients.
 
 1. First read [Understanding the architecture](architecture/welcome.md) to understand the security and governance model.
-2. Then find instructions for deploying the platform in the [Deployment section](../deployment/deploy-global.md).
-3. Refer your own partners deploying clients to the [Client deployment section](../deployment/deploy-client.md) for instructions on how to deploy a client — make sure to communicate the correct parameters to them for connecting to your platform.
+2. Then find instructions for deploying the platform in the [Deployment section](../deployment/self-deployment-guide.md).
+3. Refer your own partners deploying clients to the [Client deployment section](../deployment/client/deploy-client.md) for instructions on how to deploy a client — make sure to communicate the correct parameters to them for connecting to your platform.
 
 ## I want to contribute to the FL-Net codebase itself
 

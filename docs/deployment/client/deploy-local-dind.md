@@ -1,7 +1,7 @@
 ---
 id: deploy-local-dind
 title: Local Clinic Deployment (Docker-in-Docker)
-sidebar_position: 4
+sidebar_position: 3
 ---
 
 This page explains how to deploy a **%%DEPLOYED_PRODUCT_NAME%% Client** locally using Docker-in-Docker (DinD). This approach packages the entire clinic stack — all services, configuration, and pre-pulled Docker images — into a **single self-contained Docker container**. It is designed for clinic environments where:
