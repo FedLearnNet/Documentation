@@ -1,6 +1,6 @@
 ---
 title: Backup and Restore a Client
-sidebar_position: 3
+sidebar_position: 2
 ---
 
 # Backup and Restore a Client

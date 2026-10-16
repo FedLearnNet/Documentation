@@ -1,6 +1,7 @@
 ---
 title: How can I deploy a Client
-sidebar_position: 2
+slug: /deployment/deploy-client
+sidebar_position: 1
 ---
 [comment]: <> (Please be REALLY careful with changing the URL of this page. It is hardcoded currently in both the frontend AND the deployment script!)
 
@@ -45,8 +46,8 @@ Please ask your Platform provider whether you require an account in the Network 
 If yes, please make sure to have the credentials ready, as you will need them in the next step.
 
 We also recommend you first read relevant documentation:
-- [Welcome](../intro/welcome.md) to understand the Network you're joining.
-- [Requests and governance](../client-usage/governance.md) to understand how to manage access to your Client from the network.
+- [Welcome](../../intro/welcome.md) to understand the Network you're joining.
+- [Requests and governance](../../client-usage/governance.md) to understand how to manage access to your Client from the network.
 
 ### 1. Initializing the Client folder
 Simply run the initialization command and follow the command line prompts:

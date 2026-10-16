@@ -98,7 +98,7 @@ function Home(): ReactNode {
       title: 'Self-host a deployment',
       description:
         'Run your own platform and coordinate the clients that connect to it.',
-      to: '/docs/deployment/deploy-global',
+      to: '/docs/deployment/self-deployment-guide',
     },
     {
       title: 'Contribute to FL-Net',

@@ -66,7 +66,7 @@ The secrets are added to the containers of the FL-Net Client as environment vari
 ### Step 0.2 Deployment
 The deployment is done by starting the configures FL-Net Client.
 This requires network access to pull all required docker images.
-Required domains to whitelist are documented in the [Client deployment guide](../../deployment/deploy-client.md), which generally contains more information.
+Required domains to whitelist are documented in the [Client deployment guide](../../deployment/client/deploy-client.md), which generally contains more information.
 The Data Holder (Admin) is advised to use the Instance Manager Frontend to:
 1. Change the bootstrap password for the Keycloak admin account to a secure password
 2. Create the first user(s).

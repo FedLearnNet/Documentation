@@ -1,7 +1,7 @@
 ---
 title: Self deployment of a FL-Net Platform
 description: Deploy the FL-Net Platform. Includes Keycloak (Oauth server), APIs, DBs, frontend, reverse proxy, and documentation.
-sidebar_position: 8
+sidebar_position: 2
 ---
 
 # Deploy your own Platform
@@ -143,7 +143,7 @@ Congratulations, you're ready to go.
 Share your chosen domain and TCP port with the data holders that want to join your network.
 You automatically also deploy documentation, so you can refer data holders to the relevant
 documentation on how to join your network:
-`<your-domain>/documentation/docs/client-usage/deploy-client`
+`<your-domain>/documentation/docs/deployment/deploy-client`
 
 [comment]: <> (TODO: The URL of the docs is still a bit fucked up right now!)
 

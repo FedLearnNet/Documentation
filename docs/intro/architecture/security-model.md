@@ -33,7 +33,7 @@ The details of how this works are explained in all previous sections:
 - Treat every `.env` file and the backup output location as sensitive secrets; restrict host and container access to trusted users only.
 - Decide and document your organization's policy for approving Tools that request broader network or host access.
 - Coordinate with your organization's Data Access Managers to ensure disclosure-control thresholds (minimum record count, query rate limits) are configured sensibly for each cohort — see the [access management documentation](../../client-usage/governance.md#manage-access-permissions). This, not anything the Platform does, is what actually determines what a federated query or statistics request can extract.
-- If you choose an alternative to the recommended CA-issued-certificate setup — a self-signed certificate, your own reverse proxy, or an SSH tunnel — securing that path becomes your own responsibility; see the [Client deployment guide](../../deployment/deploy-client.md) for the supported options.
+- If you choose an alternative to the recommended CA-issued-certificate setup — a self-signed certificate, your own reverse proxy, or an SSH tunnel — securing that path becomes your own responsibility; see the [Client deployment guide](../../deployment/client/deploy-client.md) for the supported options.
 
 ## Platform operator responsibilities
 

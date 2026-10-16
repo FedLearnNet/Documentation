@@ -127,7 +127,7 @@ The Client exposes one HTTP entry point for the Data Holder. How it's secured ul
   - Enables **HSTS**, with a 1-year max-age and `includeSubDomains`
 - **HTTPS with a self-signed certificate supplied to the Client.** A script for generating the self-signed certificate is provided. Unlike the CA-signed option, **HSTS should not be enabled** here — modern browsers will otherwise refuse the connection.
 
-Alternatively, Clients can put their **own reverse proxy** in front, or connect via an **SSH tunnel**. See the [Client deployment docs](../../deployment/deploy-client.md) for details.
+Alternatively, Clients can put their **own reverse proxy** in front, or connect via an **SSH tunnel**. See the [Client deployment docs](../../deployment/client/deploy-client.md) for details.
 
 #### Outgoing (Client → Platform)
 
@@ -185,7 +185,7 @@ Apart from the outgoing connections listed under [Client connections](#client-co
 5. **GitLab access:** `Platform (Global Learning API) ⟷[HTTPS]⟷ GitLab FL-Net Developers`
    For bug reporting, the Platform may supply the bug reports to the GitLab instance run by [Cosy Bio](https://cosy.bio), the developers of FL-Net. These requests contain no Client data.
 
-*Running a self-hosted FL-Net Platform? Contact your Platform administrator, since these defaults may have been changed. See the [Platform deployment docs](../../deployment/deploy-global.md) for more.*
+*Running a self-hosted FL-Net Platform? Contact your Platform administrator, since these defaults may have been changed. See the [Platform deployment docs](../../deployment/self-deployment-guide.md) for more.*
 
 #### Intra Platform connections
 

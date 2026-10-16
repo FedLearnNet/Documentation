@@ -73,7 +73,7 @@ Which variables of a cohort can be queried, and how, is set separately in the co
 
 ## Deployment settings
 
-Some access controls are configured when the Client is deployed rather than in its interface. See [Deploy your client](../deployment/deploy-client.md).
+Some access controls are configured when the Client is deployed rather than in its interface. See [Deploy your client](../deployment/client/deploy-client.md).
 
 ### Automatic approval
 
@@ -96,6 +96,6 @@ Open **Governance → Trainings** to review accepted federated learning training
 
 ## Related reading
 
-- [Deploy your client](../deployment/deploy-client.md)
+- [Deploy your client](../deployment/client/deploy-client.md)
 - [Authentication](../contribution-guide/auth.md)
 - [Add data to a cohort](add-data/index.md)

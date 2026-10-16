@@ -11,9 +11,9 @@ It is intended for readers who want to understand the technical details of the P
 ## Overview
 The Platform is an ensemble of services that run on a single host, deployed centrally to serve all participating Clients, Data Scientists, and Auditors.
 These services are either provided by FL-Net or third-party software.
-All required services are available as Docker images, and the provided [deployment script](/docs/deployment/deploy-global.md)
+All required services are available as Docker images, and the provided [deployment script](/docs/deployment/self-deployment-guide.md)
 automatically configures everything for deployment via docker compose.
-This documentation assumes deployment as described in the [deployment guide](/docs/deployment/deploy-global.md), using the default configuration.
+This documentation assumes deployment as described in the [deployment guide](/docs/deployment/self-deployment-guide.md), using the default configuration.
 Unlike the Client, a Platform deployment additionally requires a registered domain and an SSL certificate, since it must be reachable by every participating Client.
 
 ## Which services get deployed?
