@@ -307,7 +307,7 @@ At this point, the patient data remains inside the Client environment. The brows
 ### Local ETL Tool execution
 
 Ingestion sometimes requires more flexible processing — an ETL Tool may need to run against the data (for example, to apply an institution-specific transformation). When that happens:
-1. The Data Holders (Data Admin) Browser requests the available Tools, selects the Tool or workflow to build a connector.
+1. The Data Holders (Data Admin) Browser requests the available Tools from the Platform, selects the Tool or workflow to build a connector.
 2. Once the Data Holder starts the connector, the Local Learning API determines what data the Tool needs and passes the workflow request to the Orch API.
 3. The Orch API stages the required input in `orch-data-volume` — its own volume, which Tools never mount directly.
 4. A temporary copying container transfers the staged data from `orch-data-volume` into a separate volume dedicated to that specific Tool run. This extra hop matters: it means a Tool can never reach `orch-data-volume` itself — only the one volume prepared for it — so a compromised or misbehaving Tool can't see data staged for other runs, and can't write anything back except through the same controlled copy step.
