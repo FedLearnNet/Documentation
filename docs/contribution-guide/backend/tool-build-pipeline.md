@@ -12,7 +12,7 @@ For run modes, step order, SAST policy, and the rescan user flow, start with the
 | Repository | Location | Responsibility |
 | --- | --- | --- |
 | `Tool-Build-Pipeline` | `src/config.py`, `src/pipeline.py`, `src/steps/` | Parse `RUN_MODE`, select the steps, execute scanner/build commands, and report progress and results. |
-| `Tool-Build-Pipeline` | `src/sast/fl-net.yml`, `Dockerfile` | Own the SAST rules and install the scanners in the pipeline image. |
+| `Tool-Build-Pipeline` | `Dockerfile`, `src/sast/r.yml` | Install the scanners and bundle the standard Python rules and R security policy in the pipeline image. |
 | `Learning-APIs` | `core-learning-api/.../core/api/pipeline/` | Share the run-mode enum and dedicated SAST DTOs. |
 | `Learning-APIs` | `global-learning-api/.../api/build/pipeline/` | Persist modes, create matching steps, start runs, stream updates, and apply publish summaries. |
 | `Learning-APIs` | `global-learning-api/.../scheduler/`, `local-learning-api/.../scheduler/` | Own Quarkus scheduled triggers. |
@@ -40,41 +40,51 @@ Use Java 25 and a running Docker daemon. On macOS with Homebrew, select the JDK 
 export JAVA_HOME="$(brew --prefix openjdk@25)/libexec/openjdk.jdk/Contents/Home"
 ```
 
-From `Learning-APIs`, run:
+Fill in the Global API's `.env` and `orch_secrets.env` from their examples as described in
+[Environment secrets](env-secrets.md). From `Learning-APIs`, prepare the local artifacts:
 
 ```bash
-bash scripts/prepare-local-testing.sh
+./mvnw -Dmaven.test.skip=true install
+cd ../Orchestration-API
+./mvnw -Dmaven.test.skip=true package
+cd ../Tool-Build-Pipeline
+docker build -t localhost:5001/flnet/tool-build-pipeline:dev .
+cd ../Learning-APIs/global-learning-api
+../mvnw quarkus:dev
+```
+
+Quarkus starts the Compose dependencies and builds the Orchestration API image from its local
+packaged artifacts. The pipeline image is already available in the host Docker daemon; once the
+registry is running, publish it locally from another terminal:
+
+```bash
+docker push localhost:5001/flnet/tool-build-pipeline:dev
+```
+
+For later starts, run from `Learning-APIs`:
+
+```bash
 cd global-learning-api
 ../mvnw quarkus:dev
 ```
 
-The setup script:
-
-1. Creates missing `global-learning-api/.env` and `orch_secrets.env` from their examples.
-2. Builds and installs the core, global, and local Learning API modules, then packages the
-   Orchestration API. These preparation builds skip tests.
-3. Builds the Orchestration API and pipeline Docker images from the sibling repositories.
-4. Starts the Compose registry, pushes and pulls the local pipeline image, then starts the remaining
-   development services.
-5. Verifies that the Orchestration API can find the pipeline image in the registry.
-
-Existing environment files are preserved. Fill in the Global API's OIDC and model-service credentials
-as described in [Environment secrets](env-secrets.md). Start dev mode from `global-learning-api`;
-the setup script prepares the dependencies and images but does not leave the Global API running.
-
 | Component | Address or image |
 | --- | --- |
 | Global API | `http://localhost:8080` |
-| Orchestration API | `http://localhost:8191`, image `fl-net/orchestration-api:dev` |
+| Orchestration API | `http://localhost:8191`, built from the sibling repository |
 | Registry | `localhost:5001` |
 | Pipeline image | `localhost:5001/flnet/tool-build-pipeline:dev` |
 | Published tool images | `localhost:5001/flnet/tools/<slug>:<commit>` |
 | Global API database | `localhost:5433` |
 | Controller | `http://localhost:8192` |
 
-The Compose project is `flnet-global-dev`; Quarkus reuses the prepared services. The Orchestration API
-has a separate PostgreSQL database, and the controller has the stable container name
-`global-learning-controller`. The shared Docker network is `global-learning-network`.
+The development file does not override the Compose project name. Quarkus defaults to
+`quarkus-devservices-global-learning-api`; a manually prepared stack can use that same name
+with `docker compose -p quarkus-devservices-global-learning-api ...` and is discovered on the
+next `quarkus:dev` start. Both APIs share
+the existing PostgreSQL service and database. The Orchestration API uses the `orch` schema for
+Flyway and Hibernate, so no extra database container is needed. The controller has the stable
+container name `global-learning-controller`. The shared Docker network is `global-learning-network`.
 
 ### Registry and builder configuration
 
@@ -106,11 +116,21 @@ the private registry. The Orchestration API reads the [Registry V2 catalogue and
 following pagination links. The registry must expose these endpoints to the configured account;
 registries that disable catalogue access produce an error in the view.
 
-`orch.docker."private".registry-api-url` is optional and defaults to `registry-url` with HTTPS
-when no scheme is specified. Set it explicitly for HTTP registries or when the Orchestration API
-needs an internal address. Image references still use `registry-url`. Anonymous access and the
-configured `registry-username`/`registry-password` for HTTP Basic authentication are supported.
-No registry credentials are sent to the browser.
+`DockerRegistryService` injects `DockerRegistryRestClient` using `@Inject @RestClient`. The client
+declares the Registry V2 endpoints `GET /v2/_catalog` and `GET /v2/{repository}/tags/list`. There is no
+standard endpoint that returns every tagged image in one response, so the client combines the
+catalogue with each repository's tags and follows pagination links. Image-existence checks use the
+Docker Engine's `GET /distribution/{name}/json` through docker-java, keeping full image references
+intact without parsing their tags or digests. The REST client owns pagination and its URI
+handling; the service combines repositories with their tags. Quarkus manages the client lifecycle
+through `@RegisterRestClient(configKey = "docker-registry")`, with standard
+`quarkus.rest-client.docker-registry.*` configuration and no custom builder.
+
+`orch.docker."private".registry-api-url` is optional and defaults to HTTPS at the `registry-url`
+host and port. Set the complete API URL explicitly for HTTP registries or when the Orchestration API
+needs an internal address. Image references still use `registry-url`. The local registry allows
+anonymous access. For authenticated catalogue access, configure the REST client's standard
+`quarkus.rest-client.docker-registry.headers.*` settings. Registry credentials stay in the API.
 
 The Orchestration API accepts a builder from its configured GHCR or private registry only when its
 repository matches `pipeline.image-prefix`; tags and digests are allowed. Keep this setting aligned
@@ -145,13 +165,10 @@ The image lookup should return `true`. For startup or pull errors, inspect:
 docker compose -f global-learning-api/compose-devservices.yml --profile dev logs orch-api registry
 ```
 
-Run this Compose command from `Learning-APIs`, or supply an absolute Compose file path.
-After source changes, stop dev mode and rerun the preparation script to rebuild local artifacts.
-To stop the prepared stack while keeping database and registry volumes, run from `Learning-APIs`:
-
-```bash
-docker compose -f global-learning-api/compose-devservices.yml --profile dev down
-```
+Run this Compose command from `Learning-APIs`, or supply an absolute Compose file path. If the
+stack was started by Quarkus, pass its generated Compose project name with `-p`.
+After Orchestration API source changes, stop dev mode, package that API again, and rebuild its
+Compose service with `docker compose ... up -d --build orch-api` using that same project name.
 
 ## Startup imports and the official registry
 
@@ -229,10 +246,15 @@ finding-bearing scans. A vulnerability-only rescan does not replace this source 
 
 ### Scanner configuration and checks
 
-The pipeline Dockerfile pins OpenGrep to `v1.30.2` and verifies the release checksum for amd64 and
-arm64. Update the version and matching checksums together. SAST rules, Trivy's database, and ClamAV
-definitions are included in the image. The `LOCAL_BUILD` vulnerability scan uses its bundled database;
-other modes allow Trivy to refresh it.
+The pipeline Dockerfile installs the latest stable OpenGrep release using its official installer
+with signature verification for amd64 and arm64. Remote release metadata invalidates the Docker
+install cache when a new release appears. The standard `p/python` ruleset is downloaded at image
+build time into `/app/src/sast/python.yml`. The bundled `src/sast/r.yml` adds R checks for dynamic
+code execution, shell commands, and remote script loading; no standard `p/r` ruleset is available.
+The SAST step loads the entire `/app/src/sast` directory and scans Python and R files together offline.
+Rebuild the pipeline image to pick up scanner and rule updates. Trivy's database and ClamAV
+definitions are also included in the image. The `LOCAL_BUILD` vulnerability scan uses its bundled
+database; other modes allow Trivy to refresh it.
 
 `SAST_TIMEOUT` defaults to 30 seconds per rule/file. `SAST_MAX_TARGET_BYTES` defaults to 1,000,000
 bytes per file. Both are positive integer pipeline environment settings in `src/config.py`.

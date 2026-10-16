@@ -59,24 +59,17 @@ can therefore still have security findings or test warnings; inspect the step an
 
 The `SAST` step uses [OpenGrep](https://github.com/opengrep/opengrep) after source files have been
 prepared and before the Docker image is built.
-It uses the platform-owned rules bundled in `Tool-Build-Pipeline/src/sast/fl-net.yml`, without
-downloading rules at runtime.
+The pipeline image downloads the standard [Python ruleset (`p/python`)](https://semgrep.dev/p/python)
+at build time and bundles it at `/app/src/sast/python.yml`. It also includes `src/sast/r.yml` for
+R scripts (`.R` and `.r`), checking `eval(parse(...))`, system/shell commands, and remote script
+loading. There is no standard `p/r` ruleset; these R checks are a focused security policy.
+OpenGrep applies both rule files from `/app/src/sast` to matching source files, including mixed
+Python/R repositories, without downloading rules at runtime. The image installs the latest stable
+OpenGrep release at build time; rebuild the pipeline image to pick up scanner and rule updates.
 
-The policy contains 12 targeted rules for Python tools, Dockerfiles, and YAML:
-
-| Area | Checks |
-| --- | --- |
-| Code execution | `eval`/`exec`, shell commands and subprocess calls with `shell=True`. |
-| Deserialization | Unsafe YAML loaders, pickle/dill/joblib loading, and explicit `torch.load(weights_only=False)`. |
-| Connections and files | Disabled TLS verification, insecure temporary files, and unsafe TAR extraction. |
-| Deployment and secrets | Flask debug mode, hardcoded credentials, remote Docker `ADD`, and Python object constructors in YAML. |
-
-Model deserialization findings are advisory because trusted ML artifacts commonly use these formats.
-The policy is a focused set of checks rather than complete coverage of every language or vulnerability.
-
-Repository ignore files and `nosem` comments cannot suppress the platform policy. The scanner excludes
+Repository ignore files and `nosem` comments cannot suppress the rules. The scanner excludes
 `.git`, virtual environments, dependency/cache directories, notebooks, and listed data/model formats.
-Python source in `models/` and tests remains in scope. The default limits are 30 seconds per rule/file
+Python and R source in `models/` and tests remains in scope. The default limits are 30 seconds per rule/file
 and 1,000,000 bytes per target file.
 
 Findings appear in step logs with the file, line, rule, and remediation message. Open the Docker
