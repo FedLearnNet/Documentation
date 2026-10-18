@@ -8,8 +8,22 @@ This section is for contributors working on the Angular frontend workspace behin
 
 The workspace lives in the [Frontends](https://github.com/FedLearnNet/Frontends) repository and contains two applications and one shared library:
 - `local-app`: the frontend of the Client, which talks to the `local-learning-api`
-- `global-app`: the frontend of the Platform, which talks to the `global-learning-api` and the `datamodeler-api`
+- `global-app`: the frontend of the Platform, which talks to the `global-learning-api` and, forwarded through it, the `datamodeler-api`
 - `shared-lib`: components, services, styles, and assets used by both apps
+
+Both apps log in through their learning API (backend-for-frontend, see [Authentication](../auth.md)) and never hold a token.
+The auth code lives in `shared-lib`:
+
+| File | Content |
+| --- | --- |
+| `services/auth.ts` | `login`, `logout`, route guards, `provideBffAuth` |
+| `services/auth.helper.ts` | realm roles, the `X-Requested-With` BFF header, `getBffUrl`, account management URL |
+| `services/auth-state.service.ts` | `AuthStateService`, loads the user and roles from `/bff/me` |
+| `utils/url.helper.ts` | `getAppUrl` and other URL helpers |
+
+`keycloak-js` and `keycloak-angular` are no longer used.
+
+*Report an issue* opens a prefilled issue on [FedLearnNet/.github](https://github.com/FedLearnNet/.github/issues/new), which the user submits with their own GitHub account. No backend call or token is involved.
 
 The prerequisites and the commands to start the apps are in [Local setup](local-setup.md) and the [README](https://github.com/FedLearnNet/Frontends#readme); the checks to run before a review are in [Testing and review](testing-and-review.md).
 

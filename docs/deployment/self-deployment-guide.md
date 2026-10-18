@@ -137,6 +137,8 @@ Here we only provide information on how to add users manually:
 Make sure to tick `Email verified` or connect a SMTP server to the KeyCloak instance!
 Alternatively you can deactivate that email verification is required.
 
+Users that create, update or delete schemas, ontologies and datatypes need the realm role `Data-Modeler` (or `Admin`).
+
 [comment]: <> (TODO: We still only have dev level groups, we should have groups and add the info about them here!)
 
 Congratulations, you're ready to go.
@@ -163,6 +165,15 @@ Make sure to test the restart commands before you setup the hook, as it's easy t
 The FLNet Platform is deployed via docker compose.
 We currently don'y have a specific update functionality.
 You may use e.g. watchtower to automatically update the images.
+
+Keycloak imports the `FLNet-Platform` realm only on the first start, so realm changes of newer versions do not reach existing Platforms automatically.
+For the backend-for-frontend login and the datamodeler permissions, apply these changes once in the Keycloak admin console (realm `FLNet-Platform`):
+- Clients → `database-api`: *Standard flow* enabled, *Valid redirect URIs* `<your-domain>/api/bff/login`,
+  *Valid post logout redirect URIs* `<your-domain>/`, Advanced → *Proof Key for Code Exchange Code Challenge Method* `S256`.
+- Realm roles: add `Data-Modeler` (create, update and delete schemas, ontologies and datatypes) and assign it to the users that maintain them.
+  Without it only `Admin` users can change the data model.
+
+`<your-domain>` is the full Platform address (`DEPLOYED_ON_DOMAIN`, e.g. `https://platform.example.org`).
 
 ## What gets deployed
 
@@ -298,6 +309,13 @@ Wiring:
 - environment variables of the services
 - dependencies/healthchecks
 - volumes + mounts
+
+Authentication related variables:
+- `FLNET_BFF_FRONTEND_URL` (`global-learning-api`, set to `DEPLOYED_ON_DOMAIN`): public frontend address, the backend-for-frontend login builds its callback `<address>/api/bff/login` from it.
+- `QUARKUS_OIDC_TOKEN_ISSUER` (`global-learning-api` and `datamodeler-api`): issuer of the Platform realm, `${DEPLOYED_ON_DOMAIN}/auth/realms/FLNet-Platform`.
+
+Clients must always authenticate with a Platform account. The former switches `REQUIRE_CLIENT_AUTHENTICATION` (`flnet.feddb-client.auth.enable`), the CLI option
+`--client-auth`/`--no-client-auth` and the network setting `client-auth` were removed.
 - networks
 - exposed ports
 - labels (watchtower)
