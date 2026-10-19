@@ -149,6 +149,12 @@ documentation on how to join your network:
 
 [comment]: <> (TODO: The URL of the docs is still a bit fucked up right now!)
 
+#### 3.3 Restricting access to the KeyCloak admin console
+The KeyCloak admin console is available at `<your-domain>/auth/admin/`.
+We recommend to restrict access to this console to only your own IP address.
+You can do this by editing the `nginx_keycloak_admin.conf` file in the folder created by
+the initialization script (`~/fl-net/platforms`).
+
 ## 4. Keeping your FLNet Platform running
 ### Cert renewal
 The deployment does neither automatically renew the SSL certificates nor reload updated certificates.

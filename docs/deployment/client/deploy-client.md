@@ -119,6 +119,12 @@ For more information about the groups, click on groups. Alternatively, here is a
 
 The Client is now ready to be used, simply visit it at the domain you chose (or IP:port) and use the user you just created.
 
+#### 3.3 Restricting access to the KeyCloak admin console
+The KeyCloak admin console is available at `<your-domain>/auth/admin/`.
+We recommend to restrict access to this console to only your own IP address.
+You can do this by editing the `nginx_keycloak_admin.conf` file in the folder created by
+the initialization script (`~/fl-net/clients`).
+
 ## Further information
 ### Updating an existing Client
 Keycloak imports the `FLNet-Client` realm only on the first start, so realm changes of newer versions do not reach existing Clients automatically.
