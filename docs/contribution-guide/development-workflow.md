@@ -18,10 +18,12 @@ For any issue over multiple repositories you can use the meta repository [FedLea
 ## Branches
 All repositories use two long-lived branches:
 
-| Branch | Purpose | Published Docker image tag |
-|---|---|---|
-| `main` | Production state | `latest` |
-| `develop` | Integration and staging state | `staging` |
+| Branch | Purpose | Version | Published Docker image tags |
+|---|---|---|---|
+| `main` | Production state | `X.Y.Z` | `latest`, `X.Y.Z` |
+| `develop` | Integration and staging state | `X.Y.Z.dev` | `staging`, `X.Y.Z.dev` |
+
+How versions are numbered and released is described in the [Release workflow](release-workflow.md).
 
 Work happens on short-lived branches created from the **develop** branch. 
 Existing branches are usually named after the issue they solve, 
@@ -48,6 +50,7 @@ These generally focus on
 - building docker images
 - scanning the built images for vulnerabilities
 - publishing the images to the GitHub Container Registry (if the previous steps pass)
+- tagging and releasing new versions, see [Release workflow](release-workflow.md)
 
 Dependabot (`.github/dependabot.yml`) opens pull requests for dependency updates.
 
