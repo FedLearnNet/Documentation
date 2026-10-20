@@ -21,7 +21,7 @@ All repositories use two long-lived branches:
 | Branch | Purpose | Version | Published Docker image tags |
 |---|---|---|---|
 | `main` | Production state | `X.Y.Z` | `latest`, `X.Y.Z` |
-| `develop` | Integration and staging state | `X.Y.Z.dev` or `X.Y.Z.rcN` | `staging`, `X.Y.Z.dev` or `X.Y.Z.rcN` |
+| `develop` | Integration and staging state | `X.Y.Z.dev` | `staging`, `X.Y.Z.dev` |
 
 How versions are numbered and released is described in the [Release workflow](release-workflow.md).
 
