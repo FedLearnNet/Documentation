@@ -38,10 +38,50 @@ The secrets of all backend services are described in [Environment secrets](env-s
 
 **Testing:** run `./mvnw verify` in the repository root (or `mvn test` inside one module). CI runs `mvnw verify`, for `Learning-APIs` including Checkstyle and SpotBugs.
 
+## Datamodeler access
+The `datamodeler-api` validates bearer tokens of the Platform Keycloak (`quarkus-oidc`, application type `service`) and has no
+browser login of its own. Permissions:
+- reads, including schema subscribe/unsubscribe and ontologies/datatypes of subscribed schemas: login only
+- create, update, delete of schemas, ontologies, datatypes: realm role `Data-Modeler` (`Roles.GLOBAL_DATA_MODELER`) or `Admin`
+- UMLS import and embedding rebuild: `Admin` only
+
+The datamodeler is not exposed on the platform nginx. Callers:
+- Global frontend: through the `global-learning-api` under `/api/data-modeler/**` (`DataModelerForwardService`), forwarded with the user's access token.
+- `global-learning-api` itself (`QueryBO`, `TestRunBO`, exports): typed REST clients with a service-account token
+  (`@OidcClientFilter`, client credentials of `database-api`).
+- FL-Net Clients: the same `/api/data-modeler/**` forward with their Platform account token
+  (`quarkus.rest-client.global-schema-api.url` defaults to `${quarkus.rest-client.global-api.url}/data-modeler`).
+- Local dev: `global-learning-api` calls a locally started datamodeler on port 8086.
+
+## Health endpoints
+`/q/*` is blocked on nginx (`/api/q/`, `/local-learning-api/q/`). Docker compose checks `/q/health/live` inside the containers
+(curl). The health dashboard of the local frontend uses `GET /local-learning-api/health/ready` (login required), which returns the
+same payload as `/q/health/ready` (503 if a check is down).
+
+Schema subscriptions are anonymous per Client: the subscriber id is the SHA-256 hash of the token subject. Before, all Clients
+shared the subscriber `test-user`, which broke the queryability counts and let one unsubscribe remove the subscription of every
+Client. Existing `test-user` subscriptions need a cleanup.
+
+## Configuration files
+Each Quarkus service (`local-learning-api`, `global-learning-api`, `datamodeler-api`) splits its configuration. `application.properties`
+loads the others via `quarkus.config.locations=security.properties,openapi.properties,flnet.properties`:
+
+| File | Content |
+|---|---|
+| `application.properties` | all other Quarkus settings, e.g. datasource, REST clients, Hibernate, logging |
+| `security.properties` | OIDC, backend-for-frontend (`flnet.bff.*`), service accounts, CORS |
+| `openapi.properties` | OpenAPI document and Swagger UI |
+| `flnet.properties` | all `flnet.*` properties except `flnet.bff.*` |
+
+- Swagger UI is only included in `dev` and `test` (datamodeler: also `staging`). The local and global API disable the OpenAPI
+  document in `prod` and `staging` with `quarkus.smallrye-openapi.enabled=false`, which replaces the deprecated `.enable`.
+- The `test` profile uses `quarkus.oidc.application-type=service`, so tests still get `401` for anonymous calls instead of a
+  redirect to Keycloak.
+
 ## Detailed documentation
 - [Environment secrets](env-secrets.md): the secrets each service needs for local development
 - [Pipeline integration and local testing](tool-build-pipeline.md): SAST contracts, run modes, local registry and images, scheduled rescans, and container lifecycle cleanup
 - [Federated learning flow](federated-learning-flow.md): the complete life cycle of a federated learning run across all services
 - `global-learning-api`: [Configuration](global-learning-api/config.md), [Workflow system](global-learning-api/workflow-system.md), [Query creation](global-learning-api/query-creation.md), [Multi-agent analysis system](global-learning-api/data-analysis-agent.md)
 - `local-learning-api`: [Configuration](local-learning-api/config.md), [ETL pipeline](local-learning-api/etl-pipeline.md), [Patient store](local-learning-api/patient-store.md), [Query translation and privacy](local-learning-api/query-translation-and-privacy.md)
-- [Authentication](../auth.md): the Keycloak clients and roles used by the backend services
+- [Authentication](../auth.md): the Keycloak clients, roles, backend-for-frontend login and security defaults of the backend services
