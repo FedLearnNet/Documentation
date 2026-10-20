@@ -89,8 +89,8 @@ flowchart LR
     GLA -->|FL project run orchestration, HTTP| RELAY
     RELAY <-->|Federated learning communication channel| CLIENTS
     KC --> DB1
-    GLA <-->|Federated requests / results, WSS 🔒 OAuth protected*| CLIENTS
-    DMA <-->|Schema retrieval 🔒 OAuth protected*| CLIENTS
+    GLA <-->|Federated requests / results, schema retrieval, WSS 🔒 OAuth protected| CLIENTS
+    GLA -->|Forward schema requests 🔒 OAuth protected| DMA
 
     classDef user fill:#eefaf1,stroke:#2e8b57,stroke-width:2px,color:#000
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
@@ -100,7 +100,6 @@ flowchart LR
     class FE,KC,GLA,DMA,ORCH,TR,TOOL,CTRL,RELAY,DB1,DB2,DB3,DB4 platform
     class CLIENTS client
 ```
-\* Whether Clients must authenticate via OAuth is set at deployment time of the Platform.
 
 ### User access (Data Scientist / Auditor)
 
@@ -110,9 +109,9 @@ The Global Learning API persists state in PostgreSQL; the Data Modeler API in Ne
 
 ### Client access
 
-Each Client keeps a permanent, authenticated WebSocket connection to the Global Learning API for federated queries, statistics/learning requests, and FL run orchestration sync. Clients also reach the Data Modeler API directly for Schema retrieval during cohort creation.
+Each Client keeps a permanent, authenticated WebSocket connection to the Global Learning API for federated queries, statistics/learning requests, and FL run orchestration sync. Clients also retrieve Schemas during cohort creation through the Global Learning API, which forwards these requests to the Data Modeler API.
 
-Whether Client connections require OAuth or can be unauthenticated is set at deployment time at Platform level via the deployment script. When required, the account used for the Client must have the `Site` role in KeyCloak.
+Every Client must authenticate via OAuth with its own Platform account, which must have the `Site` role in KeyCloak.
 
 ### FL run orchestration
 
