@@ -104,9 +104,9 @@ flowchart LR
 
 ### User access (Data Scientist / Auditor)
 
-The Data Scientist or Auditor accesses the Platform via the Frontend, authenticating through Keycloak. Once logged in, they use the Global Learning API to submit FL requests, run DDQs, retrieve statistics, manage Tools/models, and monitor service health — and the Data Modeler API directly to manage Schemas, Ontologies, and DataTypes.
+The Data Scientist or Auditor accesses the Platform via the Frontend, authenticating through Keycloak. The login runs through the Global Learning API (backend-for-frontend), so the browser only holds a session cookie, no token. Once logged in, they use the Global Learning API to submit FL requests, run DDQs, retrieve statistics, manage Tools/models, and monitor service health — and to manage Schemas, Ontologies, and DataTypes, which the Global Learning API forwards to the Data Modeler API with the user's access token.
 
-The Global Learning API persists state in PostgreSQL; the Data Modeler API in Neo4j. Most endpoints on both APIs require authentication, aside from a few public ones (e.g. the Tool store). Endpoints may be restricted based on the Users role, e.g. a `Data-Scientist` role cannot submit a certification.
+The Global Learning API persists state in PostgreSQL; the Data Modeler API in Neo4j. Every REST endpoint on both APIs requires authentication by default, including the Tool store. Endpoints may be restricted based on the Users role, e.g. a `Data-Scientist` role cannot submit a certification.
 
 ### Client access
 
@@ -139,7 +139,7 @@ During FL, a Tool running on the Platform (as aggregator) talks to the Platform'
 Beyond what's shown above, the Global Learning API and Data Modeler API reach a few external services:
 
 - The Data Modeler API may query the **UMLS API** for ontology concepts.
-- The Global Learning API may reach **Semantic Scholar / PubMed** for research assistance, an **LLM server** for the chatbot feature, and **Docker Hub**, **Chainguard**, and **GitLab** for Tool building, certification, and bug reporting.
+- The Global Learning API may reach **Semantic Scholar / PubMed** for research assistance, an **LLM server** for the chatbot feature, and **Docker Hub**, **Chainguard**, and **GitLab** for Tool building and certification.
 
 See the [network architecture overview](network-architecture.md) for the full list.
 
@@ -151,6 +151,7 @@ OAuth protection mostly requires roles:
 |---|---|
 | Client → Global Learning API | `Site` |
 | Data Scientist / Auditor → Global Learning API / Data Modeler API | `Data-Scientist` or `Auditor` |
+| Schema, Ontology, DataType changes → Data Modeler API | `Data-Modeler` or `Admin` |
 | Global Learning API → Orch API | None — isolated, called only via service account |
 
 ### What networks are the services deployed on?

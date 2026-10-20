@@ -28,8 +28,25 @@ env:
   REGISTRY: ghcr.io/fedlearnnet/documentation
 
 jobs:
+  # Version from package.json and whether it gets an image tag and a release, see FedLearnNet/.github/actions/version
+  version:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_image: ${{ steps.version.outputs.tag_image }}
+      release: ${{ steps.version.outputs.release }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - id: version
+        uses: FedLearnNet/.github/actions/version@main
+
   images:
     name: Build and push images
+    needs: version
     # main -> latest, develop -> staging; other branches would overwrite those tags
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     runs-on: ubuntu-24.04
@@ -63,6 +80,8 @@ jobs:
       # New brand variables in docusaurus.config.ts must be added here
       - name: Build and push FL-Net documentation
         env:
+          VERSION: ${{ needs.version.outputs.version }}
+          TAG_IMAGE: ${{ needs.version.outputs.tag_image }}
           DEPLOYED_PRODUCT_NAME: Federated Learning Net
           PRODUCT_SLUG: flnet
           DEPLOYED_PRODUCT_URL: https://federated-learning.net
@@ -71,6 +90,24 @@ jobs:
           PRODUCT_LOGO_ALT: FLNet Logo
           PRODUCT_FAVICON_PATH: img/flnet/logo.svg
         run: bash .github/scripts/build-image.sh flnet-user-doc
+
+  # First build of a release candidate or release: git tag and GitHub release
+  release:
+    needs: [version, images]
+    if: needs.version.outputs.release == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+          PRERELEASE: ${{ needs.version.outputs.prerelease }}
+        run: |
+          gh release create "$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "$VERSION" --generate-notes --prerelease="$PRERELEASE"
 
   # Vulnerability scan after every main build (results under Security → Code scanning)
   scan:

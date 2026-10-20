@@ -137,6 +137,8 @@ Here we only provide information on how to add users manually:
 Make sure to tick `Email verified` or connect a SMTP server to the KeyCloak instance!
 Alternatively you can deactivate that email verification is required.
 
+Users that create, update or delete schemas, ontologies and datatypes need the realm role `Data-Modeler` (or `Admin`).
+
 [comment]: <> (TODO: We still only have dev level groups, we should have groups and add the info about them here!)
 
 Congratulations, you're ready to go.
@@ -146,6 +148,12 @@ documentation on how to join your network:
 `<your-domain>/documentation/docs/deployment/deploy-client`
 
 [comment]: <> (TODO: The URL of the docs is still a bit fucked up right now!)
+
+#### 3.3 Restricting access to the KeyCloak admin console
+The KeyCloak admin console is available at `<your-domain>/auth/admin/`.
+We recommend to restrict access to this console to only your own IP address.
+You can do this by editing the `nginx_keycloak_admin.conf` file in the folder created by
+the initialization script (`~/fl-net/platforms`).
 
 ## 4. Keeping your FLNet Platform running
 ### Cert renewal
@@ -159,7 +167,7 @@ Alternatively check the exact container names.
 If you use certbot, you can use the `--deploy-hook` option to automatically reload the services after cert renewal.
 Make sure to test the restart commands before you setup the hook, as it's easy to make a mistake in e.g. container names.
 
-### 4.2 Updating the FLNet Platform
+### Updating the FLNet Platform
 The FLNet Platform is deployed via docker compose.
 We currently don'y have a specific update functionality.
 You may use e.g. watchtower to automatically update the images.

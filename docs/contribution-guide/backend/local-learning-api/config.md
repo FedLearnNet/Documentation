@@ -11,13 +11,16 @@ The Local Learning API configuration is defined by
 The interface is annotated with `@ConfigMapping(prefix = "flnet")`, so every
 property documented here starts with `flnet.`.
 
-Older documentation used keys such as `feddb.*`, `global.socket.*`, or
-`gitlab.issue.*` without the `flnet.` prefix. Those keys are outdated for the
+Older documentation used keys such as `feddb.*` or `global.socket.*` without
+the `flnet.` prefix. Those keys are outdated for the
 current `FLNetClientConfig` object.
 
-Generic Quarkus settings, database settings, logging settings, and
-infrastructure ports are configured in `application.properties` as well, but
-they are not part of `FLNetClientConfig` and are not listed here.
+The `flnet.*` values are set in `flnet.properties`. Generic Quarkus settings,
+database settings, logging settings, and infrastructure ports stay in
+`application.properties`, security settings (OIDC, backend-for-frontend
+`flnet.bff.*`, CORS) in `security.properties`, OpenAPI settings in
+`openapi.properties`. See [Configuration files](../overview.md#configuration-files).
+None of these are part of `FLNetClientConfig` and they are not listed here.
 
 ## Naming Rules
 
@@ -26,11 +29,11 @@ Java method names are converted to kebab-case unless the config object uses
 
 Examples:
 
-- `clientId()` with `@WithName("client-id")` becomes `flnet.global.auth.client-id`.
+- `authorizationHeader()` with `@WithName("authorization-header")` becomes `flnet.global.auth.authorization-header`.
 - `deleteTraceability()` with `@WithName("delete-traceability")` becomes `flnet.cohort.delete-traceability`.
 - `importRowLimitForDiskCache()` becomes `flnet.connector.import-row-limit-for-disk-cache`.
 
-`@WithDefault` defines the Java fallback value. `application.properties` can
+`@WithDefault` defines the Java fallback value. `flnet.properties` can
 still override that fallback for the default profile or for profile-specific
 settings such as `%dev`, `%test`, `%staging`, or `%prod`.
 
@@ -43,15 +46,9 @@ settings such as `%dev`, `%test`, `%staging`, or `%prod`.
 | `flnet.global.socket.reconnect.attempts` | Integer | `5` | `-1`, `%dev=5` | Number of reconnect attempts. `-1` means unlimited attempts. |
 | `flnet.global.socket.reconnect.delay.init` | Integer | `1000` | `1000` | Initial reconnect delay in milliseconds. |
 | `flnet.global.socket.reconnect.delay.reconnect` | Integer | `30000` | `30000` | Delay between reconnect attempts in milliseconds. |
-| `flnet.global.auth.enable` | Boolean | `true` | `true`, `%prod=false`, `%staging=false` | Enables authentication for global API calls. |
-| `flnet.global.auth.url` | URI | `https://staging.featurecloud.ai/feddb/global-auth` | same | Authentication server URL. |
-| `flnet.global.auth.realm` | String | `FederatedDB_Global` | same | Authentication realm. |
-| `flnet.global.auth.client-id` | String | `frontend` | `clinic-direct-connect` | Authentication client id. |
 | `flnet.global.auth.username` | Optional String | none | `test` | Username used for configured auth flows. |
 | `flnet.global.auth.password` | Optional String | none | `test` | Password used for configured auth flows. |
 | `flnet.global.auth.authorization-header` | Optional String | none | commented example | Static authorization header, for example `Bearer ...`. |
-| `flnet.gitlab.issue.token` | Optional String | none | env/commented | Token for creating GitLab issues. |
-| `flnet.gitlab.issue.project-id` | Integer | `9` | `9` | GitLab project id used by issue reporting. |
 | `flnet.permission.add-on-create` | Optional Boolean | none | `true` | Adds permissions when supported entities are created. |
 | `flnet.permission.user-name` | Optional String | none | none | User name used by the permission bootstrap flow. |
 | `flnet.permission.group-name` | Optional String | none | none | Group name used by the permission bootstrap flow. |
@@ -101,29 +98,30 @@ behavior. The Java object defaults to `5`, but the shipped application property
 sets it to `-1` for the default profile, which means the client keeps trying to
 reconnect. The development profile overrides it back to `5`.
 
-`flnet.global.auth.*` controls authentication for global API calls. The Java
-default client id is `frontend`; the shipped configuration uses
-`clinic-direct-connect`. Production and staging currently disable the auth flag
-with profile-specific overrides.
+`flnet.global.auth.*` holds the Platform account of this Client (username and
+password, or a static authorization header). The Keycloak server and client
+used for the login are configured through the Quarkus OIDC client
+`quarkus.oidc-client.global-websocket.*` in `security.properties`.
+Authentication towards the global API is always on; the former switch
+`flnet.global.auth.enable` was removed.
 
 Secrets such as passwords, tokens, and static authorization headers should be
 provided through environment-specific configuration instead of committed values.
 
-## GitLab Issues
+## Issue Reporting
 
-The `gitlab.issue` section configures GitLab issue reporting:
-
-- `flnet.gitlab.issue.project-id` selects the target GitLab project.
-- `flnet.gitlab.issue.token` is optional in the Java object and should be
-  supplied through a secure environment-specific source when issue creation is
-  enabled.
+Issue reporting needs no configuration. *Report an issue* in the frontend opens
+a prefilled issue on
+[FedLearnNet/.github](https://github.com/FedLearnNet/.github/issues/new), which
+the user submits with their own GitHub account. The former `flnet.gitlab.issue.*`
+keys, the GitLab token, and the `/issue` endpoints have been removed.
 
 ## Permissions
 
 The `permission` section controls permission bootstrap behavior.
 
 `flnet.permission.add-on-create` is optional in the Java object and is set to
-`true` in the shipped application properties. When enabled, the Local Learning
+`true` in the shipped `flnet.properties`. When enabled, the Local Learning
 API adds permissions during supported create flows.
 
 `flnet.permission.user-name` and `flnet.permission.group-name` are optional
@@ -234,7 +232,7 @@ available enum values are defined in the local API model classes
 
 Use `flnet.*` keys when adding or overriding Local Learning API settings. If a
 new Java method is added to `FLNetClientConfig`, update this page and
-`application.properties` together so the documented key, Java default, and
+`flnet.properties` together so the documented key, Java default, and
 shipped profile behavior stay aligned.
 
 For large connector imports, tune the connector section first. In particular,

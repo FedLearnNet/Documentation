@@ -135,7 +135,7 @@ CLINIC_CONNECTOR_PATH=/path/to/us-130-clinics.json \
 | Variable | Default | Description |
 |---|---|---|
 | `HOST_PORT` | `4601` | The port on the host machine that maps to the clinic frontend (`:80` inside DinD). |
-| `DEPLOYED_ON_ADDRESS` | `http://localhost:{HOST_PORT}` | The full URL the clinic frontend is reachable at. Used by Keycloak for redirect URLs. |
+| `DEPLOYED_ON_ADDRESS` | `http://localhost:{HOST_PORT}` | The full URL the clinic frontend is reachable at. Used by Keycloak and the backend-for-frontend login (`FLNET_BFF_FRONTEND_URL`) for redirect URLs. |
 | `COMPOSE_PROJECT_NAME` | `fl-net-clinic1` | Docker Compose project name for the inner stack. Change this when running multiple clinics on the same host. |
 | `CLINIC_DATASET_PATH` | `{repo}/deployment/example-data/us-130/clinics/clinic_001.csv` | Absolute path to the clinic CSV dataset on the host. |
 | `CLINIC_CONNECTOR_PATH` | `{script_dir}/us-130-clinics.json` | Absolute path to the connector config JSON on the host. |
@@ -177,7 +177,7 @@ The inner `controller` service connects to the global relay server. These URLs a
 |---|---|
 | `GLOBAL_LEARNING_API_URL` | HTTP URL of the global learning API (e.g. `https://dev.federated-learning.net/api`) |
 | `GLOBAL_LEARNING_API_WEBSOCKET_URL` | WebSocket URL of the global learning API (e.g. `wss://dev.federated-learning.net/api`) |
-| `GLOBAL_SCHEMA_API_URL` | URL of the data modeler API on the global server |
+| `GLOBAL_SCHEMA_API_URL` | URL of the data modeler behind the global learning API (e.g. `https://dev.federated-learning.net/api/data-modeler`) |
 | `GLOBAL_RELAY_HTTP_URL` | HTTP URL of the relay server on the global server |
 | `GLOBAL_RELAY_TCP_ADDRESS` | TCP address of the relay server (e.g. `dev.federated-learning.net:9150`) |
 
@@ -193,7 +193,7 @@ docker run -it \
   -e DEPLOYED_ON_ADDRESS=http://localhost:4601 \
   -e GLOBAL_LEARNING_API_URL=https://your-global-server.com/api \
   -e GLOBAL_LEARNING_API_WEBSOCKET_URL=wss://your-global-server.com/api \
-  -e GLOBAL_SCHEMA_API_URL=https://your-global-server.com/data-modeler \
+  -e GLOBAL_SCHEMA_API_URL=https://your-global-server.com/api/data-modeler \
   -e GLOBAL_RELAY_HTTP_URL=https://your-global-server.com/relay \
   -e GLOBAL_RELAY_TCP_ADDRESS=your-global-server.com:9150 \
   -v clinic-dind-docker:/var/lib/docker \

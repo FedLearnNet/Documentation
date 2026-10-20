@@ -36,6 +36,7 @@ For a **Quickstart**, jump directly to what you need:
 - [Quickstart](quickstart.md): the contribution workflow from the issue to the pull request
 - [Repository map](repository-map.md): which repository to change
 - [Development workflow](development-workflow.md): issues, branches, pull requests, and CI
+- [Release workflow](release-workflow.md): versions, release candidates, and releases
 - [Documentation workflow](documentation-workflow.md): changing this documentation site
 
 However, we recommend the following reading order for new contributors:
@@ -46,7 +47,8 @@ However, we recommend the following reading order for new contributors:
 5. [Quickstart](quickstart.md)
 6. [Development workflow](development-workflow.md)
 7. [Documentation workflow](documentation-workflow.md)
-8. One of the detailed sections, depending on your change:
+8. [Release workflow](release-workflow.md), if you publish versions
+9. One of the detailed sections, depending on your change:
    - [Frontend](frontend/overview.md)
    - [Backend](backend/overview.md)
    - [Federated communication layer](federated-communication/overview.md)

@@ -144,8 +144,8 @@ Alternatively, Clients can put their **own reverse proxy** in front, or connect 
 3. **Tool image registry access:** `Client (Orch API) ⟷[HTTPS]⟷ Platform (Tool registry)`
    The Tool registry is part of the Platform and is served under `/v2/` of the Platform domain. Pulling needs no login. During ETL or federated-learning Tool execution, the Client's Orch API pulls the selected Tool's Docker image from this registry. The pull uses the same Platform domain and port (443) as the Local Learning API connection, so no additional host has to be reachable. The image is pulled by the Orch API itself, not by the Data Holder's browser or the Local Learning API.
 
-4. **Gitlab access:** `Client (Local Learning API) ⟷[HTTPS]⟷ GitLab FL-Net Developers`
-   A Data Holder may file a bug report via their Browser which is submitted via the Local Learning API to the GitLab instance run by [Cosy Bio](https://cosy.bio), the developers of FL-Net. These requests contain no Client data.
+Bug reports need no connection from the Client: *Report an issue* opens a prefilled issue on [GitHub](https://github.com/FedLearnNet/.github/issues/new) in the Data Holder's Browser, which they review and submit with their own GitHub account.
+
 ---
 
 #### Potential connections
@@ -181,9 +181,6 @@ Apart from the outgoing connections listed under [Client connections](#client-co
 
 4. **Docker hub/chainguard** access: `Platform (Global Learning API) ⟷[HTTPS]⟷ Docker hub / Chainguard`
    Tools are packaged docker images built on the Platform. The Platform must therefore pull the base images for Tools which may be stored in the Docker hub registry or the Chainguard registry. These requests contain no Client data.
-
-5. **GitLab access:** `Platform (Global Learning API) ⟷[HTTPS]⟷ GitLab FL-Net Developers`
-   For bug reporting, the Platform may supply the bug reports to the GitLab instance run by [Cosy Bio](https://cosy.bio), the developers of FL-Net. These requests contain no Client data.
 
 *Running a self-hosted FL-Net Platform? Contact your Platform administrator, since these defaults may have been changed. See the [Platform deployment docs](../../deployment/self-deployment-guide.md) for more.*
 

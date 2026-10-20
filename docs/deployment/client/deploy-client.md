@@ -42,8 +42,8 @@ curl -fsSL https://raw.githubusercontent.com/FedLearnNet/FL-Net-CLI/main/install
 This will download the relevant binary for your system and place it in `~/.local/bin` (Linux/Mac) 
 for non root users and /usr/local/bin as `root`.
 
-Please ask your Platform provider whether you require an account in the Network to join the network.
-If yes, please make sure to have the credentials ready, as you will need them in the next step.
+Every Client needs an account in the Platform's Keycloak to join the network. Ask the Platform provider
+for the credentials and have them ready, as the next step asks for them.
 
 We also recommend you first read relevant documentation:
 - [Welcome](../../intro/welcome.md) to understand the Network you're joining.
@@ -119,7 +119,26 @@ For more information about the groups, click on groups. Alternatively, here is a
 
 The Client is now ready to be used, simply visit it at the domain you chose (or IP:port) and use the user you just created.
 
+#### 3.3 Restricting access to the KeyCloak admin console
+The KeyCloak admin console is available at `<your-domain>/auth/admin/`.
+We recommend to restrict access to this console to only your own IP address.
+You can do this by editing the `nginx_keycloak_admin.conf` file in the folder created by
+the initialization script (`~/fl-net/clients`).
+
 ## Further information
+### Updating an existing Client
+Keycloak imports the `FLNet-Client` realm only on the first start, so realm changes of newer versions do not reach existing Clients automatically.
+Since the backend-for-frontend login, the browser login runs through the `local-learning-api` client. Apply these changes once in the Keycloak admin console
+(`<your-domain>/auth/`, realm `FLNet-Client`, Clients → `local-learning-api`):
+- *Standard flow*: enabled
+- *Valid redirect URIs*: `<frontend-address>/local-learning-api/bff/login`
+- *Valid post logout redirect URIs*: `<frontend-address>/`
+- Advanced → *Proof Key for Code Exchange Code Challenge Method*: `S256`
+
+`<frontend-address>` is the address the Client is reached at (`DEPLOYED_ON_ADDRESS`, e.g. `https://clinic.example.org`).
+It is also passed to the `local-learning-api` as `FLNET_BFF_FRONTEND_URL`, from which the login callback is built.
+The former option `--platform-auth`/`--no-platform-auth` and the env variable `GLOBAL_KEYCLOAK_ENABLED` were removed: a Platform login is mandatory.
+
 ### Server availability 24/7
 The %%DEPLOYED_PRODUCT_NAME%% allows discovery of data at any point in time. To also be able to discover
 your data, your machine needs to be connected. Therefore, we recommend running the server/machine
