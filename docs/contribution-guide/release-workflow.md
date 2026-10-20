@@ -5,9 +5,9 @@ description: How FL-Net versions are numbered, what to change for a release, and
 ---
 
 # Release workflow
-This page describes how a new FL-Net version is released: which version number goes where, which steps you do by hand, and what the CI does automatically.
+This page describes how a new FL-Net version is released
 
-All FL-Net repositories listed below share **one version** and are released together. A Client running `1.0.0` therefore runs `1.0.0` images of every local server component.
+All FL-Net repositories containing components of either the Client or the Platform share **one version** and are released together. A Client running `1.0.0` therefore runs `1.0.0` images of every local server component. 
 
 ## Version scheme
 A version has one of two forms:
@@ -24,21 +24,13 @@ Pick the next number like this:
 - **Minor** `Y`: new features. This is the usual step after a release, e.g. `1.0.0` → `1.1.0.dev`.
 - **Patch** `Z`: bug fixes only, typically a [hotfix](#hotfix) on `main`.
 
-One version runs through these stages:
-
-```mermaid
-flowchart LR
-  DEV["1.0.0.dev<br/>develop"] -->|release PR| REL["1.0.0<br/>main"]
-  REL -->|back to develop| NEXT["1.1.0.dev<br/>develop"]
-```
-
 ## Where the version is stored
-Each repository stores the version in the place its ci/cd expects (e.g. pom.xml). The versioning comes in two halves:
-- `.github/scripts/version.sh` in every repository only knows where that repository keeps its version, and reads or changes it.
-- The rules are the same for all repositories, so they live once in [FedLearnNet/.github](https://github.com/FedLearnNet/.github) as the action `actions/version`. They cover the format, which branch takes which version, and what a build publishes. Every repository's CI uses that action, so a rule change happens in one place.
+Each repository stores the version in the place specific for the programming language used by the repository, e.g. `pom.xml` for Java, `package.json` for Node.js.
 
-So the version is set in the code specific version way depending on the programming language, based on this github and docker tags are set.
-The version change is only done at release time, look at this part of the release workflow.
+To release a new version each repository contains the `.github/scripts/version.sh` script which is a helper to easily set the version in the right place as this differs per repo.
+
+The CI/CD then automatically applies validation and creates concrete realeases.
+
 ## What CI does automatically
 On every push to `main` or `develop`, the image workflows (`docker.yml`, in the CLI `release.yml`) first run the shared `actions/version`. That step checks the version and decides what gets published:
 
@@ -48,25 +40,23 @@ On every push to `main` or `develop`, the image workflows (`docker.yml`, in the 
 | `main`, `X.Y.Z`, first build | `latest`, `latest-<sha>`, `X.Y.Z` (Learning-APIs also `prod`) | tag `X.Y.Z`, release |
 | `main`, `X.Y.Z` that already has a tag | only `staging`/`latest` and the `<sha>` tag, plus a warning | none |
 
-Releases are **published once and then stay fixed**. As long as the version is not raised, later builds keep updating `latest`, but `X.Y.Z` keeps pointing to the build that was released. To publish fixes, raise the version, see [Hotfix](#hotfix).
+Releases are **published once and then stay fixed**. As long as the version is not raised, later builds keep updating `latest`, but `X.Y.Z` keeps pointing to the build that was released. To publish fixes, raise the (patch) version, see [Hotfix](#hotfix).
 
 The CI also:
 - **Writes the release notes**: the GitHub release lists the pull requests merged since the previous tag.
 - **Labels the images** with `org.opencontainers.image.version`, so `docker inspect` shows the version of a running container.
-- **Builds and attaches the CLI binaries**: in FL-Net-CLI, the first build of a new release builds the native binaries and `flnet.jar` and attaches them to the GitHub release. Every `main` build still replaces the rolling `latest` release.
 - **Guards the branches**:
   - The *Version* workflow runs on every pull request into `main` or `develop`.
   - `main` only takes a release version `X.Y.Z` that has no tag yet.
   - `develop` only takes `X.Y.Z.dev`. A release version would publish the staging build under the release tag.
   - A push that breaks these rules fails the image workflow.
 
-What stays manual: choosing the version number, opening the pull requests that change it, and testing `develop` on staging before a release.
+What stays manual: choosing and setting the version number, opening the pull requests that change it, and testing `develop` on staging before a release.
 
 ### The version at runtime
 - Both learning APIs report their version at `GET /info`, publicly, as it contains nothing secret. The Local Learning API also asks the Platform for its version and caches the answer for a day. If the Platform is not reachable, `globalVersion` stays empty and the next call asks again. It returns `globalVersionNewer: true` if the Platform runs a newer version, plus `globalWebUrl`, the address of the Platform frontend.
-- The Client and Platform frontends show the version in the footer. Both load it right at the start, before the login, and show a one-line skeleton until it arrives. The Client frontend adds a hint when the Platform is newer. Instead of the former `globalWebUrl` build setting, it uses the address from `GET /info`. The Local Learning API derives that address from `QUARKUS_REST_CLIENT_GLOBAL_API_URL` without its `/api` path.
+- The Client and Platform frontends show the version in the footer. Both load it right at the start, before the login, and show a one-line skeleton until it arrives. The Client frontend adds a hint when the Platform is newer. 
 - The Orchestration API starts the Tool-Build-Pipeline image of its own version (`pipeline.image-tag`, default: its version). The tag sent by the Global API is ignored. For a locally built pipeline image, set `PIPELINE_IMAGE_TAG`.
-- `flnet update` checks the GitHub releases for a newer CLI and prints the install command.
 
 ## Releasing step by step
 The examples release `1.1.0`; replace the numbers with yours. Do every step in **all repositories** listed above, so the whole network stays on the same version.
@@ -95,7 +85,7 @@ Start the next version on `develop`, so it also contains the release commit:
 Until this is done, `develop` still carries `1.1.0.dev`. That is fine, it just keeps updating `staging`.
 
 ### Hotfix
-A bug in a release that cannot wait for the next one:
+A bug in a release (`1.1.0`) that cannot wait for the next one can be fixed by just updating the patch version of the relevant repository and not updating all repositories:
 
 1. Create a branch `hotfix/1.1.1` from `main`.
 2. Fix the bug, run `.github/scripts/version.sh set 1.1.1` and commit.
