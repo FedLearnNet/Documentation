@@ -1,6 +1,6 @@
 ---
 title: Authentication
-sidebar_position: 6
+sidebar_position: 7
 description: Overview of the KeyCloak-based authentication system used across the Client and Platform
 ---
 
