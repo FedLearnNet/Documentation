@@ -57,6 +57,22 @@ The diagram is simplified, but it matches how contributors usually move through 
 | change operational logs | `projects/local-app/src/app/modules/logs` |
 | change admin dashboards | `projects/local-app/src/app/modules/admin` |
 
+## Docker registry inventory
+
+In either frontend, open **Admin → Docker & orchestration → Registry** to browse the configured
+private registry's repositories and image tags. Search by repository or tag, refresh the inventory,
+or copy a full image reference. Commit tags are shortened in the table; hover to see the full tag.
+Repositories without tags are shown as **No tags**.
+
+The shared `admin-docker-registry` component loads the inventory when its tab is opened. It calls
+`GET /admin/orch/relay/docker/registry/images`, protected by the existing `Admin` role in both
+Learning APIs. The relay delegates to the Orchestration API's `GET /docker/registry/images`.
+Registry credentials stay in the Orchestration API.
+
+The inventory comes from the configured registry's catalogue, including repositories not yet
+imported into the tool store. See [registry configuration](../../backend/tool-build-pipeline.md#registry-and-builder-configuration)
+for local Compose addressing and registry API requirements.
+
 ## Adjacent systems
 
 - reusable query cards and log dialogs often continue into [Query system](query-system.md)

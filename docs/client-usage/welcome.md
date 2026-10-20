@@ -47,8 +47,8 @@ If you only need to use already available data and tools, start with [Platform u
 
 As the IT administrator of the Client:
 
-1. [Deploy your client](../deployment/deploy-client.md)
-2. [Back up your client](../deployment/backup-client.md)
+1. [Deploy your client](../deployment/client/deploy-client.md)
+2. [Back up your client](../deployment/client/backup-client.md)
 
 As the data administrator adding and managing data:
 

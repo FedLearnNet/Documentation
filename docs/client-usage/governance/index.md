@@ -27,5 +27,5 @@ Some access controls are also set when the Client is deployed. See [Deployment s
 
 - [Requests](../requests/index.md)
 - [Cohorts](../cohorts.md)
-- [Deploy your client](../../deployment/deploy-client.md)
+- [Deploy your client](../../deployment/client/deploy-client.md)
 - [Authentication](../../contribution-guide/auth.md)

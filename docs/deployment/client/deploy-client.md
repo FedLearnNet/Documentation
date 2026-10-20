@@ -1,6 +1,7 @@
 ---
 title: How can I deploy a Client
-sidebar_position: 2
+slug: /deployment/deploy-client
+sidebar_position: 1
 ---
 [comment]: <> (Please be REALLY careful with changing the URL of this page. It is hardcoded currently in both the frontend AND the deployment script!)
 
@@ -45,8 +46,8 @@ Please ask your Platform provider whether you require an account in the Network 
 If yes, please make sure to have the credentials ready, as you will need them in the next step.
 
 We also recommend you first read relevant documentation:
-- [Welcome](../intro/welcome.md) to understand the Network you're joining.
-- [Requests](../client-usage/requests/index.md) and [Governance](../client-usage/governance/index.md) to understand how to manage access to your Client from the network.
+- [Welcome](../../intro/welcome.md) to understand the Network you're joining.
+- [Requests](../../client-usage/requests/index.md) and [Governance](../../client-usage/governance/index.md) to understand how to manage access to your Client from the network.
 
 ### 1. Initializing the Client folder
 Simply run the initialization command and follow the command line prompts:
@@ -286,7 +287,8 @@ via `tcp` for federated learning.
 - Please make sure the system correctly keeps time (so has network time protocol access), 
 or issued authorization tokens might immediately expire.
 - Furthermore, the following domains must be whitelisted to pull the docker images used by the %%DEPLOYED_PRODUCT_NAME%% Client:
-  - `gitlab.cosy.bio:5050` (the %%DEPLOYED_PRODUCT_NAME%% registry)
+  - `ghcr.io/fedlearnnet/` (the %%DEPLOYED_PRODUCT_NAME%% Client images)
+    - If your firewall filters by host name only, also allow `pkg-containers.githubusercontent.com`, from which `ghcr.io` serves the image layers.
   - `docker.io` (the docker hub registry) and `docker.com` (May be used for authentication and pulling images)
     - Please also allow all subdomains, as docker uses multiple, e.g. `auth.docker.io` and `registry-1.docker.io`. Alternatively, you can follow the [docker allow list](https://docs.docker.com/desktop/setup/allow-list/), which may cover domains unused by the %%DEPLOYED_PRODUCT_NAME%% Client, but used by docker itself. 
   - `quay.io` (Red Hat registry for KeyCloak)

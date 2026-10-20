@@ -11,9 +11,9 @@ It is intended for readers who want to understand the technical details of the C
 ## Overview
 The Client is an ensemble of services that run on a single machine, either on-premise or in the cloud.
 These services are either provided by FL-Net or third-party software.
-All required services are available as Docker images, and the provided [deployment script](/docs/deployment/deploy-client.md) 
+All required services are available as Docker images, and the provided [deployment script](/docs/deployment/client/deploy-client.md) 
 automatically configures everything for deployment via docker compose.
-This documentation assumes deployment as described in the [deployment guide](/docs/deployment/deploy-client.md), using the default configuration. 
+This documentation assumes deployment as described in the [deployment guide](/docs/deployment/client/deploy-client.md), using the default configuration. 
 
 ## Which services get deployed?
 The Client is a single-host deployment composed of a small set of runtime services. The services listed here are the default components that make up a standard Client installation and reflect the architecture described in the FL-Net paper and in the network overview.

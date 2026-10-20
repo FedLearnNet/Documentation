@@ -1,4 +1,4 @@
-FROM cgr.dev/chainguard/nginx
+FROM cgr.dev/chainguard/nginx:latest
 #FROM nginx:latest
 
 COPY build/ /usr/share/nginx/html/

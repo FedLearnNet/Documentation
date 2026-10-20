@@ -68,7 +68,7 @@ You can create as many permissions as you need. If more than one permission appl
 
 ## Deployment settings
 
-Some access controls are configured when the Client is deployed rather than in its interface. See [Deploy your client](../../deployment/deploy-client.md).
+Some access controls are configured when the Client is deployed rather than in its interface. See [Deploy your client](../../deployment/client/deploy-client.md).
 
 ### Automatic approval
 

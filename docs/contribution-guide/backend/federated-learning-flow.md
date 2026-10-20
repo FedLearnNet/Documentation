@@ -40,7 +40,7 @@ A run involves several distinct identifiers that are easy to confuse:
 | **app** (e.g. `us-130-fl`) | `apps/us-130-fl` + `pyfedappwrap` (`Python-Tool-API`) | yes (ephemeral) | The federated tool. One container per clinic per workflow node, started by orch-api. |
 
 :::note
-The `meta` repository referenced in this page for the clinic-dind deployment was not moved to GitHub. See [Local Docker-in-Docker deployment](../../deployment/deploy-local-dind.md) for the current documentation of this setup.
+The `meta` repository referenced in this page for the clinic-dind deployment was not moved to GitHub. See [Local Docker-in-Docker deployment](../../deployment/client/deploy-local-dind.md) for the current documentation of this setup.
 :::
 
 In the **clinic-dind** deployment (`meta/deployment/clinic-dind`) each clinic is one
@@ -432,7 +432,8 @@ For `startRunning=true`:
 
 Code: `pyfedappwrap/engine/worker/federated_worker_manager.py`,
 `engine/tests/federated/runner.py` (despite the path, this **is** the production runner),
-`engine/service/controller/common.py`, `engine/federated/models.py`.
+`engine/service/controller/common.py`, `engine/federated/models.py`. Threads, controller modes and
+the communicator API are described in [Federated Runtime](../python-tool-api/federated-runtime.md).
 
 `FederatedWorkerManager._run_federated(run_dto, run_type)` per message:
 

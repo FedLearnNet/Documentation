@@ -101,7 +101,7 @@ This is the primary configuration file. All values here are injected into the Do
 IMAGE_TAG=latest
 
 # Frontend image (can differ from the backend IMAGE_TAG)
-FRONTEND_IMAGE=gitlab.cosy.bio:5050/cosybio/federated-learning/federated_db/frontend-shared/global-fl-net:latest
+FRONTEND_IMAGE=ghcr.io/fedlearnnet/frontends/global-fl-net:latest
 
 # Full URL of this deployment (used for CORS, Keycloak redirect URLs)
 DEPLOYED_ON_DOMAIN=https://your-domain.com
@@ -169,7 +169,6 @@ QUARKUS_OIDC_CREDENTIALS_SECRET=change-me
 ```dotenv
 POSTGRES_PASSWORD=change-me
 QUARKUS_DATASOURCE_PASSWORD=change-me
-ORCH_DOCKER__GITLAB__REGISTRY_PASSWORD=your-registry-pat
 PIPELINE_DOCKER_PASSWORD=your-registry-pat
 PIPELINE_REPO_TOKEN=your-repo-token
 ```
@@ -224,12 +223,6 @@ The SSL cipher and protocol configuration (applied automatically in the `ssl` pr
 ---
 
 ## Step 4: Pull Images and Start
-
-Log into the registry:
-
-```bash
-docker login gitlab.cosy.bio:5050
-```
 
 Pull all images and start the stack:
 
