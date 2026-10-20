@@ -44,11 +44,11 @@ Select a cohort from the overview to open its workspace.
 | Manage access | Open **Access management** to configure permissions and disclosure controls. See [federated access settings](governance/access-management.md#permission-settings). |
 | Review statistics | Open **Statistics** to inspect summaries of the cohort's data. |
 | Manage records | Open **Patients** to view, create, edit, or delete individual records. See [manual record management](add-data/manual-patient-management.md). |
-| Review cohort members | Open **Members** to review cohort membership. |
+| Review cohort members | Open **Members** to review which other users of your client have access to the cohort. |
 | Import or update data | Use **Connector** to configure imports and run them against the cohort. See [adding data through connectors](add-data/index.md). |
 | Export data | Use the download action to export cohort data. |
 | Delete the cohort | Use the cohort's delete action to remove it from the Client. |
 
-## Use cohort data in the network
+## Allowing secured federated access from the network
 
 Cohort permissions determine how data can be queried or used for statistics and federated analysis. See [Requests](requests/index.md) for reviewing incoming requests, and [Governance](governance/index.md) for access permissions and the management of accepted trainings.
