@@ -35,7 +35,7 @@ Select or drag a file into the **Upload source file** dialog, then specify how t
 
 ![Upload source file dialog with delimited-file interpretation settings](/img/screenshots/tutorials/walkthrough/client-usage/uploade-source-file%201_2.png)
 
-Select **Upload and analyze**. The Client reads the source and presents the detected tables, row counts, columns, a bounded preview, and column statistics. For a ZIP archive, each supported file is presented as a separate table. Review the analysis and select **Use file**.
+Select **Upload and analyze**. The Client reads the source and presents the detected tables, row counts, columns, a preview, and column statistics. For a ZIP archive, each supported file is presented as a separate table. Review the analysis and select **Use file**.
 
 ![Analyzed ZIP source showing its detected tables and the Use file action](/img/screenshots/tutorials/walkthrough/client-usage/uploade-source-file%202_2.png)
 
@@ -82,7 +82,7 @@ Two transformation sources are available:
 - **Built-in transformations** are managed transformation functions provided directly by the Client. They can operate on individual cells or complete rows.
 - **App tools** are installed transformation applications. They support reusable or domain-specific processing that is not provided by a built-in transformation.
 
-The available transformations depend on the Client configuration, and installations may provide their own app tools. This guide does not list every transformation. Developers who need custom processing can follow the [tool development guide](../../../tool-dev/create-tool.md), including its section on [transformer apps](../../../tool-dev/create-tool.md#transformer-app-rowcell-transform-on-a-dataframe).
+The available transformations depend on the Client configuration, and installations may provide their own app tools. This guide does not list every transformation. Developers who need custom transformations can follow the [tool development guide](../../../tool-dev/create-tool.md), including its section on [transformer apps](../../../tool-dev/create-tool.md#transformer-app-rowcell-transform-on-a-dataframe).
 
 After adding a transformation, review its output before continuing. The transformed columns are the inputs available to the mapper.
 

@@ -63,7 +63,27 @@ const sidebars: SidebarsConfig = {
                         'client-usage/add-data/manual-patient-management',
                     ],
                 },
-                'client-usage/governance',
+                {
+                    type: 'category',
+                    label: 'Requests',
+                    link: {type: 'doc', id: 'client-usage/requests/index'},
+                    items: [
+                        'client-usage/requests/training-requests',
+                        'client-usage/requests/statistics-requests',
+                        'client-usage/requests/metrics-requests',
+                    ],
+                },
+                {
+                    type: 'category',
+                    label: 'Governance',
+                    link: {type: 'doc', id: 'client-usage/governance/index'},
+                    items: [
+                        'client-usage/governance/trainings',
+                        'client-usage/governance/access-management',
+                        'client-usage/governance/logs',
+                        'client-usage/governance/notifications',
+                    ],
+                },
             ],
         },
     ],
