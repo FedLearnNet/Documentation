@@ -49,6 +49,18 @@ You can usually boot the shell without every backend running, but feature work o
 
 See the [Repository map](../repository-map.md) and check which service calls your change affects.
 
+The login runs through the learning API (backend-for-frontend), so logging in needs the matching backend: `local-learning-api` on
+port 8081 for the local app, `global-learning-api` on port 8080 for the global app.
+
+`ng serve` uses `projects/<app>/proxy.conf.json`, so development is same-origin like behind NGINX and the session cookie works:
+
+| Path | Target |
+| --- | --- |
+| `/local-learning-api` | `http://localhost:8081` |
+| `/api` | `http://localhost:8080` |
+
+The prefix is stripped and WebSockets are proxied as well.
+
 ## 4. Be careful with environment files
 
 Environment files live under:

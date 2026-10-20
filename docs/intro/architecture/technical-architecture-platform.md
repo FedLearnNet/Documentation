@@ -89,8 +89,8 @@ flowchart LR
     GLA -->|FL project run orchestration, HTTP| RELAY
     RELAY <-->|Federated learning communication channel| CLIENTS
     KC --> DB1
-    GLA <-->|Federated requests / results, WSS 🔒 OAuth protected*| CLIENTS
-    DMA <-->|Schema retrieval 🔒 OAuth protected*| CLIENTS
+    GLA <-->|Federated requests / results, schema retrieval, WSS 🔒 OAuth protected| CLIENTS
+    GLA -->|Forward schema requests 🔒 OAuth protected| DMA
 
     classDef user fill:#eefaf1,stroke:#2e8b57,stroke-width:2px,color:#000
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
@@ -100,19 +100,18 @@ flowchart LR
     class FE,KC,GLA,DMA,ORCH,TR,TOOL,CTRL,RELAY,DB1,DB2,DB3,DB4 platform
     class CLIENTS client
 ```
-\* Whether Clients must authenticate via OAuth is set at deployment time of the Platform.
 
 ### User access (Data Scientist / Auditor)
 
-The Data Scientist or Auditor accesses the Platform via the Frontend, authenticating through Keycloak. Once logged in, they use the Global Learning API to submit FL requests, run DDQs, retrieve statistics, manage Tools/models, and monitor service health — and the Data Modeler API directly to manage Schemas, Ontologies, and DataTypes.
+The Data Scientist or Auditor accesses the Platform via the Frontend, authenticating through Keycloak. The login runs through the Global Learning API (backend-for-frontend), so the browser only holds a session cookie, no token. Once logged in, they use the Global Learning API to submit FL requests, run DDQs, retrieve statistics, manage Tools/models, and monitor service health — and to manage Schemas, Ontologies, and DataTypes, which the Global Learning API forwards to the Data Modeler API with the user's access token.
 
-The Global Learning API persists state in PostgreSQL; the Data Modeler API in Neo4j. Most endpoints on both APIs require authentication, aside from a few public ones (e.g. the Tool store). Endpoints may be restricted based on the Users role, e.g. a `Data-Scientist` role cannot submit a certification.
+The Global Learning API persists state in PostgreSQL; the Data Modeler API in Neo4j. Every REST endpoint on both APIs requires authentication by default, including the Tool store. Endpoints may be restricted based on the Users role, e.g. a `Data-Scientist` role cannot submit a certification.
 
 ### Client access
 
-Each Client keeps a permanent, authenticated WebSocket connection to the Global Learning API for federated queries, statistics/learning requests, and FL run orchestration sync. Clients also reach the Data Modeler API directly for Schema retrieval during cohort creation.
+Each Client keeps a permanent, authenticated WebSocket connection to the Global Learning API for federated queries, statistics/learning requests, and FL run orchestration sync. Clients also retrieve Schemas during cohort creation through the Global Learning API, which forwards these requests to the Data Modeler API.
 
-Whether Client connections require OAuth or can be unauthenticated is set at deployment time at Platform level via the deployment script. When required, the account used for the Client must have the `Site` role in KeyCloak.
+Every Client must authenticate via OAuth with its own Platform account, which must have the `Site` role in KeyCloak.
 
 ### FL run orchestration
 
@@ -139,7 +138,7 @@ During FL, a Tool running on the Platform (as aggregator) talks to the Platform'
 Beyond what's shown above, the Global Learning API and Data Modeler API reach a few external services:
 
 - The Data Modeler API may query the **UMLS API** for ontology concepts.
-- The Global Learning API may reach **Semantic Scholar / PubMed** for research assistance, an **LLM server** for the chatbot feature, and **Docker Hub**, **Chainguard**, and **GitLab** for Tool building, certification, and bug reporting.
+- The Global Learning API may reach **Semantic Scholar / PubMed** for research assistance, an **LLM server** for the chatbot feature, and **Docker Hub**, **Chainguard**, and **GitLab** for Tool building and certification.
 
 See the [network architecture overview](network-architecture.md) for the full list.
 
@@ -151,6 +150,7 @@ OAuth protection mostly requires roles:
 |---|---|
 | Client → Global Learning API | `Site` |
 | Data Scientist / Auditor → Global Learning API / Data Modeler API | `Data-Scientist` or `Auditor` |
+| Schema, Ontology, DataType changes → Data Modeler API | `Data-Modeler` or `Admin` |
 | Global Learning API → Orch API | None — isolated, called only via service account |
 
 ### What networks are the services deployed on?

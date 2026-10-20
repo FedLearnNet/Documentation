@@ -18,6 +18,20 @@ The data modeling system is the schema and ontology side of the global frontend.
 - UMLS-related views
 - schema and ontology services
 
+## Backend access
+
+The global frontend never calls the `datamodeler-api` directly. Requests go to the `global-learning-api` under
+`/api/data-modeler/**` (`DataModelerForwardService`), which forwards them with the user's access token. The
+`datamodeler-api` checks the roles:
+
+| Operation | Required |
+| --- | --- |
+| reads, including subscribe/unsubscribe and ontologies/datatypes of subscribed schemas | login |
+| create, update, delete of schemas, ontologies, datatypes | `Data-Modeler` or `Admin` |
+| UMLS import, embedding rebuild | `Admin` |
+
+The API URL is `globalLearningApiUrl + '/' + datamodelerApiPrefix`, see [Builds and environments](../builds-and-environments.md#environment-files).
+
 ## System boundary
 
 Start here when the change affects schema meaning, ontology structure, datatypes, or the domain concepts that other systems consume.

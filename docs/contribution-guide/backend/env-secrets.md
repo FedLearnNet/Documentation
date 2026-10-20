@@ -18,7 +18,6 @@ The `local-learning`, `global-learning`, and `data-modeler` modules live in the
 
 | Variable | local-learning | global-learning | data-modeler | orch-api |
 |---|:---:|:---:|:---:|:---:|
-| `FLNET_GITLAB_ISSUE_TOKEN` | ✓ | ✓ | | |
 | `QUARKUS_OIDC_CREDENTIALS_SECRET` | ✓ | ✓ | | |
 | `QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET` | ✓ | ✓ | | |
 | `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` | | ✓ | | |
@@ -28,11 +27,13 @@ The `local-learning`, `global-learning`, and `data-modeler` modules live in the
 | `PIPELINE_DOCKER_PASSWORD` | ✓ | ✓ | | ✓ |
 | `PIPELINE_REPO_TOKEN` | ✓ | ✓ | | ✓ |
 
+No token is needed for issue reporting: *Report an issue* in the frontends opens a prefilled issue on
+[FedLearnNet/.github](https://github.com/FedLearnNet/.github/issues/new) that the user submits with their own GitHub account.
+
 ## local-learning
 
 This file should be named: `.env`
 ```env
-FLNET_GITLAB_ISSUE_TOKEN=TOKEN
 QUARKUS_OIDC_CREDENTIALS_SECRET=SECRET
 QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET=SECRET
 ```
@@ -45,7 +46,6 @@ This file should be named: `.env`
 
 ```env
 QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=TOKEN
-FLNET_GITLAB_ISSUE_TOKEN=TOKEN
 QUARKUS_OIDC_CREDENTIALS_SECRET=TOKEN
 QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET=TOKEN
 ```

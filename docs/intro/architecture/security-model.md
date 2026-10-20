@@ -27,6 +27,18 @@ The details of how this works are explained in all previous sections:
 - The [technical architecture of the Platform](technical-architecture-platform.md) explains the same for the Platform, also including the data flow of the platform in shorter form.
 - The [data flow of the Client](data-flow-client.md) explains exactly how data flows through the Client.
 
+## Authentication
+
+- **Browser sessions:** the Local and Global Learning API act as backend-for-frontend. They run the Keycloak login (authorization code flow with PKCE) and keep the tokens in an encrypted HttpOnly session cookie, so no token ever reaches the browser. State-changing requests that use this cookie must carry an `X-Requested-With` header, which blocks cross-site request forgery.
+- **API endpoints:** every REST endpoint of the Learning APIs and the Data Modeler API requires a login unless explicitly marked public; only the logout endpoint is. WebSockets are secured individually.
+- **Token audience:** each API only accepts tokens issued for it (`aud` claim), so a token of another Keycloak client of the same realm is rejected.
+- **Cohort data:** on the Client, patient data, exports, files, import runs and logs are only available to members of the cohort.
+- **Not exposed:** the Data Modeler API and the Quarkus `/q/*` endpoints (health, metrics) are not reachable through nginx. The Data Modeler is only reached through the Global Learning API, which checks the login and forwards the token.
+- **Clients towards the Platform:** every Client logs in with its own account in the Platform's Keycloak. Anonymous Clients are not possible.
+- **Tools:** a Tool container only receives an API key bound to its run. The key is accepted on that run's Tool endpoints and rejected everywhere else.
+
+See [Authentication](../../contribution-guide/auth.md) for the Keycloak clients, roles and endpoints.
+
 ## Client IT admin responsibilities
 
 - Change the initial Keycloak admin password immediately after deployment, before real patient data is loaded.
@@ -38,7 +50,8 @@ The details of how this works are explained in all previous sections:
 ## Platform operator responsibilities
 
 - Since the Platform must be internet-reachable by every participating Client, use a CA-issued certificate and keep it current — the self-signed/no-HSTS option documented for Clients is not an appropriate choice for a Platform deployment.
-- Ensure the Platform's own Keycloak instance correctly gates Client registration, since this is what protects the Platform from unauthorized or malicious Clients.
+- Ensure the Platform's own Keycloak instance correctly gates Client registration, since this is what protects the Platform from unauthorized or malicious Clients. Every Client needs an account there; there is no option to accept unauthenticated Clients.
+- Assign the `Data-Modeler` role only to users who maintain schemas, ontologies and datatypes, since these define what every Client imports.
 - Control who holds auditor rights for Tool certification, and treat that role with care — certification is the sole technical gate for Tools executing on the Platform itself (see [the central trust boundary](#the-central-trust-boundary)).
 
 ## Known limitations
@@ -51,7 +64,7 @@ These are accepted design trade-offs, not defects awaiting a fix — documented 
 - **FL run creation/stopping on the Controller and Relay Server carries no application-level authentication.**, The Relay Server's HTTP orchestration endpoints are network-isolated to the global learning API (only its TCP endpoint is public, for Controllers to connect), so this is not exploitable externally. The Controller's orchestration endpoints, however, are reachable by any Tool on the client and have no auth — but a Tool-registered FL run has no effect, since the Relay Server never learns of it. Given this, the lack of auth is accepted as a simplicity/performance trade-off. Actual FL message traffic is separately API-key protected.
 - **Disclosure control only protects against what it's configured to protect against.** A statistic or query result can be within a Client's granted permissions and still be disclosive if the underlying thresholds are set too permissively for a given cohort — this is a configuration responsibility of the Client's Data Access Managers, not something FL-Net's architecture can enforce on its behalf. See the [access management documentation](../../client-usage/governance/access-management.md#permission-settings).
 - **Manual approval steps are only as reliable as the humans performing them.** A Data Holder (Data Access Manager) who approves a Request or a Tool's elevated access without adequately reviewing it is a governance risk no technical control in this document eliminates.
-- **Linkage of schema subscription to a Client is possible**. While the schema pull and subscription lifecycle are Local Learning API to Platform traffic, and are intentionally kept anonymous, a Platform operator could still correlate the timing or IP address of a schema pull or subscription with a Client's WebSocket connection to the Platform. This is a known limitation of the current design, and is accepted as a trade-off for simplicity and performance, as schema information is not considered sensitive in the same way as patient-level data.
+- **Schema subscriptions are linkable to a Client**. All schema-related requests use the Client's identity. The Data Modeler API stores only a SHA-256 hash of the Client account's token subject as subscriber, but since the Platform knows its Clients' accounts, a Platform operator can map a subscription back to the Client. This is accepted, as schema information is not considered sensitive in the same way as patient-level data.
 
 ## Further reading
 
