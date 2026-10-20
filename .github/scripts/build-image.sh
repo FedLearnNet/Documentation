@@ -7,7 +7,7 @@ set -euo pipefail
 
 image="$REGISTRY/$1"
 tag=$([ "$GITHUB_REF" = "refs/heads/main" ] && echo latest || echo staging)
-tag_args=(-t "$image:$tag" -t "$image:$tag-${GITHUB_SHA::7}")
+tag_args=(-t "$image:$tag")
 if [ "${TAG_IMAGE:-false}" = true ]; then tag_args+=(-t "$image:$VERSION"); fi
 
 npm run build

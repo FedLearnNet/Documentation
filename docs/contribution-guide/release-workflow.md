@@ -36,15 +36,16 @@ On every push to `main` or `develop`, the image workflows (`docker.yml`, in the 
 
 | Version on the branch | Image tags | Git tag and GitHub release |
 |---|---|---|
-| `develop`, `X.Y.Z.dev` | `staging`, `staging-<sha>`, `X.Y.Z.dev` (moves with every build) | none |
-| `main`, `X.Y.Z`, first build | `latest`, `latest-<sha>`, `X.Y.Z` (Learning-APIs also `prod`) | tag `X.Y.Z`, release |
-| `main`, `X.Y.Z` that already has a tag | only `staging`/`latest` and the `<sha>` tag, plus a warning | none |
+| `develop`, `X.Y.Z.dev` | `staging`, `X.Y.Z.dev` (both move with every build) | none |
+| `main`, `X.Y.Z`, first build | `latest`, `X.Y.Z` (Learning-APIs also `prod`) | tag `X.Y.Z`, release |
+| `main`, `X.Y.Z` that already has a tag | only `latest`, plus a warning | none |
 
 Releases are **published once and then stay fixed**. As long as the version is not raised, later builds keep updating `latest`, but `X.Y.Z` keeps pointing to the build that was released. To publish fixes, raise the (patch) version, see [Hotfix](#hotfix).
 
 The CI also:
 - **Writes the release notes**: the GitHub release lists the pull requests merged since the previous tag.
-- **Labels the images** with `org.opencontainers.image.version`, so `docker inspect` shows the version of a running container.
+- **Cleans up the registry** every Monday (*Image cleanup* workflow, shared from [FedLearnNet/.github](https://github.com/FedLearnNet/.github)): images without any tag left, i.e. old builds that `staging`, `latest` or a `.dev` tag moved away from, are deleted. Released versions keep their tag and are never deleted.
+- **Labels the images** with `org.opencontainers.image.version` and the commit in `org.opencontainers.image.revision`, so `docker inspect` shows what a running container was built from.
 - **Guards the branches**:
   - The *Version* workflow runs on every pull request into `main` or `develop`.
   - `main` only takes a release version `X.Y.Z` that has no tag yet.
