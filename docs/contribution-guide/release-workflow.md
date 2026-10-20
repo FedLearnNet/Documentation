@@ -36,7 +36,7 @@ flowchart LR
 ```
 
 ## Where the version is stored
-Each repository stores the version in the place its build tool expects. You never edit these files by hand. The versioning comes in two halves:
+Each repository stores the version in the place its ci/cd expects (e.g. pom.xml). The versioning comes in two halves:
 - `.github/scripts/version.sh` in every repository only knows where that repository keeps its version, and reads or changes it.
 - The rules are the same for all repositories, so they live once in [FedLearnNet/.github](https://github.com/FedLearnNet/.github) as the action `actions/version`. They cover the format, which branch takes which version, and what a build publishes. Every repository's CI uses that action, so a rule change happens in one place.
 
@@ -100,6 +100,7 @@ What stays manual: choosing the version number, opening the pull requests that c
 ### The version at runtime
 - Both learning APIs report their version at `GET /info`, publicly, as it contains nothing secret. The Local Learning API also asks the Platform for its version and caches the answer for a day. If the Platform is not reachable, `globalVersion` stays empty and the next call asks again. It returns `globalVersionNewer: true` if the Platform runs a newer version, plus `globalWebUrl`, the address of the Platform frontend.
 - The Client and Platform frontends show the version in the footer. Both load it right at the start, before the login, and show a one-line skeleton until it arrives. The Client frontend adds a hint when the Platform is newer. Instead of the former `globalWebUrl` build setting, it uses the address from `GET /info`. The Local Learning API derives that address from `QUARKUS_REST_CLIENT_GLOBAL_API_URL` without its `/api` path.
+- The Orchestration API starts the Tool-Build-Pipeline image of its own version (`pipeline.image-tag`, default: its version). The tag sent by the Global API is ignored. For a locally built pipeline image, set `PIPELINE_IMAGE_TAG`.
 - `flnet update` checks the GitHub releases for a newer CLI and prints the install command. `flnet update --pre` also offers release candidates.
 
 ## Releasing step by step
@@ -108,21 +109,7 @@ The examples release `1.1.0`; replace the numbers with yours. Do every step in *
 ### 1. Develop
 `develop` carries `1.1.0.dev`. Nothing to do: features are merged as described in the [Development workflow](development-workflow.md), and every build is published as `staging` and `1.1.0.dev`.
 
-### 2. Release candidate
-When all features for `1.1.0` are merged (feature freeze):
-
-1. Create a branch from `develop`, e.g. `chore/1.1.0.rc0`.
-2. Run `.github/scripts/version.sh set 1.1.0.rc0` and commit.
-3. Open a pull request into `develop` and merge it.
-
-The CI then publishes `1.1.0.rc0` images, the tag `1.1.0.rc0` and a pre-release, and the CLI attaches its binaries. Deploy the candidate on staging with this version pinned, e.g. `flnet client init --image-tag 1.1.0.rc0`, and test it.
-
-### 3. Further candidates
-Fixes for the candidate go into `develop` as usual. To publish them as a new candidate, raise the version in the same way to `1.1.0.rc1`, `1.1.0.rc2`, and so on. Until then the fixes only reach `staging`.
-
-Avoid merging new features during this phase. They would end up in the release.
-
-### 4. Release
+### 2. Release
 When a candidate passes the tests:
 
 1. Create a branch `release/1.1.0` from `develop`.
@@ -132,7 +119,7 @@ When a candidate passes the tests:
 
 The CI publishes the `1.1.0` and `latest` images, the tag `1.1.0` and the GitHub release. Check the generated release notes on GitHub and complete them if needed.
 
-### 5. Back to develop
+### 3. Back to develop
 Start the next version on `develop`, so it also contains the release commit:
 
 1. Create a branch from `develop`, e.g. `chore/1.2.0.dev`.
@@ -156,12 +143,12 @@ Only the repositories with the fix need a hotfix release, the others stay on `1.
 In every repository, make the *Version check* a required status check for `main` and `develop`. This is set in the branch protection rules on GitHub, so the CI cannot do it itself.
 
 ## Troubleshooting
-**`develop takes X.Y.Z.dev or X.Y.Z.rcN`**: a release version reached `develop`, usually by merging `main` without step 5. Set the next `.dev` version.
+**`develop takes X.Y.Z.dev`**: a release version reached `develop`, usually by merging `main` without step 5. Set the next `.dev` version.
 
-**`main only takes release versions`**: the pull request into `main` still carries a `.dev` or `.rcN` version. Release via a `release/X.Y.Z` branch as in step 4.
+**`main only takes release versions`**: the pull request into `main` still carries a `.dev` version. Release via a `release/X.Y.Z` branch as in step 2.
 
 **`X.Y.Z is already released. Raise the version`**: there is already a tag for this version. Use the next patch version for a fix.
 
 **Warning `… was already released from <sha>`**: changes reached the branch without a new version. They are published as `staging`/`latest`, but not under the version tag. Raise the version to publish them.
 
-**A wrong candidate or release was published**: don't move the tag. Publish the next number instead, e.g. `1.1.0.rc2` or `1.1.1`. Deleting a GitHub release and its tag lets the next build publish the same version again, which may confuse deployments that already pulled it.
+**A wrong candidate or release was published**: don't move the tag. Publish the next number instead, e.g. `1.1.0.dev` or `1.1.1`. Deleting a GitHub release and its tag lets the next build publish the same version again, which may confuse deployments that already pulled it.
