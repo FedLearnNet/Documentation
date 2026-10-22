@@ -86,9 +86,9 @@ jobs:
           PRODUCT_SLUG: flnet
           DEPLOYED_PRODUCT_URL: https://federated-learning.net
           PRODUCT_TAGLINE: A secure, locally governed Federated Learning Network for healthcare, industry, and research
-          PRODUCT_LOGO_PATH: img/flnet/logo.svg
+          PRODUCT_LOGO_PATH: img/flnet/logo.avif
           PRODUCT_LOGO_ALT: FLNet Logo
-          PRODUCT_FAVICON_PATH: img/flnet/logo.svg
+          PRODUCT_FAVICON_PATH: img/flnet/logo.avif
         run: bash .github/scripts/build-image.sh flnet-user-doc
 
   # First build of a release candidate or release: git tag and GitHub release

@@ -15,10 +15,10 @@ const productSlug = process.env.PRODUCT_SLUG ?? 'productSlug';
 const productTagline = process.env.PRODUCT_TAGLINE ?? 'productTagline';
 // The path here is from the root path static!! Put your logo in e.g.
 // static/img/posymed/logo.svg and it will be available at /img/posymed/logo.svg
-const productLogoPath = process.env.PRODUCT_LOGO_PATH ?? 'img/logo.svg';
+const productLogoPath = process.env.PRODUCT_LOGO_PATH ?? 'img/flnet/logo.avif';
 const productLogoAlt = process.env.PRODUCT_LOGO_ALT ?? 'product logo';
 // Same as logo, also from the static folder!
-const productFaviconPath = process.env.PRODUCT_FAVICON_PATH ?? 'img/favicon.ico';
+const productFaviconPath = process.env.PRODUCT_FAVICON_PATH ?? 'img/flnet/logo.avif';
 const baseUrl = process.env.PRODUCT_BASE_URL ?? '/documentation/';
 
 const config: Config = {
@@ -112,8 +112,7 @@ const config: Config = {
     ],
 
     themeConfig: {
-        // TODO: add the actual logo
-        image: 'img/docusaurus-social-card.jpg',
+        image: 'img/flnet/logo.avif',
         navbar: {
             title: deployedProductName,
             logo: {
@@ -213,7 +212,10 @@ const config: Config = {
                             label: 'Contact Us',
                             to: 'mailto:info@mail.federated-learning.net',
                         },
-                        // TODO: add Github link once moved to Github
+                        {
+                            label: 'GitHub',
+                            href: 'https://github.com/FedLearnNet',
+                        },
                     ],
                 }
             ],
