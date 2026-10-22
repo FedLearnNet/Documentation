@@ -47,7 +47,7 @@ for the credentials and have them ready, as the next step asks for them.
 
 We also recommend you first read relevant documentation:
 - [Welcome](../../intro/welcome.md) to understand the Network you're joining.
-- [Requests and governance](../../client-usage/governance.md) to understand how to manage access to your Client from the network.
+- [Requests](../../client-usage/requests/index.md) and [Governance](../../client-usage/governance/index.md) to understand how to manage access to your Client from the network.
 
 ### 1. Initializing the Client folder
 Simply run the initialization command and follow the command line prompts:

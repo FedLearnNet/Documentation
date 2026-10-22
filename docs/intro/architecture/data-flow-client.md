@@ -28,7 +28,7 @@ Please note that a user may hold more than one of these roles, with the Admin ro
 
 The full definition of each boundary, including what does *not* cross a network boundary at all (such as backups), is in [Boundaries of the Client](#boundaries-of-the-client) below.
 
-**Federated request types.** The Platform can make four kinds of request against a Client's data. Three of them — statistics, learning, and metrics — are formal **Requests** in the sense used by the [access management documentation](../../client-usage/governance.md) and require manual approval by a Data Holder (Data Access Manager). The fourth, federated queries, works differently: it is always answered automatically, shaped only by the disclosure-control settings configured for that cohort — there is no manual-approval step for a query. However, the automatic answer may also be an automatic rejection depending on how the disclosure control is set up.
+**Federated request types.** The Platform can make four kinds of request against a Client's data. Three of them — statistics, learning, and metrics — are formal **Requests** in the sense used by the [access management documentation](../../client-usage/governance/access-management.md) and require manual approval by a Data Holder (Data Access Manager). The fourth, federated queries, works differently: it is always answered automatically, shaped only by the disclosure-control settings configured for that cohort — there is no manual-approval step for a query. However, the automatic answer may also be an automatic rejection depending on how the disclosure control is set up.
 
 Deployments that explicitly enable the relevant Automatic Access permissions can approve matching statistics, learning, or metrics requests without manual review. Manual approval remains the default.
 
@@ -189,7 +189,7 @@ flowchart LR
 The Local Learning API and Controller both connect to the Platform, but they do so in different ways. The Local Learning API uses a permanent websocket connection over TLS (`wss`) to the Global Learning API, while the Controller uses a separate raw TCP connection (TLS 1.3 minimum) to the Relay Server, only created on executing a federated learning.
 These form the **Local Learning API** and **Controller** boundaries, respectively.
 
-Depending on how the Client is setup in [step 0.1](#step-01-configuration), the Local Learning API connection can be an anonymous connection or a connection with a dedicated Client account on the Platform. If authenticated, the account's token is sent in the `Authorization` header of the websocket handshake and the connection is re-established with a fresh token before it expires.
+The Local Learning API always authenticates with a dedicated Client account on the Platform. The account's token is sent in the `Authorization` header of the websocket handshake and the connection is re-established with a fresh token before it expires.
 
 The Controller uses mTLS and [API Key](#details-api-keys) based application layer authentication towards the Platform. Authentication is mutual: the Controller verifies the Relay Server's TLS certificate (public CA and hostname) and a per-run Relay key presented by the Relay Server.
 
@@ -257,7 +257,7 @@ Before data can be ingested, the Data Holder creates a cohort through the Instan
 
 When the cohort is created, the Local Learning API sends a subscription request to the Platform confirming that the Client subscribes to the selected schema. If the cohort is deleted later, the Local Learning API sends the corresponding unsubscribe request. 
 
-All mentioned requests (schema availability, subscription and unsubscription messages) are sent as an anonymous user; they do not use the identity associated with the Client's WebSocket connection to the Platform.
+All schema-related requests use the Client’s identity. When the Client subscribes to a schema, the Platform hashes this identity and stores it in that schema’s subscription list.
 
 ```mermaid
 flowchart LR
@@ -283,7 +283,7 @@ flowchart LR
  
     DH -->|Select schema, create / delete cohort| FE
     FE -->|Schema request, cohort create / delete| LLA
-    LLA -->|Anonymous request: Pull schemas, subscribe / unsubscribe| GLA
+    LLA -->|Pull schemas, subscribe / unsubscribe| GLA
 ```
 
 ## 3. Data ingestion
@@ -400,7 +400,7 @@ sequenceDiagram
     L->>L: Apply disclosure controls (per requesting user: is allowed, min. record count, rate limit) and log hit patient ids
     L-->>P: Permitted result
 ```
-How the query is treated, from applying privacy controls to rejecting it, depends on the setup permissions, see the [access management documentation](/docs/client-usage/governance.md) for details. 
+How the query is treated, from applying privacy controls to rejecting it, depends on the setup permissions, see the [access management documentation](/docs/client-usage/governance/access-management.md) for details. 
 
 ## 5. Federated statistics
 
@@ -422,7 +422,7 @@ sequenceDiagram
     L-->>P: Permitted result
 ```
 
-The permission system handles the approval and privacy settings, see [access management documentation](/docs/client-usage/governance.md) for details.
+The permission system handles the approval and privacy settings, see [access management documentation](/docs/client-usage/governance/access-management.md) for details.
 
 ## 6. Federated learning
 
@@ -560,7 +560,7 @@ Reasoning about Client data flow comes down to two different kinds of boundary: 
 | Boundary | Crosses to/from | Carries |
 |---|---|---|
 | **NGINX** | Data Holder ↔ Client | All human/browser access: login, uploads, exports, admin actions |
-| **Local Learning API** | Client ↔ Platform | Schema pulls, anonymous schema subscriptions/unsubscriptions, federated queries, and federated statistics, learning, and metrics requests, plus their results |
+| **Local Learning API** | Client ↔ Platform | Schema pulls, schema subscriptions/unsubscriptions, federated queries, and federated statistics, learning, and metrics requests, plus their results |
 | **Controller** | Client ↔ Platform | Federated-learning training communication only (model updates), over its own dedicated channel |
 | **Orch API** | Client ↔ Platform | Pulls required Tool images from the Tool registry, which is part of the Platform and served under `/v2/` of the Platform domain |
 
@@ -579,7 +579,7 @@ The Tool therefore has access to sensitive data by design, but its network acces
 The Client data flow can be reduced to one central principle:
 > **Patient data is processed inside the Client, while only explicitly permitted results leave — and only through the Local Learning API or Controller boundary, never directly from a database.**
 
-The Local Learning API is the main control point for local data, for federated queries, and for the statistics, learning, and metrics requests alongside them. It also pulls schemas and manages anonymous schema subscriptions for cohorts. The Orch API prepares data for Tool execution — always by way of a copying container into the Tool's own volume, never a direct handoff — and pulls the Tool image from the Platform registry. Tools perform the actual ETL or FL computation inside their own sandbox, and the Controller handles federated-learning communication through its own dedicated channel.
+The Local Learning API is the main control point for local data, for federated queries, and for the statistics, learning, and metrics requests alongside them. It also pulls schemas and manages the Client's schema subscriptions for cohorts. The Orch API prepares data for Tool execution — always by way of a copying container into the Tool's own volume, never a direct handoff — and pulls the Tool image from the Platform registry. Tools perform the actual ETL or FL computation inside their own sandbox, and the Controller handles federated-learning communication through its own dedicated channel.
 
 ```mermaid
 flowchart LR
@@ -628,11 +628,9 @@ flowchart LR
     ORCH -->|Orch API boundary: pull Tool image| REG
     TOOL -->|Model updates and FL messages| CTRL
     CTRL -->|Controller boundary: federated learning| RELAY
-    LLA -->|Local Learning API boundary, authenticated*: queries, statistics, learning, and metrics| GLA
-    LLA -->|Local Learning API boundary, anonymous: Schema pulls, subscriptions, unsubscriptions| GLA
+    LLA -->|Local Learning API boundary, authenticated: Schema pulls, subscriptions, unsubscriptions, queries, statistics, learning, and metrics| GLA
     USER -->|Tool descriptions, browser direct| GLA
 ```
-\**Only authenticated if configured on deployment, see [step 0.1](#step-01-configuration)*
 
 For more detail about the components themselves, see the [technical architecture of the Client](technical-architecture-client.md).
 
@@ -640,9 +638,9 @@ For the network-level view, including the Client's connections to the Platform, 
 
 For details about the security controls and Tool restrictions, see the [security model](security-model.md).
 
-For details on how to setup the Client's access management, see the [access management documentation](/docs/client-usage/governance.md).
+For details on how to setup the Client's access management, see the [access management documentation](/docs/client-usage/governance/access-management.md).
 
-*Please note that automatic approval of federated learning, statistics and metrics requests is supported if the Data Holder (Data Access Manager) setup a specific permission for them. The automatic approval permission system can be turned of on deployment, see the [access management documentation](/docs/client-usage/governance.md#automatic-approval) for details.*
+*Please note that automatic approval of federated learning, statistics and metrics requests is supported if the Data Holder (Data Access Manager) setup a specific permission for them. The automatic approval permission system can be turned of on deployment, see the [access management documentation](/docs/client-usage/governance/access-management.md#automatic-approval) for details.*
 
 ## Recommended next step
 

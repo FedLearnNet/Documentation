@@ -58,7 +58,7 @@ The datamodeler is not exposed on the platform nginx. Callers:
 (curl). The health dashboard of the local frontend uses `GET /local-learning-api/health/ready` (login required), which returns the
 same payload as `/q/health/ready` (503 if a check is down).
 
-Schema subscriptions are anonymous per Client: the subscriber id is the SHA-256 hash of the token subject. Before, all Clients
+Schema subscriptions are per Client: the subscriber id is the SHA-256 hash of the token subject. Before, all Clients
 shared the subscriber `test-user`, which broke the queryability counts and let one unsubscribe remove the subscription of every
 Client. Existing `test-user` subscriptions need a cleanup.
 
