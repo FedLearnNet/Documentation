@@ -47,6 +47,12 @@
   color: #173e39;
 }
 
+[data-theme='dark'] .button.button--secondary {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e4efec;
+}
+
 /* backdrop-filter makes the navbar the containing block of the fixed mobile sidebar, clipping it */
 .navbar:not(.navbar-sidebar--show) {
   backdrop-filter: blur(10px);
@@ -81,4 +87,9 @@
 .navbar-sidebar .navbar-rangefind {
   order: -1;
   margin-bottom: 0.5rem;
+}
+
+/* Logo has an opaque white background; show it as a tile on the dark navbar */
+.navbar__logo img {
+  border-radius: 0.4rem;
 }
