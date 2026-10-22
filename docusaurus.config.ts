@@ -37,6 +37,9 @@ const config: Config = {
         productLogoAlt,
         productFaviconPath,
     },
+    plugins: [
+        ["docusaurus-plugin-rangefind", {theme: true}]
+    ],
     future: {
         v4: true, // Improve compatibility with the upcoming Docusaurus v4
     },
@@ -51,7 +54,7 @@ const config: Config = {
     ],
 
     url: deployedProductUrl,
-    baseUrl: process.env.PRODUCT_BASE_URL ?? '/documentation/',
+    baseUrl,
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
@@ -167,6 +170,12 @@ const config: Config = {
                     activeBaseRegex: '/docs/contribution-guide/',
                     sidebarId: 'coreDeveloperSidebar',
                 },
+                {
+                    type: "html",
+                    position: "right",
+                    className: "navbar-rangefind",
+                    value: `<rangefind-search src="${baseUrl}rangefind/" placeholder="Search…"></rangefind-search>`
+                }
             ],
         },
         footer: {

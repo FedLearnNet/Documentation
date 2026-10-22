@@ -33,6 +33,8 @@
     "@docusaurus/module-type-aliases": "^3.10.2",
     "@docusaurus/tsconfig": "^3.10.2",
     "@docusaurus/types": "^3.10.2",
+    "docusaurus-plugin-rangefind": "^0.3.1",
+    "rangefind": "^0.3.24",
     "typescript": "~7.0.2"
   },
   "browserslist": {

@@ -31,6 +31,7 @@
   --ifm-color-primary-lighter: #79d1c2;
   --ifm-color-primary-lightest: #9bdcd1;
   --ifm-background-color: #0f1615;
+  --ifm-navbar-background-color: rgba(15, 22, 21, 0.92);
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
@@ -46,6 +47,38 @@
   color: #173e39;
 }
 
-.navbar {
+/* backdrop-filter makes the navbar the containing block of the fixed mobile sidebar, clipping it */
+.navbar:not(.navbar-sidebar--show) {
   backdrop-filter: blur(10px);
+}
+
+/* Rangefind theme follows prefers-color-scheme; tie it to the Docusaurus color mode instead. */
+[data-theme] .rf-search {
+  --rf-accent: var(--ifm-color-primary);
+  --rf-bg: var(--ifm-background-surface-color);
+  --rf-fg: var(--ifm-font-color-base);
+  --rf-muted: var(--ifm-color-emphasis-600);
+  --rf-border: var(--ifm-color-emphasis-300);
+  --rf-panel-bg: var(--ifm-background-surface-color);
+  --rf-option-hover: var(--ifm-color-emphasis-100);
+  --rf-option-active: var(--ifm-color-emphasis-200);
+  --rf-mark-bg: var(--ifm-color-warning-lightest);
+  --rf-mark-fg: var(--ifm-color-emphasis-900);
+  --rf-shadow: var(--ifm-global-shadow-md);
+  min-width: 14rem;
+}
+
+.navbar-sidebar {
+  background-color: var(--ifm-background-color);
+}
+
+/* Search first in the mobile menu */
+.navbar-sidebar .menu__list:has(> .navbar-rangefind) {
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-sidebar .navbar-rangefind {
+  order: -1;
+  margin-bottom: 0.5rem;
 }
