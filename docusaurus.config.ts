@@ -19,7 +19,7 @@ const productLogoPath = process.env.PRODUCT_LOGO_PATH ?? 'img/logo.svg';
 const productLogoAlt = process.env.PRODUCT_LOGO_ALT ?? 'product logo';
 // Same as logo, also from the static folder!
 const productFaviconPath = process.env.PRODUCT_FAVICON_PATH ?? 'img/favicon.ico';
-
+const baseUrl = process.env.PRODUCT_BASE_URL ?? '/documentation/';
 
 const config: Config = {
     title: `Documentation of ${deployedProductName}`,
@@ -54,7 +54,7 @@ const config: Config = {
     ],
 
     url: deployedProductUrl,
-    baseUrl: process.env.PRODUCT_BASE_URL ?? '/documentation/',
+    baseUrl: baseUrl,
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
