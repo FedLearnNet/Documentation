@@ -46,6 +46,10 @@ const config: Config = {
     plugins: [
         ["docusaurus-plugin-rangefind", {theme: true}]
     ],
+    clientModules: [
+        './src/rangefind/searchPageLinks.ts',
+        ...(isDevServer ? ['./src/rangefind/devSingleRanges.ts'] : []),
+    ],
     future: {
         v4: true, // Improve compatibility with the upcoming Docusaurus v4
     },

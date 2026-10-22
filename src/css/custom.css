@@ -93,3 +93,25 @@
 .navbar__logo img {
   border-radius: 0.4rem;
 }
+
+/* Wider, taller search dropdown in the desktop navbar */
+.navbar__items--right .rf-search__panel {
+  left: auto;
+  width: min(38rem, calc(100vw - 2rem));
+  max-height: min(75vh, 44rem);
+}
+
+.rf-search__option {
+  padding: 0.7rem 0.9rem;
+}
+
+.rf-search__all {
+  position: sticky;
+  bottom: 0;
+  display: block;
+  padding: 0.7rem 0.95rem;
+  border-top: 1px solid var(--rf-border);
+  background: var(--rf-panel-bg);
+  color: var(--rf-accent);
+  font-weight: 600;
+}
