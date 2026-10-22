@@ -2,6 +2,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import replaceVariables from './src/remark/replaceVariables';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import prepareRangefindDevStaticDir from './src/rangefind/devStaticDir';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
@@ -20,12 +21,17 @@ const productLogoAlt = process.env.PRODUCT_LOGO_ALT ?? 'product logo';
 // Same as logo, also from the static folder!
 const productFaviconPath = process.env.PRODUCT_FAVICON_PATH ?? 'img/flnet/logo.avif';
 const baseUrl = process.env.PRODUCT_BASE_URL ?? '/documentation/';
+const isDevServer = process.argv.includes('start');
 
 const config: Config = {
     title: `Documentation of ${deployedProductName}`,
     tagline: productTagline,
     favicon: productFaviconPath,
-    staticDirectories: ['public', 'static'],
+    staticDirectories: [
+        'public',
+        'static',
+        ...(isDevServer ? [prepareRangefindDevStaticDir(__dirname)] : []),
+    ],
     customFields: {
         productName: deployedProductName,
         productSlug,
