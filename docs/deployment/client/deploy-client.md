@@ -89,7 +89,7 @@ The first start up might take upto a few minutes.
 The Client uses `KeyCloak` as the OIDC Provider for authentication. 
 There are two different so called `Realms` in it:
 - The `FLNet-Client` realm is used for the Client itself. It contains the users and groups that are used to access the Client.
-- The `Master` realm is a the administation realm of KeyCloak itself. It is used to manage the KeyCloak instance and the `FLNet-Client` realm.
+- The `Master` realm is the administration realm of KeyCloak itself. It is used to manage the KeyCloak instance and the `FLNet-Client` realm.
 
 First, you need to update the initial admin account created for you in the `Master` realm.
 Please access the Client. If you gave a domain, use the domain name. 
