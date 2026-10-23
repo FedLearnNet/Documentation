@@ -85,13 +85,20 @@ docker compose up -d
 The first start up might take upto a few minutes.
 
 ### 3. The initial setup of the Client
-#### 3.1 First login as the admin user
-Now you need to update the initial admin account created for you.
+#### 3.1 First login as the admin user to the KeyCloak Administration Console
+The Client uses `KeyCloak` as the OIDC Provider for authentication. 
+There are two different so called `Realms` in it:
+- The `FLNet-Client` realm is used for the Client itself. It contains the users and groups that are used to access the Client.
+- The `Master` realm is a the administation realm of KeyCloak itself. It is used to manage the KeyCloak instance and the `FLNet-Client` realm.
+
+First, you need to update the initial admin account created for you in the `Master` realm.
 Please access the Client. If you gave a domain, use the domain name. 
 Otherwise use the given IP and port. 
-The authentication service is available at `auth/`, so e.g. at `<your-domain>/auth/`
+
+1. Access the Client at `<your-domain>/auth/admin/` or `<your-ip>:<your-port>/auth/admin`
+
 In case you missed the initial password given by the initialization script, the initial
-username and password can be found in `flnet_client/env/keycloak-secrets.env` as `KC_BOOTSTRAP_ADMIN_PASSWORD`.
+username and password for the `Master` realm can be found in `flnet_client/env/keycloak-secrets.env` as `KC_BOOTSTRAP_ADMIN_PASSWORD`.
 Use these credentials to log in.
 
 Please immediately change the password, this can be done via the upper right corner under manage account.
@@ -100,11 +107,14 @@ If going to the account management page causes an infinite reload glitch, you ne
 2. Go to the account-console client by clicking on it's client id.
 3. In Web Origins, add a plus. This just allows the redirect URLs to also be origins of requests. 
 
-#### 3.2 Create a user for the Client 
-The %%DEPLOYED_PRODUCT_NAME%% Client is initialized without any users.
+Please directly continue with [creating a user for the Client](#32-create-a-user-for-the-client-via-the-keycloak-administration-console).
+
+#### 3.2 Create a user for the Client via the KeyCloak Administration Console
+The %%DEPLOYED_PRODUCT_NAME%% Client is initialized without any users in the `FLNet-Client` realm.
 To create one:
-1. On the left navigation bar go to Manage Realms and choose the FLNet-Client realm.
-2. On the left navigation bar go to users and add a user. 
+1. Follow the steps in the previous section to log in to the KeyCloak Administration Console.
+2. On the left navigation bar go to Manage Realms and choose the FLNet-Client realm.
+3. On the left navigation bar go to users and add a user. 
 Make sure to tick `Email verified` or connect a SMTP server to the KeyCloak instance, see [Keycloaks documentation](https://www.keycloak.org/docs/latest/server_admin/index.html#_email). 
 Alternatively you can deactivate that email verification is required.
 
@@ -120,7 +130,7 @@ For more information about the groups, click on groups. Alternatively, here is a
 The Client is now ready to be used, simply visit it at the domain you chose (or IP:port) and use the user you just created.
 
 #### 3.3 Restricting access to the KeyCloak admin console
-The KeyCloak admin console is available at `<your-domain>/auth/admin/`.
+The KeyCloak Administration Console is available at `<your-domain>/auth/admin/`.
 We recommend to restrict access to this console to only your own IP address.
 You can do this by editing the `nginx_keycloak_admin.conf` file in the folder created by
 the initialization script (`~/fl-net/clients`).

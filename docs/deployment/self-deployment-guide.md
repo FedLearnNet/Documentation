@@ -108,21 +108,30 @@ docker compose up -d
 The first start up might take upto a few minutes.
 
 ### 3. The initial setup of the FLNet Platform
-#### 3.1 First login as the admin user
-Now you need to update the initial admin account created for you.
-The authentication service is available at `auth/`, so e.g. at `<your-domain>/auth/`
+#### 3.1 First login as the admin user to the KeyCloak Administration Console
+The FLNet Platform uses `KeyCloak` as the OIDC Provider for authentication. 
+There are two different so called `Realms` in it:
+- The `FLNet-Platform` realm is used for the Platform itself. It contains the users, roles and groups that are used to access the Platform.
+- The `Master` realm is the administration realm of KeyCloak itself. It is used to manage the KeyCloak instance and the `FLNet-Platform` realm.
+
+First, you need to update the initial admin account created for you in the `Master` realm.
+
+1. Access the KeyCloak Administration Console at `<your-domain>/auth/admin/`
+
 In case you missed the initial password given by the initialization script, the initial
-username and the password can be found in `FLNET_platform/env/keycloak-secrets.env` as the `KC_BOOTSTRAP_ADMIN_PASSWORD`.
+username and password for the `Master` realm can be found in `FLNET_platform/env/keycloak-secrets.env` as `KC_BOOTSTRAP_ADMIN_PASSWORD`.
 Use these credentials to log in.
 
 Please immediately change the password, this can be done via the upper right corner under manage account.
 If going to the account management page causes an infinite reload glitch, you need to
-1. Go to the Clients page. This is found on the left site.
+1. Go to the Clients page. This is found on the left navigation bar.
 2. Go to the account-console client by clicking on it's client id.
-3. In Web Origins, add a plus. This just allows the redirect URLS to also be origins of requests. 
+3. In Web Origins, add a plus. This just allows the redirect URLs to also be origins of requests. 
 
-#### 3.2 Managing users in KeyCloak
-The FLNet Platform is initialized without any users.
+Please directly continue with [managing users in KeyCloak](#32-managing-users-via-the-keycloak-administration-console).
+
+#### 3.2 Managing users via the KeyCloak Administration Console
+The FLNet Platform is initialized without any users in the `FLNet-Platform` realm.
 **Please make sure to directly create the user with username `admin` with the password you want to use.**
 The Platform automatically loads and builds prevetted Tools and Workflows. 
 These are owned by the `admin` user, so make sure you create that user.
@@ -132,12 +141,17 @@ allow self registration of users.
 Please refer to the KeyCloak documentation itself. 
 
 Here we only provide information on how to add users manually:
-1. On the left site go to Manage Realms and chose the FLNet-Platform realm.
-2. On the left site select users and add a user. 
-Make sure to tick `Email verified` or connect a SMTP server to the KeyCloak instance!
+1. Follow the steps in the previous section to log in to the KeyCloak Administration Console.
+2. On the left navigation bar go to Manage Realms and choose the FLNet-Platform realm.
+3. On the left navigation bar go to users and add a user. 
+Make sure to tick `Email verified` or connect a SMTP server to the KeyCloak instance, see [Keycloaks documentation](https://www.keycloak.org/docs/latest/server_admin/index.html#_email). 
 Alternatively you can deactivate that email verification is required.
 
 Users that create, update or delete schemas, ontologies and datatypes need the realm role `Data-Modeler` (or `Admin`).
+
+Users that audit Tools need the realm role `Auditor` (or `Admin`).
+
+Other users who use the network for data science and federated learning need the realm role `Data-Scientist` (or `Admin`).
 
 [comment]: <> (TODO: We still only have dev level groups, we should have groups and add the info about them here!)
 
@@ -150,7 +164,7 @@ documentation on how to join your network:
 [comment]: <> (TODO: The URL of the docs is still a bit fucked up right now!)
 
 #### 3.3 Restricting access to the KeyCloak admin console
-The KeyCloak admin console is available at `<your-domain>/auth/admin/`.
+The KeyCloak Administration Console is available at `<your-domain>/auth/admin/`.
 We recommend to restrict access to this console to only your own IP address.
 You can do this by editing the `nginx_keycloak_admin.conf` file in the folder created by
 the initialization script (`~/fl-net/platforms`).
