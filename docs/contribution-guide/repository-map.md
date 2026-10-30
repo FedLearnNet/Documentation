@@ -11,7 +11,7 @@ Use this page to answer one practical question quickly:
 
 - which repository owns the part of FL-Net you want to change?
 
-If you want the product-level architecture first, start with [Understanding the network architecture](../intro/architecture/network-architecture.md). If you already know you are touching the Angular UI, also see the [Frontend workspace map](frontend/workspace-map.md).
+If you want the networking focused architecture first, start with [Understanding the network architecture](../intro/architecture/network-architecture.md). If you already know you are touching the Frontend, also see the [Frontend workspace map](frontend/workspace-map.md).
 
 ## Mental model
 
@@ -58,15 +58,15 @@ flowchart LR
 
 This diagram is intentionally simplified. It does not contain repository interactions.
 
-## Core product repositories
+## Core repositories
 
 | Repository | What it owns | When you usually change it |
 | --- | --- | --- |
-| [Documentation](https://github.com/FedLearnNet/Documentation) | Docusaurus site for Client/Platform usage and deployment documentation. Also contains Tool development and contributors documentation | Writing or restructuring docs, see [Documentation workflow](documentation-workflow.md) |
-| [Frontends](https://github.com/FedLearnNet/Frontends) | Angular workspace with the local (Client) and global (Platform) frontends, the shared UI library, and project themes | UI flows, components, routes, frontend integrations, brand variants, see [Frontend](frontend/overview.md) |
-| [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs) | Multi-module Quarkus project: `core-learning-api` (shared logic and DTOs), `global-learning-api` (Platform), `local-learning-api` (Client, including data import and the patient store), `datamodeler-api` (data models (schemas) with ontologies and datatypes) | Federated learning flows, queries, workflows, data import, schema and ontology handling |
-| [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API) | Runs Tools as Docker containers: pulls images, creates an isolated network and volume per run, starts Tool builds, and tracks the run lifecycle. Also handles the tool build pipeline execution. | Starting runs, container isolation, run lifecycle |
-| [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API) | Go services for federated communication: one controller per Client and one relay server per network | Controller and relay behavior, encryption, SMPC and DP message flows |
+| [Documentation](https://github.com/FedLearnNet/Documentation) | Docusaurus site for Client/Platform usage, deployment, Tool development and contributors documentation, You're viewing this now! | Writing or restructuring docs, see [Documentation workflow](documentation-workflow.md). **Any changes to other repositiories that result in a different user experience must also be documented here.** |
+| [Frontends](https://github.com/FedLearnNet/Frontends) | Angular workspace with the local (Client) and global (Platform) frontends, the shared UI library, and project themes | UI flows, components, routes, frontend integrations, see [Frontend](frontend/overview.md) |
+| [Learning-APIs](https://github.com/FedLearnNet/Learning-APIs) | Multi-module Quarkus project: `core-learning-api` (shared logic and DTOs), `global-learning-api` (Platform), `local-learning-api` (Client, including data import and the patient store), `datamodeler-api` (data models (schemas) with ontologies and datatypes) | Federated learning flows, queries, workflows, data import, schema and ontology handling, see [Backend](backend/overview.md) |
+| [Orchestration-API](https://github.com/FedLearnNet/Orchestration-API) | Runs Tools as Docker containers: pulls images, creates an isolated network and volume per run, starts Tool builds, and tracks the run lifecycle. Also handles the tool build pipeline execution. | Starting runs, container isolation, run lifecycle, see [Backend](backend/overview.md) |
+| [Federated-Learning-Communication-API](https://github.com/FedLearnNet/Federated-Learning-Communication-API) | Go services for federated communication: one controller per Client and one relay server per network | Controller and relay behavior, encryption, SMPC and DP message flows, see [Federated communication layer](federated-communication/overview.md) |
 
 ## Tool development repositories
 
@@ -90,10 +90,9 @@ See the [Deployment section](../deployment/overview.md) for how these are used.
 - **Documentation**: `Documentation`
 - **Angular UI or shared frontend components**: `Frontends`
 - **Platform backend behavior (projects, queries, workflows, federated runs)**: `global-learning-api` in `Learning-APIs`, potentially also the `local-learning-api` as the federated runs are executed there.
-- **Client backend behavior (data import, patient store, local queries, Tool runs)**: `local-learning-api` in `Learning-APIs`
-- **Schema, ontology, or data model work**: `datamodeler-api` in `Learning-APIs`
+- **Client backend behavior (data import, patient store, local queries, Tool runs)**: `local-learning-api` in `Learning-APIs`. May also affect the `orchestration-api` if it changes the run lifecycle.
+- **Schema, ontology, or data model work**: `datamodeler-api` in `Learning-APIs`. Careful, as this might also change the behavior of the `Learning APIs` and the `Frontends`.
 - **Tool container and pipeline execution and run lifecycle**: `Orchestration-API`
-- **Federated communication layer (Controller or relay internals)**: `Federated-Learning-Communication-API`
-- **Tool development support**: `Python-Tool-API`, `Tool-Build-Pipeline`
-- **Deployment including proxy (NGINX) and oauth (KeyCloak) handling**: `FL-Net-CLI`
-
+- **Federated communication layer (Controller or relay internals)**: `Federated-Learning-Communication-API`, see [Federated communication layer](federated-communication/overview.md)
+- **Tool development support**: `Python-Tool-API`, `Tool-Build-Pipeline`. Potentially also the `FL-Net-CLI` if you want to change the Tool template given to developers.
+- **Deployment including proxy (NGINX), oauth (KeyCloak) and backup handling**: `FL-Net-CLI`.

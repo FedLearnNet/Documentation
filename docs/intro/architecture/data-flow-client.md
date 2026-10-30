@@ -23,12 +23,12 @@ Please note that a user may hold more than one of these roles, with the Admin ro
 **Boundaries.** The Client's perimeter is crossed at exactly four points, and each data-flow section below states which one(s) apply:
 - **NGINX** — the single entry point for the Data Holder, via the Instance Manager Frontend and Keycloak.
 - **Local Learning API** — the outbound channel to the Platform used for federated queries, statistics, learning, and metrics requests, and their results.
-- **Orch API** — Pulls required Tool images from the Platform's registry.
+- **Orch API** — Pulls required Tool images from the Tool registry, which is part of the Platform and served under `/v2/` of the Platform domain.
 - **Controller** — a separate outbound channel to the Platform used only for the federated-learning training communication itself, once a run is underway.
 
 The full definition of each boundary, including what does *not* cross a network boundary at all (such as backups), is in [Boundaries of the Client](#boundaries-of-the-client) below.
 
-**Federated request types.** The Platform can make four kinds of request against a Client's data. Three of them — statistics, learning, and metrics — are formal **Requests** in the sense used by the [access management documentation](../../client-usage/external-access-management.md) and require manual approval by a Data Holder (Data Access Manager). The fourth, federated queries, works differently: it is always answered automatically, shaped only by the disclosure-control settings configured for that cohort — there is no manual-approval step for a query. However, the automatic answer may also be an automatic rejection depending on how the disclosure control is set up.
+**Federated request types.** The Platform can make four kinds of request against a Client's data. Three of them — statistics, learning, and metrics — are formal **Requests** in the sense used by the [access management documentation](../../client-usage/governance/access-management.md) and require manual approval by a Data Holder (Data Access Manager). The fourth, federated queries, works differently: it is always answered automatically, shaped only by the disclosure-control settings configured for that cohort — there is no manual-approval step for a query. However, the automatic answer may also be an automatic rejection depending on how the disclosure control is set up.
 
 Deployments that explicitly enable the relevant Automatic Access permissions can approve matching statistics, learning, or metrics requests without manual review. Manual approval remains the default.
 
@@ -66,14 +66,14 @@ The secrets are added to the containers of the FL-Net Client as environment vari
 ### Step 0.2 Deployment
 The deployment is done by starting the configures FL-Net Client.
 This requires network access to pull all required docker images.
-Required domains to whitelist are documented in the [Client deployment guide](../../deployment/deploy-client.md), which generally contains more information.
+Required domains to whitelist are documented in the [Client deployment guide](../../deployment/client/deploy-client.md), which generally contains more information.
 The Data Holder (Admin) is advised to use the Instance Manager Frontend to:
 1. Change the bootstrap password for the Keycloak admin account to a secure password
 2. Create the first user(s).
 
 Furthermore, if the federated features are enabled, the Local Learning API on startup connects to the Platform creating the previously mentioned Local Leaning API boundary.
 This data flow via this connection is discussed in the further chapters of this document.
-In this stage, only technical information is exchanged, e.g. ping/pong messages.
+In this stage, only technical information is exchanged, e.g. ping/pong keep-alive messages, which continue for the whole lifetime of the connection.
 
 ```mermaid
 flowchart LR
@@ -87,24 +87,25 @@ flowchart LR
 
     subgraph PLATFORM[FL-Net Platform]
         GLA[Global Learning API]
-        subgraph REGISTRY[FL-Net Registry]
-            REG[Tool registry]
-        end
     end
+
+    subgraph CLIENTREGISTRY[FL-Net Client image registry]
+        GHCR["ghcr.io/fedlearnnet/"]
+        CHAIN["cgr.dev/chainguard"]
+        DOCKERIO["registry-1.docker.io"]
+    end
+    
 
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    classDef registry fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     class FE,KC,LLA client
     class GLA platform
-    class REG registry
 
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style PLATFORM fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    style REGISTRY fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
-    CLIENT -->|On startup pull service images| REGISTRY
+    CLIENT -->|On startup pull service images| CLIENTREGISTRY
     ADMIN -->|Login| FE
     FE -->|Create first users and change bootstrap password| KC
     LLA -->|Connect to Platform| GLA
@@ -152,7 +153,7 @@ The Instance Manager Frontend and NGINX are not discussed as service to service 
 they merely serve to relay requests of the Data Holder.
 
 The only containers sending requests towards the Local Learning API are started Tools.
-Tools use application-layer authentication (API keys) to authenticate to both the Local Learning API and the Controller. 
+Tools use application-layer authentication (API keys) to authenticate to both the Local Learning API (`X-API-Key` header, accepted only on that Tool run's endpoints) and the Controller (key in the request body). 
 See the [api key section](#details-api-keys) for more information on their size, generation, and distribution.
 Other services are not reachable by the Tool due to it's network isolation.
 
@@ -177,18 +178,20 @@ flowchart LR
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style TOOLNETWORK fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
 
-    LLA -->|Request tool start with roleless token and api key in request body, authenticated via the Local Learning API's service account| ORCH
-    ORCH -.->|Start Tool with roleless token and api key in environment| TOOL
-    TOOL -->|Roleless token| LLA
+    LLA -->|Request tool start with API keys in request body, authenticated via the Local Learning API's service account| ORCH
+    ORCH -.->|Start Tool with API keys in environment| TOOL
+    TOOL -->|API key| LLA
     TOOL -->|API key| CTRL
 ```
 *Note: The dotted line represents the Orch API starting the Tool. Straight lines represent HTTP requests.*
 
 ### FL-Net Client to Platform authentication
-The Local Learning API and Controller both connect to the Platform, but they do so in different ways. The Local Learning API uses a permanent websocket HTTPS connection to the Global Learning API, while the Controller uses a separate TCP connection to the Relay Server, only created on executing a federated learning. Both connections are encrypted using TLS.
+The Local Learning API and Controller both connect to the Platform, but they do so in different ways. The Local Learning API uses a permanent websocket connection over TLS (`wss`) to the Global Learning API, while the Controller uses a separate raw TCP connection (TLS 1.3 minimum) to the Relay Server, only created on executing a federated learning.
 These form the **Local Learning API** and **Controller** boundaries, respectively.
-Depending on how the Client is setup in [step 0.1](#step-01-configuration), the Local Learning API connection can be an anonymous connection or a connection with a dedicated Client account on the Platform. Depending on Platform configuration, the Platform may reject unauthenticated Clients from connecting.
-The Controller use mTLS and [API Key](#details-api-keys) based application layer authentication towards the Platform.
+
+The Local Learning API always authenticates with a dedicated Client account on the Platform. The account's token is sent in the `Authorization` header of the websocket handshake and the connection is re-established with a fresh token before it expires.
+
+The Controller uses mTLS and [API Key](#details-api-keys) based application layer authentication towards the Platform. Authentication is mutual: the Controller verifies the Relay Server's TLS certificate (public CA and hostname) and a per-run Relay key presented by the Relay Server.
 
 ```mermaid
 flowchart LR
@@ -229,9 +232,24 @@ API keys are unique per FL run, tool and participating Client.
 The Local Learning API generates and holds the API Keys of the Tool:
 1. The API key used between the Tool and the Controller. This is a 256 bit, hex encoded key, generated by the Local Learning API and passed to the Tool and Controller on Tool start. The SHA-256 hash of the key is stored in memory during the Tool run but not persisted. 
 1. The API key used between the Tool and the Local Learning API. This is a 256 bit, base64 encoded key, generated by the Local Learning API and passed to the Tool on Tool start. The SHA-256 hash of the key is stored in memory during the Tool run but not persisted. 
-The API Key used between the Controller and the Relay Server is generated by the Relay Server, and distributed to the Controller via the Local Learning API boundary. Similarly, only the SHA-256 hash of the key is stored in memory during the Tool run but not persisted. 
-The Relay Server does not persist any state between FL runs.
-The Global Learning API uses a randomly generated ID per FL Run and participating Client to be able to identify federated learning status updates, but restrict identfication over multiple runs via logs.
+1. The API Key used between the Controller and the Relay Server is a 2048 bit (256 byte), hex encoded key generated by the Relay Server, and distributed to the Controller via the Local Learning API boundary. Keys are compared in constant time.
+The Relay Server has no database: run state and keys are held in memory only until the run is stopped.
+
+### Details: mTLS
+The mTLS flow uses the connection between the Local Learning API and Global Learning API as a secure communication channel. Certificates and keys used for mTLS are generated per Tool execution. 
+The following flow is used:
+1. For each FL Tool execution the Relay server generates a new root certificate and private key (ECDSA P-256, valid for at most 90 days, private key held in memory only). Additionally, a random 64 bit ID is generated per participant of the FL, and a random 256 bit channel identifies the run.
+2. The Global Learning API receives these random IDs and distributes one ID to each participant.
+3. The Local Learning API starts the Tool and informs the Controller about the random ID and the FL.
+The Controller generates a new private key (ECDSA P-256) and answers the Local Learning API with the certificate signing request (CSR, common name = the random ID).
+4. The Local Learning API forwards the CSR and the random ID to the Global Learning API, which rejects the request if the run is unknown or already stopped, if the requesting connection is not part of the run, or if the random ID does not match the one given to that participant.
+5. The Global Learning API requests signing of that CSR from the Relay Server.
+The Relay Server rejects signing if the run is not active, the ID is not part of the run, the CSR signature is invalid, the key is not P-256, the common name does not equal the ID, or a different key was already bound to that ID. Otherwise it signs it with the root certificate and returns it to the Global Learning API. Only the common name and public key are taken from the CSR.
+6. The Global Learning API forwards the signed certificate to the Local Learning API, which forwards it to the Controller.
+7. Finally, the Controller connects to the Relay Server using the signed certificate and private key. The Relay Server verifies the certificate chain against the root certificate generated in step 1, checks that it is a client authentication certificate whose common name equals the ID the Controller claims, and then checks the [API Key](#details-api-keys). Only one connection per ID is accepted. If all checks succeed, the connection is established.
+
+The Relay Server's management API (create run, sign CSR, stop run) has no authentication of its own; it is only reachable from the Platform's internal network, i.e. by the Global Learning API, and signing additionally requires knowing the run's 256 bit channel and the participant ID.
+
 
 ## 2. Cohort creation and schema subscription
 
@@ -239,7 +257,7 @@ Before data can be ingested, the Data Holder creates a cohort through the Instan
 
 When the cohort is created, the Local Learning API sends a subscription request to the Platform confirming that the Client subscribes to the selected schema. If the cohort is deleted later, the Local Learning API sends the corresponding unsubscribe request. 
 
-All mentioned requests (schema availability, subscription and unsubscription messages) are sent as an anonymous user; they do not use the identity associated with the Client's WebSocket connection to the Platform.
+All schema-related requests use the Client’s identity. When the Client subscribes to a schema, the Platform hashes this identity and stores it in that schema’s subscription list.
 
 ```mermaid
 flowchart LR
@@ -265,7 +283,7 @@ flowchart LR
  
     DH -->|Select schema, create / delete cohort| FE
     FE -->|Schema request, cohort create / delete| LLA
-    LLA -->|Anonymous request: Pull schemas, subscribe / unsubscribe| GLA
+    LLA -->|Pull schemas, subscribe / unsubscribe| GLA
 ```
 
 ## 3. Data ingestion
@@ -306,7 +324,7 @@ At this point, the patient data remains inside the Client environment. The brows
 ### Local ETL Tool execution
 
 Ingestion sometimes requires more flexible processing — an ETL Tool may need to run against the data (for example, to apply an institution-specific transformation). When that happens:
-1. The Data Holders (Data Admin) Browser requests the available Tools, selects the Tool or workflow to build a connector.
+1. The Data Holders (Data Admin) Browser requests the available Tools from the Platform, selects the Tool or workflow to build a connector.
 2. Once the Data Holder starts the connector, the Local Learning API determines what data the Tool needs and passes the workflow request to the Orch API.
 3. The Orch API stages the required input in `orch-data-volume` — its own volume, which Tools never mount directly.
 4. A temporary copying container transfers the staged data from `orch-data-volume` into a separate volume dedicated to that specific Tool run. This extra hop matters: it means a Tool can never reach `orch-data-volume` itself — only the one volume prepared for it — so a compromised or misbehaving Tool can't see data staged for other runs, and can't write anything back except through the same controlled copy step.
@@ -333,27 +351,23 @@ flowchart LR
     end
 
     subgraph PLATFORM[FL-Net Platform]
-        subgraph REGISTRY[FL-Net Registry]
-            REG[Tool registry]
-        end
+        REG[Tool registry]
     end
 
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     classDef toolnet fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
-    classDef registry fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
 
     class LLA,ORCH,DATA,COPY,TVOL,DB2 client
     class TOOL toolnet
-    class REG registry
+    class REG platform
 
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style TOOLNETWORK fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     style PLATFORM fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    style REGISTRY fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     LLA -->|Workflow input| ORCH
-    ORCH -->|Pull ETL Tool image| REGISTRY
+    ORCH -->|Pull ETL Tool image| REG
     ORCH -->|Stage input files| DATA
     DATA -->|Copy in| COPY
     COPY -->|Write to Tool's own volume| TVOL
@@ -386,7 +400,7 @@ sequenceDiagram
     L->>L: Apply disclosure controls (per requesting user: is allowed, min. record count, rate limit) and log hit patient ids
     L-->>P: Permitted result
 ```
-How the query is treated, from applying privacy controls to rejecting it, depends on the setup permissions, see the [access management documentation](/docs/client-usage/external-access-management.md) for details. 
+How the query is treated, from applying privacy controls to rejecting it, depends on the setup permissions, see the [access management documentation](/docs/client-usage/governance/access-management.md) for details. 
 
 ## 5. Federated statistics
 
@@ -408,7 +422,7 @@ sequenceDiagram
     L-->>P: Permitted result
 ```
 
-The permission system handles the approval and privacy settings, see [access management documentation](/docs/client-usage/external-access-management.md) for details.
+The permission system handles the approval and privacy settings, see [access management documentation](/docs/client-usage/governance/access-management.md) for details.
 
 ## 6. Federated learning
 
@@ -416,8 +430,12 @@ A federated learning request is also a formal **Request**: it arrives at the Loc
 
 Once approved, the flow into the Tool and it's execution is the one already described under [Local ETL Tool execution](#local-etl-tool-execution).
 In difference to an ETL Tool, the Controller is also attached to the Tool's network, and the Tool communicates with it to exchange model updates and other FL messages over the **federated communication channel**, connecting the participants of the FL. 
-This is the second and last outbound path a Client has, and it crosses the Controller boundary rather than the Local Learning API boundary:
-As FL messages are inherently more sensitive than the the other request types, messages sent over the federated learning channel are additionally to the transport encryption also machine to machine encrypted, with only the sending Clients Controller and receiving aggregators/other Clients controller able to decrypt them.
+
+The Local Learning API generates a random ID (UUID) per FL experiment, which the Global Learning API uses to identify that Client's federated learning status updates, restricting identification across multiple experiments via logs.
+
+This is the second and last path over which data can leave a Client, and it crosses the Controller boundary rather than the Local Learning API boundary:
+As FL messages are inherently more sensitive than the the other request types, messages sent from a Client to the aggregator or to another Client are additionally to the transport encryption also machine to machine encrypted, with only the sending Clients Controller and the receiving aggregators/other Clients Controller able to decrypt them. Each Controller generates an X25519 key pair per run; each message is encrypted with AES-256-GCM using a key derived (SHA-256) from an ephemeral X25519 key exchange with the recipient. The public keys are distributed via the Relay Server, which therefore has to be trusted for key distribution. Routing metadata (e.g. sender and recipient IDs) is not end-to-end encrypted.
+Broadcasts from the aggregator to all Clients (e.g. the aggregated model) are protected by the transport encryption (TLS) only, not machine to machine encrypted.
 The request contains the information whether the aggregator is deployed on another participating Client or on the Platform. In case the aggregator is deployed on another Client, no information on the identify of the owner of that Client and therefore the aggregator is available.
 
 ```mermaid
@@ -437,9 +455,7 @@ flowchart LR
 
     subgraph PLATFORM[FL-Net Platform]
         PLATFORMNODE[Platform services]
-        subgraph REGISTRY[FL-Net Registry]
-            REG[Tool registry]
-        end
+        REG[Tool registry]
     end
     
     AGGREGATOR["Aggregator (Platform or Client)"]
@@ -447,33 +463,30 @@ flowchart LR
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     classDef toolnet fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    classDef registry fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     class LLA,ORCH,DATA,COPY,TVOL,CTRL client
     class TOOL toolnet
-    class PLATFORMNODE, platform
-    class REG registry
+    class PLATFORMNODE,REG platform
 
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style TOOLNETWORK fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     style PLATFORM fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    style REGISTRY fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     LLA -->|Workflow input| ORCH
-    ORCH -->|Pull FL Tool image| REGISTRY
+    ORCH -->|Pull FL Tool image| REG
     ORCH -->|Stage patient data| DATA
     DATA -->|Copy in| COPY
     COPY -->|Write to Tool's own volume| TVOL
     TVOL -->|Input| TOOL
     TOOL -->|Local model update| CTRL
-    CTRL -->|Federated communication channel, machine to machine encrypted| PLATFORMNODE
+    CTRL -->|Federated communication channel, machine to machine encrypted towards the aggregator| PLATFORMNODE
     TOOL -->|Status / progress| LLA
     TOOL -->|Local metrics / output| TVOL
     TVOL -->|Copy out| COPY
     COPY -->|Write back| DATA
     DATA -->|Retrieve result| ORCH
     ORCH -->|Local metrics, for later Federated Metrics requests| LLA
-    PLATFORMNODE -->|Federated learning communication channel, machine to machine encrypted| AGGREGATOR
+    PLATFORMNODE <-->|Federated learning communication channel; Client to aggregator machine to machine encrypted, aggregator broadcasts TLS only| AGGREGATOR
 ```
 
 Patient-level training data therefore never leaves the Client: the Local Learning API boundary carries only the initial request and approval, and the Controller boundary carries only the resulting model update, never the source records.
@@ -547,11 +560,11 @@ Reasoning about Client data flow comes down to two different kinds of boundary: 
 | Boundary | Crosses to/from | Carries |
 |---|---|---|
 | **NGINX** | Data Holder ↔ Client | All human/browser access: login, uploads, exports, admin actions |
-| **Local Learning API** | Client ↔ Platform | Schema pulls, anonymous schema subscriptions/unsubscriptions, federated queries, and federated statistics, learning, and metrics requests, plus their results |
+| **Local Learning API** | Client ↔ Platform | Schema pulls, schema subscriptions/unsubscriptions, federated queries, and federated statistics, learning, and metrics requests, plus their results |
 | **Controller** | Client ↔ Platform | Federated-learning training communication only (model updates), over its own dedicated channel |
-| **Orch API** | Client ↔ Platform | Pulls required Tool images from the Platform's registry |
+| **Orch API** | Client ↔ Platform | Pulls required Tool images from the Tool registry, which is part of the Platform and served under `/v2/` of the Platform domain |
 
-These are deliberately separate. NGINX is the Client's only exposure and may be limited to the Data Holder's own network only; the Local Learning API and Controller are the Client's only two outbound connections to the Platform, and they're kept apart so that the request/approval/result traffic (Local Learning API) never shares a channel with raw training communication (Controller). The Data Holder's browser also connects directly to the Platform frontend to load Tool descriptions; that browser-to-Platform path is outside the Client's four network boundaries. Internally, the Client's services sit behind Docker network isolation and are not reachable from the host network except through NGINX.
+These are deliberately separate. NGINX is the Client's only exposure and may be limited to the Data Holder's own network only; the Local Learning API and Controller are the Client's only two outbound connections to the Platform that carry requests, results, or training communication, and they're kept apart so that the request/approval/result traffic (Local Learning API) never shares a channel with raw training communication (Controller). The Orch API additionally downloads Tool images from the Platform's Tool registry; this connection sends no Client data. The Data Holder's browser also connects directly to the Platform frontend to load Tool descriptions; that browser-to-Platform path is outside the Client's four network boundaries. Internally, the Client's services sit behind Docker network isolation and are not reachable from the host network except through NGINX.
 
 ### The Tool sandbox — an internal boundary
 
@@ -566,7 +579,7 @@ The Tool therefore has access to sensitive data by design, but its network acces
 The Client data flow can be reduced to one central principle:
 > **Patient data is processed inside the Client, while only explicitly permitted results leave — and only through the Local Learning API or Controller boundary, never directly from a database.**
 
-The Local Learning API is the main control point for local data, for federated queries, and for the statistics, learning, and metrics requests alongside them. It also pulls schemas and manages anonymous schema subscriptions for cohorts. The Orch API prepares data for Tool execution — always by way of a copying container into the Tool's own volume, never a direct handoff — and pulls the Tool image from the Platform registry. Tools perform the actual ETL or FL computation inside their own sandbox, and the Controller handles federated-learning communication through its own dedicated channel.
+The Local Learning API is the main control point for local data, for federated queries, and for the statistics, learning, and metrics requests alongside them. It also pulls schemas and manages the Client's schema subscriptions for cohorts. The Orch API prepares data for Tool execution — always by way of a copying container into the Tool's own volume, never a direct handoff — and pulls the Tool image from the Platform registry. Tools perform the actual ETL or FL computation inside their own sandbox, and the Controller handles federated-learning communication through its own dedicated channel.
 
 ```mermaid
 flowchart LR
@@ -589,25 +602,20 @@ flowchart LR
     subgraph PLATFORM[FL-Net Platform]
         GLA[Global Learning API]
         RELAY[Relay Server]
-        subgraph REGISTRY[FL-Net Registry]
-            REG[Tool registry]
-        end
+        REG[Tool registry]
     end
 
     classDef client fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     classDef toolnet fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     classDef platform fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    classDef registry fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     class NGINX,FE,KC,DB,ORCH,LLA,CTRL client
     class TOOL toolnet
-    class GLA,RELAY platform
-    class REG registry
+    class GLA,RELAY,REG platform
 
     style CLIENT fill:#e8f3ff,stroke:#3a7bd5,stroke-width:2px,color:#000
     style TOOLNETWORK fill:#f4efff,stroke:#7651a8,stroke-width:2px,color:#000
     style PLATFORM fill:#fff4e5,stroke:#d98b2b,stroke-width:2px,color:#000
-    style REGISTRY fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
 
     USER -->|Login and operate| NGINX
     NGINX --> FE
@@ -617,14 +625,12 @@ flowchart LR
     LLA --> DB
     LLA --> ORCH
     ORCH -->|Tool input and output| TOOL
-    ORCH -->|Pull Tool image| REGISTRY
+    ORCH -->|Orch API boundary: pull Tool image| REG
     TOOL -->|Model updates and FL messages| CTRL
     CTRL -->|Controller boundary: federated learning| RELAY
-    LLA -->|Local Learning API boundary, authenticated*: queries, statistics, learning, and metrics| GLA
-    LLA -->|Local Learning API boundary, anonymous: Schema pulls, subscriptions, unsubscriptions| GLA
+    LLA -->|Local Learning API boundary, authenticated: Schema pulls, subscriptions, unsubscriptions, queries, statistics, learning, and metrics| GLA
     USER -->|Tool descriptions, browser direct| GLA
 ```
-\**Only authenticated if configured on deployment, see [step 0.1](#step-01-configuration)*
 
 For more detail about the components themselves, see the [technical architecture of the Client](technical-architecture-client.md).
 
@@ -632,9 +638,9 @@ For the network-level view, including the Client's connections to the Platform, 
 
 For details about the security controls and Tool restrictions, see the [security model](security-model.md).
 
-For details on how to setup the Client's access management, see the [access management documentation](/docs/client-usage/external-access-management.md).
+For details on how to setup the Client's access management, see the [access management documentation](/docs/client-usage/governance/access-management.md).
 
-*Please note that automatic approval of federated learning, statistics and metrics requests is supported if the Data Holder (Data Access Manager) setup a specific permission for them. The automatic approval permission system can be turned of on deployment, see the [access management documentation](/docs/client-usage/external-access-management.md) for details.*
+*Please note that automatic approval of federated learning, statistics and metrics requests is supported if the Data Holder (Data Access Manager) setup a specific permission for them. The automatic approval permission system can be turned of on deployment, see the [access management documentation](/docs/client-usage/governance/access-management.md#automatic-approval) for details.*
 
 ## Recommended next step
 

@@ -41,7 +41,7 @@ Brand settings are environment variables read in [`docusaurus.config.ts`](docusa
 | `DEPLOYED_PRODUCT_TCP_PORT` | `9152`                                 | default                     | default                           |
 | `PRODUCT_SLUG`              | `productSlug`                          | `flnet`                     | `posymed`                         |
 | `PRODUCT_BASE_URL`          | `/documentation/`                      | default                     | `/posymed/documentation/`         |
-| `PRODUCT_LOGO_PATH`, `PRODUCT_FAVICON_PATH` | `img/logo.svg`, `img/favicon.ico` | `img/flnet/logo.svg` | `img/posymed/logo.svg`       |
+| `PRODUCT_LOGO_PATH`, `PRODUCT_FAVICON_PATH` | `img/flnet/logo.avif`  | default                     | `img/posymed/logo.svg`            |
 
 `PRODUCT_TAGLINE` and `PRODUCT_LOGO_ALT` complete the branding. Try a brand locally with e.g.
 `DEPLOYED_PRODUCT_NAME="PoSyMed" PRODUCT_SLUG=posymed npm start`. A new variable must also be added to the

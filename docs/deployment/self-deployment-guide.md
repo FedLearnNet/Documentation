@@ -1,7 +1,7 @@
 ---
 title: Self deployment of a FL-Net Platform
 description: Deploy the FL-Net Platform. Includes Keycloak (Oauth server), APIs, DBs, frontend, reverse proxy, and documentation.
-sidebar_position: 8
+sidebar_position: 2
 ---
 
 # Deploy your own Platform
@@ -18,9 +18,6 @@ sidebar_position: 8
 - a server/machine that is at best running 24/7 and exposed to the internet on two ports. 
 The network is star shaped with the FLNet Platform instance as the central coordination hub. 
 Without your FLNet Platform instance your whole FLNet is not available!
-
-
-
 
 ## How to deploy
 ### 0. Prepare
@@ -111,30 +108,50 @@ docker compose up -d
 The first start up might take upto a few minutes.
 
 ### 3. The initial setup of the FLNet Platform
-#### 3.1 First login as the admin user
-Now you need to update the initial admin account created for you.
-The authentication service is available at `auth/`, so e.g. at `<your-domain>/auth/`
+#### 3.1 First login as the admin user to the KeyCloak Administration Console
+The FLNet Platform uses `KeyCloak` as the OIDC Provider for authentication. 
+There are two different so called `Realms` in it:
+- The `FLNet-Platform` realm is used for the Platform itself. It contains the users, roles and groups that are used to access the Platform.
+- The `Master` realm is the administration realm of KeyCloak itself. It is used to manage the KeyCloak instance and the `FLNet-Platform` realm.
+
+First, you need to update the initial admin account created for you in the `Master` realm.
+
+1. Access the KeyCloak Administration Console at `<your-domain>/auth/admin/`
+
 In case you missed the initial password given by the initialization script, the initial
-username and the password can be found in `FLNET_platform/env/keycloak-secrets.env` as the `KC_BOOTSTRAP_ADMIN_PASSWORD`.
+username and password for the `Master` realm can be found in `FLNET_platform/env/keycloak-secrets.env` as `KC_BOOTSTRAP_ADMIN_PASSWORD`.
 Use these credentials to log in.
 
 Please immediately change the password, this can be done via the upper right corner under manage account.
 If going to the account management page causes an infinite reload glitch, you need to
-1. Go to the Clients page. This is found on the left site.
+1. Go to the Clients page. This is found on the left navigation bar.
 2. Go to the account-console client by clicking on it's client id.
-3. In Web Origins, add a plus. This just allows the redirect URLS to also be origins of requests. 
+3. In Web Origins, add a plus. This just allows the redirect URLs to also be origins of requests. 
 
-#### 3.2 Managing users in KeyCloak
-The FLNet Platform is initialized without any users.
+Please directly continue with [managing users in KeyCloak](#32-managing-users-via-the-keycloak-administration-console).
+
+#### 3.2 Managing users via the KeyCloak Administration Console
+The FLNet Platform is initialized without any users in the `FLNet-Platform` realm.
+**Please make sure to directly create the user with username `admin` with the password you want to use.**
+The Platform automatically loads and builds prevetted Tools and Workflows. 
+These are owned by the `admin` user, so make sure you create that user.
+
 You can create users manually, hook in your own authentication service (SAML or OpenID Connect) or 
 allow self registration of users. 
 Please refer to the KeyCloak documentation itself. 
 
 Here we only provide information on how to add users manually:
-1. On the left site go to Manage Realms and chose the FLNet-Platform realm.
-2. On the left site select users and add a user. 
-Make sure to tick `Email verified` or connect a SMTP server to the KeyCloak instance!
+1. Follow the steps in the previous section to log in to the KeyCloak Administration Console.
+2. On the left navigation bar go to Manage Realms and choose the FLNet-Platform realm.
+3. On the left navigation bar go to users and add a user. 
+Make sure to tick `Email verified` or connect a SMTP server to the KeyCloak instance, see [Keycloaks documentation](https://www.keycloak.org/docs/latest/server_admin/index.html#_email). 
 Alternatively you can deactivate that email verification is required.
+
+Users that create, update or delete schemas, ontologies and datatypes need the realm role `Data-Modeler` (or `Admin`).
+
+Users that audit Tools need the realm role `Auditor` (or `Admin`).
+
+Other users who use the network for data science and federated learning need the realm role `Data-Scientist` (or `Admin`).
 
 [comment]: <> (TODO: We still only have dev level groups, we should have groups and add the info about them here!)
 
@@ -142,9 +159,15 @@ Congratulations, you're ready to go.
 Share your chosen domain and TCP port with the data holders that want to join your network.
 You automatically also deploy documentation, so you can refer data holders to the relevant
 documentation on how to join your network:
-`<your-domain>/documentation/docs/client-usage/deploy-client`
+`<your-domain>/documentation/docs/deployment/deploy-client`
 
 [comment]: <> (TODO: The URL of the docs is still a bit fucked up right now!)
+
+#### 3.3 Restricting access to the KeyCloak admin console
+The KeyCloak Administration Console is available at `<your-domain>/auth/admin/`.
+We recommend to restrict access to this console to only your own IP address.
+You can do this by editing the `nginx_keycloak_admin.conf` file in the folder created by
+the initialization script (`~/fl-net/platforms`).
 
 ## 4. Keeping your FLNet Platform running
 ### Cert renewal
@@ -158,201 +181,10 @@ Alternatively check the exact container names.
 If you use certbot, you can use the `--deploy-hook` option to automatically reload the services after cert renewal.
 Make sure to test the restart commands before you setup the hook, as it's easy to make a mistake in e.g. container names.
 
-### 4.2 Updating the FLNet Platform
+### Updating the FLNet Platform
 The FLNet Platform is deployed via docker compose.
 We currently don'y have a specific update functionality.
 You may use e.g. watchtower to automatically update the images.
-
-## What gets deployed
-
-### High-level overview
-
-```mermaid
-flowchart LR
-  U[User / Browser] -->|HTTPS| RP[NGINX Reverse Proxy]
-  U -->|Relay TCP 9140| RP
-
-  RP --> FE[Frontend: FL-Net]
-  RP --> DOC[Documentation]
-  RP --> KC[Keycloak]
-
-  RP --> GAPI[Global Learning API]
-  RP --> ORCH[Orchestration API]
-  RP --> DMAPI[Datamodeler API]
-
-  ORCH -->|Docker socket| DOCKER[(Host Docker Engine)]
-  ORCH --> ORCHDB[(Orch DB: pgvector/postgres)]
-  GAPI --> GLDB[(Global Learning DB: pgvector/postgres)]
-  DMAPI --> NEO[(Datamodeler DB: Neo4j)]
-
-  KC --> KCPG[(Keycloak Postgres)]
-  RP --> CTRL[FeatureCloud Controller]
-  RP --> RELAY[Relay Server]
-```
-
-### Services
-
-| Service | What it does | Depends on |
-|---|---|---|
-| `reverse-proxy` (NGINX) | Single entrypoint; routes to frontends, APIs, Keycloak, docs; also exposes relay TCP | All upstreams |
-| `keycloak` | OIDC identity provider, realm import on boot | `keycloak-postgres` |
-| `keycloak-postgres` | Postgres database for Keycloak | — |
-| `frontend` | Serves FL-Net  UI (routing handled by NGINX) | `keycloak` |
-| `documentation` | Serves the user documentation site | — |
-| `global-learning-api` | Core FL-Net backend API | `global-learning-db`, `keycloak` |
-| `global-learning-db` | Postgres + pgvector backing the Global Learning API | — |
-| `orch-api` | Orchestration service (runs containers); requires docker socket access | `global-learning-db`, `keycloak` |
-| `orch-db` | Postgres + pgvector backing orchestration metadata | — |
-| `datamodeler-api` | Graph/ontology/data-model services | `datamodeler-db`, `keycloak` |
-| `datamodeler-db` | Neo4j database for datamodeling graph | — |
-| `controller` | FeatureCloud controller service | — |
-| `relay-server` | FeatureCloud relay; TCP/HTTP endpoints | — |
-
----
-
-## Deployment layout
-
-```text
-.
-├─ docker-compose.yml
-├─ .env
-├─ env/
-│  ├─ nginx.env
-│  ├─ keycloak.env
-│  ├─ keycloak-postgres.env
-│  ├─ global-api.env
-│  ├─ global-learning-db.env
-│  ├─ orch-api.env
-│  ├─ orch-db.env
-│  ├─ datamodeler-api.env
-│  ├─ datamodeler-db.env
-│  └─ controller.env
-├─ keycloak-realms/
-│  └─ <realm files>.json
-├─ nginx_server.conf
-├─ nginx.conf
-├─ umls/        (mounted read-only)
-└─ sapbert/     (mounted read-only)
-```
-
----
-
-## Routing & domains
-
-NGINX is the **single edge** service. It routes requests to:
-
-- **Frontends** (FL-Net)
-- **Keycloak** (`/auth/...` style endpoints depending on config)
-- **Documentation**
-- **APIs** (Global Learning / Orchestration / Datamodeler)
-- **Relay TCP port** (exposed separately on 9140 via the reverse proxy service)
-
-### Request flow (HTTP)
-
-```mermaid
-sequenceDiagram
-  autonumber
-  participant User as Browser
-  participant Nginx as Reverse Proxy (NGINX)
-  participant FE as Frontend
-  participant KC as Keycloak
-  participant API as Backend APIs
-  participant DOC as Documentation
-
-  User->>Nginx: Request (Host header)
-  alt Frontend route
-    Nginx->>FE: Proxy to frontend
-    FE-->>Nginx: Response
-  else Auth route
-    Nginx->>KC: Proxy to Keycloak
-    KC-->>Nginx: Tokens / login pages
-  else API route
-    Nginx->>API: Proxy to API service
-    API-->>Nginx: JSON response
-  else Docs route
-    Nginx->>DOC: Proxy to docs
-    DOC-->>Nginx: HTML
-  end
-  Nginx-->>User: Final response
-```
-
----
-
-## Configuration: where to change what
-
-### `.env`
-Holds top-level Compose variables (e.g. ports, project name, image tags).  
-Examples you likely have:
-- `IMAGE_TAG`
-- `NGINX_PORT`
-- `RELAY_TCP_PORT`
-- `COMPOSE_PROJECT_NAME`
-
-### `env/*.env`
-Contains relevant secrets such as DB passwords
-
-### `docker-compose.yml`
-Wiring:
-- images + tags
-- environment variables of the services
-- dependencies/healthchecks
-- volumes + mounts
-- networks
-- exposed ports
-- labels (watchtower)
-
----
-
-## Persistent storage
-
-The deployment uses **named volumes** for durability across restarts:
-
-- `global-learning-db-volume` → Postgres data (Global Learning)
-- `orch-db-volume` → Postgres data (Orch DB)
-- `keycloak_postgres_volume` → Postgres data (Keycloak)
-- `datamodeler-db` → Neo4j data
-- `orch-data-volume` → orch input directory (`/mnt/input`) used by orchestration
-
-```mermaid
-flowchart TB
-  subgraph Volumes
-    GLV[(global-learning-db-volume)]
-    ORCHV[(orch-db-volume)]
-    KCV[(keycloak_postgres_volume)]
-    NEO4JV[(datamodeler-db)]
-    ORCHDATA[(orch-data-volume)]
-  end
-
-  GLDB[global-learning-db] --> GLV
-  ORCHDB[orch-db] --> ORCHV
-  KCPG[keycloak-postgres] --> KCV
-  NEO[datamodeler-db] --> NEO4JV
-  ORCH[orch-api] --> ORCHDATA
-```
-
----
-
-## Healthchecks & startup ordering
-
-Several services use `depends_on: condition: service_healthy` to avoid boot races:
-
-- APIs wait for their DBs and Keycloak
-- Keycloak waits for Postgres and verifies readiness via a TCP-based healthcheck
-- NGINX depends on upstream services, and restarts if it comes up too early
-
-> NGINX note: on startup it may fail if upstreams aren’t ready yet. It should recover due to `restart: always`.
-
----
-
-## Updating images
-
-This setup includes watchtower labels:
-
-```text
-com.centurylinklabs.watchtower.enable=true
-```
-
-If you run watchtower elsewhere in your environment, it can auto-update these services.
 
 Manual update:
 
@@ -360,36 +192,3 @@ Manual update:
 docker compose pull
 docker compose up -d
 ```
-
----
-
-## Troubleshooting
-
-### Check logs
-
-```sh
-docker compose logs -f reverse-proxy
-docker compose logs -f keycloak
-docker compose logs -f global-learning-api orch-api datamodeler-api
-```
-
-### Check health
-
-```sh
-docker compose ps
-```
-
-### Common issues
-
-- **Keycloak redirect URI / hostname mismatch**  
-  Usually caused by changing hostnames/ports without updating all OIDC-related env vars and NGINX routing.
-
-- **NGINX fails at startup**  
-  Upstreams not ready yet. It should recover due to `restart: always`.
-
-- **Datamodeler mounts missing** (`./umls`, `./sapbert`)  
-  Ensure directories exist and contain expected artifacts. They are mounted `:ro`.
-
----
-
-

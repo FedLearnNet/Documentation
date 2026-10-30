@@ -18,10 +18,12 @@ For any issue over multiple repositories you can use the meta repository [FedLea
 ## Branches
 All repositories use two long-lived branches:
 
-| Branch | Purpose | Published Docker image tag |
-|---|---|---|
-| `main` | Production state | `latest` |
-| `develop` | Integration and staging state | `staging` |
+| Branch | Purpose | Version | Published Docker image tags |
+|---|---|---|---|
+| `main` | Production state | `X.Y.Z` | `latest`, `X.Y.Z` |
+| `develop` | Integration and staging state | `X.Y.Z.dev` | `staging`, `X.Y.Z.dev` |
+
+How versions are numbered and released is described in the [Release workflow](release-workflow.md).
 
 Work happens on short-lived branches created from the **develop** branch. 
 Existing branches are usually named after the issue they solve, 
@@ -31,11 +33,12 @@ for example `137-global-frontend-show-unknown-vulnerabilities-pr`.
 Always open a pull request and let the CI checks run.
 
 ## Pull requests
-1. Push your branch and open a pull request against the **develop** branch.
-2. Reference the PR in the issue(s) it solves, e.g. `Fixes #137`.
-3. Make sure the CI checks pass (see below).
-4. Keep the pull request focused on one issue. Unrelated refactorings make review harder.
-5. If your change affects user facing behavior or anything that is documented here, update the [documentation](documentation-workflow.md) as well.
+1. Merge the current `develop` state into your branch and solve any conflicts.
+2. Push your branch and open a pull request against the **develop** branch.
+3. Reference the issue(s) it solves in the pull request description, e.g. `Fixes #137`.
+4. Make sure the CI checks pass (see below).
+5. Keep the pull request focused on one issue. Unrelated refactorings make review harder.
+6. If your change affects user facing behavior or anything that is documented here, update the [documentation](documentation-workflow.md) as well. You do the same steps of creating a pull request as described here for the documentation repository, and you can link the two pull requests as a comment in the ticket.
 
 For frontend changes, the [Testing and review](frontend/testing-and-review.md) page contains a review checklist.
 
@@ -47,10 +50,11 @@ These generally focus on
 - building docker images
 - scanning the built images for vulnerabilities
 - publishing the images to the GitHub Container Registry (if the previous steps pass)
+- tagging and releasing new versions, see [Release workflow](release-workflow.md)
 
 Dependabot (`.github/dependabot.yml`) opens pull requests for dependency updates.
 
-`Python-Tool-API` additionally publishes the Python package (`publish.yml`).
+`Python-Tool-API` additionally publishes the Python package (`publish.yml`) in PyPI.
 
 ## Where to go next
 Go back to the [Welcome page](welcome.md) for the recommended reading order, or continue with the detailed section for your change.

@@ -18,23 +18,22 @@ The `local-learning`, `global-learning`, and `data-modeler` modules live in the
 
 | Variable | local-learning | global-learning | data-modeler | orch-api |
 |---|:---:|:---:|:---:|:---:|
-| `FLNET_GITLAB_ISSUE_TOKEN` | ✓ | ✓ | | |
 | `QUARKUS_OIDC_CREDENTIALS_SECRET` | ✓ | ✓ | | |
 | `QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET` | ✓ | ✓ | | |
 | `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` | | ✓ | | |
 | `UMLS_API_KEY` | | | ✓ | |
-| `ORCH_DOCKER__GITLAB__REGISTRY_USERNAME` | | | | ✓ |
-| `ORCH_DOCKER__GITLAB__REGISTRY_PASSWORD` | ✓ | ✓ | | ✓ |
 | `ORCH_DOCKER__GHCR__REGISTRY_USERNAME` | ✓ | ✓ | | ✓ |
 | `ORCH_DOCKER__GHCR__REGISTRY_PASSWORD` | ✓ | ✓ | | ✓ |
 | `PIPELINE_DOCKER_PASSWORD` | ✓ | ✓ | | ✓ |
 | `PIPELINE_REPO_TOKEN` | ✓ | ✓ | | ✓ |
 
+No token is needed for issue reporting: *Report an issue* in the frontends opens a prefilled issue on
+[FedLearnNet/.github](https://github.com/FedLearnNet/.github/issues/new) that the user submits with their own GitHub account.
+
 ## local-learning
 
 This file should be named: `.env`
 ```env
-FLNET_GITLAB_ISSUE_TOKEN=TOKEN
 QUARKUS_OIDC_CREDENTIALS_SECRET=SECRET
 QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET=SECRET
 ```
@@ -47,7 +46,6 @@ This file should be named: `.env`
 
 ```env
 QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=TOKEN
-FLNET_GITLAB_ISSUE_TOKEN=TOKEN
 QUARKUS_OIDC_CREDENTIALS_SECRET=TOKEN
 QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET=TOKEN
 ```
@@ -63,12 +61,10 @@ UMLS_API_KEY=TOKEN
 
 ## orch-api
 
-The orch-api requires the shared [orch secrets](#orch-secrets) listed below, plus the username for the GitLab registry.
+The orch-api requires the shared [orch secrets](#orch-secrets) listed below.
 
 This file should be named: `.env`
 ```env
-ORCH_DOCKER__GITLAB__REGISTRY_USERNAME=USERNAME
-ORCH_DOCKER__GITLAB__REGISTRY_PASSWORD=TOKEN
 # only needed while the pipeline image on ghcr.io is private
 ORCH_DOCKER__GHCR__REGISTRY_USERNAME=USER
 ORCH_DOCKER__GHCR__REGISTRY_PASSWORD=TOKEN
@@ -84,7 +80,6 @@ They are used by `compose-devservices.yml` to start the orch-api as a Quarkus De
 The `orch-api` project itself also requires the same set in its `.env`.
 
 ```env
-ORCH_DOCKER__GITLAB__REGISTRY_PASSWORD=TOKEN
 # only needed while the pipeline image on ghcr.io is private
 ORCH_DOCKER__GHCR__REGISTRY_USERNAME=USER
 ORCH_DOCKER__GHCR__REGISTRY_PASSWORD=TOKEN

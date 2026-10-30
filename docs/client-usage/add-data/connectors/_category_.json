@@ -1,0 +1,8 @@
+{
+  "label": "Connectors",
+  "position": 2,
+  "link": {
+    "type": "doc",
+    "id": "client-usage/add-data/connectors/index"
+  }
+}

@@ -37,7 +37,7 @@ This separation of concerns between **Clients** and the **Platform** is what all
 
 ## Quickstart
 For a **Quickstart**, you can jump directly to the relevant section for your role:
-- [Client deployment if you want to deploy your own FL-Net Client](docs/deployment/deploy-client.md)
+- [Client deployment if you want to deploy your own FL-Net Client](docs/deployment/client/deploy-client.md)
 - [Client usage if you want to understand how to add and control data on your FL-Net Client](docs/client-usage/welcome.md)
 - [Platform usage if you want to understand how to discover and analyze data on the FL-Net Network](docs/platform-usage/welcome.md)
 - [Tool development if you want to develop and contribute new tools to the FL-Net Network](../tool-dev/create-tool.md)
@@ -49,7 +49,7 @@ However, we recommend instead the following reading order for new users, underst
 4. [Graphical overview](graphical-overview.md)
 5. [Optional: Understanding the architecture](architecture/welcome.md)
 6. One of:
-   - [Client deployment](../deployment/deploy-client.md)
+   - [Client deployment](../deployment/client/deploy-client.md)
    - [Client usage](../client-usage/welcome.md)
    - [Platform usage](../platform-usage/welcome.md)
    - [Tool development](../tool-dev/create-tool.md)

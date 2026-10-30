@@ -2,6 +2,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import replaceVariables from './src/remark/replaceVariables';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import prepareRangefindDevStaticDir from './src/rangefind/devStaticDir';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
@@ -15,17 +16,22 @@ const productSlug = process.env.PRODUCT_SLUG ?? 'productSlug';
 const productTagline = process.env.PRODUCT_TAGLINE ?? 'productTagline';
 // The path here is from the root path static!! Put your logo in e.g.
 // static/img/posymed/logo.svg and it will be available at /img/posymed/logo.svg
-const productLogoPath = process.env.PRODUCT_LOGO_PATH ?? 'img/logo.svg';
+const productLogoPath = process.env.PRODUCT_LOGO_PATH ?? 'img/flnet/logo.avif';
 const productLogoAlt = process.env.PRODUCT_LOGO_ALT ?? 'product logo';
 // Same as logo, also from the static folder!
-const productFaviconPath = process.env.PRODUCT_FAVICON_PATH ?? 'img/favicon.ico';
-
+const productFaviconPath = process.env.PRODUCT_FAVICON_PATH ?? 'img/flnet/logo.avif';
+const baseUrl = process.env.PRODUCT_BASE_URL ?? '/documentation/';
+const isDevServer = process.argv.includes('start');
 
 const config: Config = {
     title: `Documentation of ${deployedProductName}`,
     tagline: productTagline,
     favicon: productFaviconPath,
-    staticDirectories: ['public', 'static'],
+    staticDirectories: [
+        'public',
+        'static',
+        ...(isDevServer ? [prepareRangefindDevStaticDir(__dirname)] : []),
+    ],
     customFields: {
         productName: deployedProductName,
         productSlug,
@@ -37,6 +43,13 @@ const config: Config = {
         productLogoAlt,
         productFaviconPath,
     },
+    plugins: [
+        ["docusaurus-plugin-rangefind", {theme: true}]
+    ],
+    clientModules: [
+        './src/rangefind/searchPageLinks.ts',
+        ...(isDevServer ? ['./src/rangefind/devSingleRanges.ts'] : []),
+    ],
     future: {
         v4: true, // Improve compatibility with the upcoming Docusaurus v4
     },
@@ -51,7 +64,7 @@ const config: Config = {
     ],
 
     url: deployedProductUrl,
-    baseUrl: process.env.PRODUCT_BASE_URL ?? '/documentation/',
+    baseUrl: baseUrl,
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
@@ -109,8 +122,7 @@ const config: Config = {
     ],
 
     themeConfig: {
-        // TODO: add the actual logo
-        image: 'img/docusaurus-social-card.jpg',
+        image: 'img/flnet/logo.avif',
         navbar: {
             title: deployedProductName,
             logo: {
@@ -167,6 +179,12 @@ const config: Config = {
                     activeBaseRegex: '/docs/contribution-guide/',
                     sidebarId: 'coreDeveloperSidebar',
                 },
+                {
+                    type: "html",
+                    position: "right",
+                    className: "navbar-rangefind",
+                    value: `<rangefind-search src="${baseUrl}rangefind/" placeholder="Search…"></rangefind-search>`
+                }
             ],
         },
         footer: {
@@ -204,7 +222,10 @@ const config: Config = {
                             label: 'Contact Us',
                             to: 'mailto:info@mail.federated-learning.net',
                         },
-                        // TODO: add Github link once moved to Github
+                        {
+                            label: 'GitHub',
+                            href: 'https://github.com/FedLearnNet',
+                        },
                     ],
                 }
             ],

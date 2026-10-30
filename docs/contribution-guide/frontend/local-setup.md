@@ -7,18 +7,24 @@ The frontend workspace is straightforward to install, but not every screen is us
 
 ## 1. Install dependencies
 
-Requirements: Node.js 22 LTS (or another version supported by the Angular version used) and npm.
+Requirements: Node.js (version depends on the Angular version used) and npm.
 
 ```sh
-npm install
+npm ci
 ```
+
+This installs the versions in `package-lock.json`. Repeat it after a dependency upgrade or branch
+change if `node_modules` still contains older Angular packages. For example, Angular 21 reports
+`$safeNavigationMigration` and `withXhr` as unknown when compiling code migrated to Angular 22.
+Both are supported by Angular 22; see its [template migration guide](https://angular.dev/guide/templates/expression-syntax#safe-navigation-migration)
+and [HTTP setup guide](https://angular.dev/guide/http/setup#withxhr).
 
 ## 2. Pick the app and product variant
 
 The workspace builds different combinations of:
 
 - app type: `local-app` or `global-app`
-- product variant: `FLNet`, `dAIbetes`, `microb-AI-ome`, `posymed`
+- product variant: `FLNet`, `dAIbetes`, `microb-AI-ome`, `posymed` (use `FLNet` if you're unsure)
 - target: development, staging, or production
 
 For day-to-day work, start with the dev server script that matches the app and brand you are changing. For the default FL-Net brand:
@@ -30,16 +36,30 @@ npm run start-global-fl-net    # http://localhost:4201
 
 Use the matching script if your task is tied to another brand.
 
+For the dAIbetes global frontend, use:
+
+```sh
+npm run start-global-dAIbetes
+# Equivalent: ng serve --project=global-app --configuration=dAIbetes --port 4201
+```
+
 ## 3. Know which backend services your screen needs
 
 You can usually boot the shell without every backend running, but feature work often needs the matching APIs.
 
-In plain terms:
+See the [Repository map](../repository-map.md) and check which service calls your change affects.
 
-- `global-app` depends on services around global learning, project data, and authentication
-- `local-app` depends on services around data import, local learning, and authentication
+The login runs through the learning API (backend-for-frontend), so logging in needs the matching backend: `local-learning-api` on
+port 8081 for the local app, `global-learning-api` on port 8080 for the global app.
 
-If the UI boots but a page stays empty, verify the backend dependency before assuming the bug is in Angular.
+`ng serve` uses `projects/<app>/proxy.conf.json`, so development is same-origin like behind NGINX and the session cookie works:
+
+| Path | Target |
+| --- | --- |
+| `/local-learning-api` | `http://localhost:8081` |
+| `/api` | `http://localhost:8080` |
+
+The prefix is stripped and WebSockets are proxied as well.
 
 ## 4. Be careful with environment files
 

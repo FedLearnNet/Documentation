@@ -21,3 +21,5 @@ yarn-error.log*
 
 .idea
 .claude
+# Rangefind search assets for the dev server
+.rangefind-dev

@@ -13,7 +13,8 @@ The canonical mapping for these properties is **FLNetConfig**.
 ## Design Notes
 
 - Prefix: all global custom properties live under `flnet.*`.
-- Source of truth: defaults can come from either `FLNetConfig` or `application.properties`.
+- Source of truth: defaults can come from either `FLNetConfig` or `flnet.properties`, which holds all `flnet.*` values except `flnet.bff.*` (in `security.properties`). See [Configuration files](../overview.md#configuration-files).
+- Removed: `flnet.feddb-client.auth.enable`. Clients must always authenticate with their Platform account.
 - Backward compatibility: property names are already used in runtime code and should not be renamed casually.
 - Profile overrides: some values intentionally differ in `dev`, `test`, or `staging`.
 
@@ -29,12 +30,13 @@ The canonical mapping for these properties is **FLNetConfig**.
 | `flnet.tool-imports.enabled` | `boolean` | `false` in code, `true` in shipped config | Enables external tool imports. |
 | `flnet.tool-imports.paths` | `List<Path>` | `tool-imports` in shipped config | Declares tool import roots. |
 | `flnet.tool-imports.create-unpublished-version` | `boolean` | `false` | Imports tools as unpublished versions. |
+| `flnet.tool-imports.override-existing` | `boolean` | `true` | Updates existing imported tool definitions. |
+| `flnet.tool-imports.build-on-import` | `ToolImportBuildingOnStart` | `IF_NOT_EXISTS_IN_REGISTRY` | Selects which imported versions are rebuilt. |
 | `flnet.workflow-imports.enabled` | `boolean` | `false` in code, `true` in shipped config | Enables workflow imports. |
 | `flnet.workflow-imports.paths` | `List<Path>` | `workflow-imports` in shipped config | Declares workflow import roots. |
 | `flnet.workflow-imports.create-unpublished-version` | `boolean` | `false` | Imports workflows as unpublished versions. |
 | `flnet.pipeline.builder.image` | `String` | set in shipped config | Selects the pipeline builder image. |
-| `flnet.gitlab.issue.token` | `String` | none | Authenticates GitLab issue creation. |
-| `flnet.gitlab.issue.project-id` | `int` | `9` | Selects the target GitLab project. |
+| `flnet.pipeline.rescan.cron` | `String` | `0 0 3 ? * MON`; dev/test: `off` | Queues weekly vulnerability rescans of built tool versions in UTC. |
 | `flnet.federated-learning.participants.minamount` | `int` | `3` | Defines the minimum clinic count for federated experiments. |
 | `flnet.audit.min-acceptance-amount` | `long` | `1` | Defines the minimum accepted audits for certification progress. |
 | `flnet.tools.semantic-scholar.api-key` | `String` | none | Supplies an optional Semantic Scholar API key. |
@@ -82,7 +84,7 @@ The canonical mapping for these properties is **FLNetConfig**.
 ### `flnet.tool-configs.enabled`
 
 - Type: `boolean`
-- Default: `false` in code, set to `true` in the shipped `application.properties`
+- Default: `false` in code, set to `true` in the shipped `flnet.properties`
 - Required: no
 - Purpose: Enables lookup of external tool configuration descriptors from configured roots.
 - Runtime effect: If disabled, the external standard handler skips directory-based tool config discovery entirely.
@@ -91,7 +93,7 @@ The canonical mapping for these properties is **FLNetConfig**.
 ### `flnet.tool-configs.paths`
 
 - Type: `List<Path>`
-- Default: none in code, set to `tool-configs` in the shipped `application.properties`
+- Default: none in code, set to `tool-configs` in the shipped `flnet.properties`
 - Required: only if `flnet.tool-configs.enabled=true`
 - Purpose: Defines one or more filesystem roots that contain tool configuration descriptors.
 - Runtime effect: The application scans these paths when resolving externally managed tool configs.
@@ -102,7 +104,7 @@ The canonical mapping for these properties is **FLNetConfig**.
 ### `flnet.tool-imports.enabled`
 
 - Type: `boolean`
-- Default: `false` in code, set to `true` in the shipped `application.properties`
+- Default: `false` in code, set to `true` in the shipped `flnet.properties`
 - Required: no
 - Purpose: Enables automatic import of external tool definitions.
 - Runtime effect: Startup and import handlers will process configured tool import locations only when this flag is enabled.
@@ -111,7 +113,7 @@ The canonical mapping for these properties is **FLNetConfig**.
 ### `flnet.tool-imports.paths`
 
 - Type: `List<Path>`
-- Default: none in code, set to `tool-imports` in the shipped `application.properties`
+- Default: none in code, set to `tool-imports` in the shipped `flnet.properties`
 - Required: only if `flnet.tool-imports.enabled=true`
 - Purpose: Declares the import roots for external tool definitions.
 - Runtime effect: These directories are used for startup imports and export target resolution.
@@ -126,12 +128,31 @@ The canonical mapping for these properties is **FLNetConfig**.
 - Runtime effect: This changes the lifecycle state of imported tools and therefore affects review, publishing, and visibility workflows.
 - Allowed values: `true`, `false`
 
+### `flnet.tool-imports.override-existing`
+
+- Type: `boolean`
+- Default: `true`
+- Purpose: Updates existing imported tool definitions and permits the existing single-version override behavior.
+- Allowed values: `true`, `false`
+
+### `flnet.tool-imports.build-on-import`
+
+- Type: `ToolImportBuildingOnStart`
+- Default: `IF_NOT_EXISTS_IN_REGISTRY`
+- Environment variable: `FLNET_TOOL_IMPORTS_BUILD_ON_IMPORT`
+- Allowed values: `ALWAYS`, `IF_NOT_EXISTS_IN_STORE`, `IF_NOT_EXISTS_IN_REGISTRY`, `NEVER`
+- Purpose: Selects whether startup imports rebuild all versions, only new versions, only missing official images, or none.
+- Runtime effect: Rebuild candidates start without the imported image or scan reports. Other versions retain an image only after it is verified in the official registry. If the policy does not rebuild an unavailable image, the definition is still imported without build information.
+
+See [Startup imports and the official registry](../tool-build-pipeline.md#startup-imports-and-the-official-registry)
+for the policy table and report handling.
+
 ## Workflow Import
 
 ### `flnet.workflow-imports.enabled`
 
 - Type: `boolean`
-- Default: `false` in code, set to `true` in the shipped `application.properties`
+- Default: `false` in code, set to `true` in the shipped `flnet.properties`
 - Required: no
 - Purpose: Enables workflow import from configured filesystem roots.
 - Runtime effect: If enabled, startup imports workflow bundles from the configured locations.
@@ -140,7 +161,7 @@ The canonical mapping for these properties is **FLNetConfig**.
 ### `flnet.workflow-imports.paths`
 
 - Type: `List<Path>`
-- Default: none in code, set to `workflow-imports` in the shipped `application.properties`
+- Default: none in code, set to `workflow-imports` in the shipped `flnet.properties`
 - Required: only if `flnet.workflow-imports.enabled=true`
 - Purpose: Lists the directories used as workflow import roots.
 - Runtime effect: Workflow import and export logic read from and write to these roots depending on the operation.
@@ -160,31 +181,31 @@ The canonical mapping for these properties is **FLNetConfig**.
 ### `flnet.pipeline.builder.image`
 
 - Type: `String`
-- Default: none in code, set in the shipped `application.properties`
+- Default: none in code, set in the shipped `flnet.properties`
 - Required: effectively yes for pipeline build flows
+- Profile overrides: `%dev=localhost:5001/flnet/tool-build-pipeline:dev`
 - Purpose: Defines the container image used by the pipeline builder integration.
 - Runtime effect: Changing this value switches the build image used for pipeline generation and execution preparation. This directly affects available tooling, runtime compatibility, and reproducibility.
 - Allowed values: A valid container image reference
 
-## GitLab Integration
-
-### `flnet.gitlab.issue.token`
+### `flnet.pipeline.rescan.cron`
 
 - Type: `String`
-- Default: none
-- Required: yes for automatic GitLab issue creation
-- Purpose: Private token used by the GitLab REST client.
-- Runtime effect: Without this token, authenticated issue creation cannot succeed. The token should be supplied through a secure deployment-specific channel in non-development environments.
-- Allowed values: A valid GitLab private token
+- Default: `0 0 3 ? * MON` (Monday at 03:00 UTC)
+- Profile overrides: `%dev=off`, `%test=off`
+- Environment variable: `FLNET_PIPELINE_RESCAN_CRON`
+- Purpose: Queues `SCAN_ONLY` pipelines for built tool versions through `ToolVulnerabilityRescanScheduler`.
+- Runtime effect: The build queue rescans one image at a time and skips versions with active pipelines. Previous source, SAST, and malware metadata are preserved.
+- Allowed values: A Quarkus scheduler cron expression, or `off` to disable the trigger.
 
-### `flnet.gitlab.issue.project-id`
+See [Pipeline integration and local testing](../tool-build-pipeline.md) for the local registry,
+builder configuration, scheduler packages, and a five-minute development schedule.
 
-- Type: `int`
-- Default: `9`
-- Required: no
-- Purpose: Selects the GitLab project that receives generated issues.
-- Runtime effect: This determines where runtime-created feedback or issue reports are filed.
-- Allowed values: Any valid GitLab project ID visible to the configured token
+## Issue Reporting
+
+Issue reporting needs no configuration. *Report an issue* in the frontend opens a prefilled issue on
+[FedLearnNet/.github](https://github.com/FedLearnNet/.github/issues/new), which the user submits with their own GitHub account.
+The former `flnet.gitlab.issue.*` properties, the GitLab token, and the `/issue` endpoints have been removed.
 
 ## Federated Learning Policy
 
