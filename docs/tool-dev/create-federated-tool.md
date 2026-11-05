@@ -145,8 +145,8 @@ class MyFederatedClientApp(
 | `_save()` | Persist model state to disk. Return a path or identifier. |
 | `_load(path)` | Restore model state from disk. |
 
-:::info Model upload in a federated run (not yet on `main`)
-On the unmerged `89-Support_running_the_aggregator_code` branches: in a federated run, `_save()` only persists the model **locally** (so a follow-up app in the same run can still read it) — it no longer uploads the model itself. Uploading is handled exclusively by the aggregator's [`save_model()`](#persisting-the-aggregated-model--save_modelaggregated), once, regardless of whether the aggregator runs on a coordinator clinic or on the platform. See the compatibility note in Step 4.
+:::info[Model upload in a federated run]
+In a federated run, `_save()` only persists the model **locally** (so a follow-up app in the same run can still read it) — it no longer uploads the model itself. Uploading is handled exclusively by the aggregator's [`save_model()`](#persisting-the-aggregated-model--save_modelaggregated), once, regardless of whether the aggregator runs on a coordinator clinic or on the platform. See the compatibility note in Step 4.
 :::
 
 ---
@@ -282,10 +282,6 @@ If no `aggregator` is specified, it defaults to `"default"`.
 
 ### Persisting the Aggregated Model — `save_model(aggregated)`
 
-:::caution Not yet on `main`
-`save_model()` and the single-upload-path behavior described here are on the unmerged `89-Support_running_the_aggregator_code` branches of Python-Tool-API and Learning APIs (PRs open, changes requested). This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so method names and behavior may still change.
-:::
-
 `AppAggregator` also has an optional `save_model(aggregated)` hook. Override it to persist the final round's aggregated result as a model file; the engine then uploads it automatically. The default implementation is a no-op that returns `None` (nothing to upload).
 
 ```python
@@ -312,7 +308,7 @@ class MeanVectorAggregator(AppAggregator):
 | `aggregated` | `Any` | The value your `aggregate()` returned on the last round. |
 | **Return** | `Optional[str]` | The file name of the saved model. Return `None` if there is nothing to persist for this result — the engine skips the upload in that case. |
 
-:::warning Keep `_save()`/`_load()` and `save_model()` compatible
+:::warning[Keep `_save()`/`_load()` and `save_model()` compatible]
 This is a change from how tools worked before: **a tool's model upload no longer always comes from `_save()`.**
 
 Whether the uploaded model is produced by a coordinator clinic's `_save()` or by the aggregator's `save_model()` depends on the deployment (random-clinic vs. platform-aggregator mode) — the tool itself doesn't control which one runs. Either way, whatever gets uploaded is read back later through the *same* `_load(path)` on `BaseApp`.
