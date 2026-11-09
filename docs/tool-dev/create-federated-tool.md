@@ -142,11 +142,11 @@ class MyFederatedClientApp(
 |---|---|
 | `run_train(data)` | Your federated training logic. Process local data, communicate with the aggregator, return output. |
 | `run_prediction(data)` | Prediction/inference logic. For many federated apps, this delegates to `run_train`. |
-| `_save()` | Persist model state to disk. Return a path or identifier. |
-| `_load(path)` | Restore model state from disk. |
+| `_save()` | Persist this participant's **local** model in the model directory and return its file name. |
+| `_load(path)` | Load the model in `run_prediction()`. Must handle both the local model from `_save()` and the aggregated model from the aggregator's `save_model()`. |
 
-:::info[Model upload in a federated run]
-In a federated run, `_save()` only persists the model **locally** (so a follow-up app in the same run can still read it) — it no longer uploads the model itself. Uploading is handled exclusively by the aggregator's [`save_model()`](#persisting-the-aggregated-model--save_modelaggregated), once, regardless of whether the aggregator runs on a coordinator clinic or on the platform. See the compatibility note in Step 4.
+:::info[Model files in a federated run]
+A federated run produces two model files: the local one from `_save()` and the aggregated one from the aggregator's [`save_model()`](#saving-and-loading-the-model). Only the aggregated model is uploaded — by the aggregator, whether it runs on a coordinator site or on the platform. Your `_load()` therefore has to find and read both, see [Saving and Loading the Model](#saving-and-loading-the-model) in Step 4.
 :::
 
 ---
@@ -280,27 +280,69 @@ response = self.communicator.aggregate(
 
 If no `aggregator` is specified, it defaults to `"default"`.
 
-### Persisting the Aggregated Model — `save_model(aggregated)`
+### Saving and Loading the Model
 
-`AppAggregator` also has an optional `save_model(aggregated)` hook. Override it to persist the final round's aggregated result as a model file; the engine then uploads it automatically. The default implementation is a no-op that returns `None` (nothing to upload).
+A federated run creates two model files in the model directory (`MODEL_DIR`, default `./model`):
+
+| File | Written by | When |
+|---|---|---|
+| Local model | the client's `_save()` | at the end of training, on every participant |
+| Aggregated model | the aggregator's `save_model(aggregated)` | after the last round, where the aggregator runs |
+
+The engine uploads the aggregated model, i.e. the file `save_model()` returns, and the platform stores it as an unpublished model version. When the model is used for predictions later, your tool finds exactly this file in its model directory.
+
+Rules:
+- Use **different file names** for the two models: a coordinator site runs the client and the aggregator in the same container and writes both.
+- `_load()` must find and load **both** files, and you call it in `run_prediction()`.
+- `save_model()` returns the file name, or `None` if there is nothing to persist (the engine then skips the upload). The default implementation returns `None`.
+
+Minimal example:
 
 ```python
-import os
 from pathlib import Path
+from typing import Any, Optional
 
 import joblib
+import numpy as np
+from pyfedappwrap.engine.config.system_config import system_settings
+from pyfedappwrap.engine.federated import AppAggregator
+from pyfedappwrap.learning.federated import BaseFederatedApp
+
+MODEL_FILE = "model.joblib"                        # written by the client's _save()
+AGGREGATED_MODEL_FILE = "aggregated_model.joblib"  # written by the aggregator's save_model()
+
+
+def _model_dir() -> Path:
+    path = Path(system_settings.model_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 class MeanVectorAggregator(AppAggregator):
     def aggregate(self, data, n_clients, meta=None) -> Any:
-        stacked = np.stack(data)
-        return np.mean(stacked, axis=0)
+        return np.mean(np.stack(data), axis=0)
 
     def save_model(self, aggregated: Any) -> Optional[str]:
-        path = Path(os.environ.get("MODEL_DIR", "./model/")) / "aggregated_model.joblib"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(aggregated, path)
-        return path.name
+        joblib.dump({"weights": aggregated}, _model_dir() / AGGREGATED_MODEL_FILE)
+        return AGGREGATED_MODEL_FILE
+
+
+class MyFederatedClientApp(BaseFederatedApp[MyFederatedConfig, MyFederatedInput, MyFederatedOutput]):
+    def run_prediction(self, data: MyFederatedInput) -> MyFederatedOutput:
+        self._load()
+        ...  # predict with self.weights
+
+    def _save(self) -> str:
+        joblib.dump({"weights": self.weights}, _model_dir() / MODEL_FILE)
+        return MODEL_FILE
+
+    def _load(self, path: str = "") -> None:
+        for name in (MODEL_FILE, AGGREGATED_MODEL_FILE):
+            file = _model_dir() / name
+            if file.exists():
+                self.weights = joblib.load(file)["weights"]
+                return
+        raise FileNotFoundError(f"No model found in {_model_dir()}")
 ```
 
 | Parameter | Type | Description |
@@ -308,13 +350,7 @@ class MeanVectorAggregator(AppAggregator):
 | `aggregated` | `Any` | The value your `aggregate()` returned on the last round. |
 | **Return** | `Optional[str]` | The file name of the saved model. Return `None` if there is nothing to persist for this result — the engine skips the upload in that case. |
 
-:::warning[Keep `_save()`/`_load()` and `save_model()` compatible]
-This is a change from how tools worked before: **a tool's model upload no longer always comes from `_save()`.**
-
-Whether the uploaded model is produced by a coordinator clinic's `_save()` or by the aggregator's `save_model()` depends on the deployment (random-clinic vs. platform-aggregator mode) — the tool itself doesn't control which one runs. Either way, whatever gets uploaded is read back later through the *same* `_load(path)` on `BaseApp`.
-
-So when you implement `save_model()`, make sure it writes the model in the same format/layout that your `_load(path)` already knows how to read from `_save()` — don't assume `_load()` will only ever see a file `_save()` produced. The example above uses `joblib.dump`/`joblib.load` for both for exactly this reason.
-:::
+For a complete tool that does this with a scikit-learn MLP, see the [US-130 hospital readmission tool](https://github.com/FedLearnNet/FL-Tool-US-130-NN) (`aggregator.py`, `app.py`, `model.py`).
 
 ---
 
@@ -398,7 +434,7 @@ ENABLE_CONFIG_SYNC=true
 TRACE_PERFORMANCE=false
 ENABLE_PROJECT_STARTUP=false
 
-MODEL_DIR=./
+MODEL_DIR=./model
 DATA_DIR=./data/
 
 WS_URL=%%DEPLOYED_PRODUCT_WS_URL%%/api/testembed/
@@ -657,6 +693,8 @@ for participant_id, result in results.items():
 ## Complete Example: Federated Mean
 
 Here is a complete, minimal federated app that computes the mean of numeric columns across distributed participants.
+
+For a real-world federated tool (multi-round MLP training, model saving and loading, prediction), see the [US-130 hospital readmission tool](https://github.com/FedLearnNet/FL-Tool-US-130-NN).
 
 ### `aggregator.py`
 
