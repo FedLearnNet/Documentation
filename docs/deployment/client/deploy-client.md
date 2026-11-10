@@ -95,7 +95,7 @@ First, you need to update the initial admin account created for you in the `Mast
 Please access the Client. If you gave a domain, use the domain name. 
 Otherwise use the given IP and port. 
 
-1. Access the Client at `<your-domain>/auth/admin/` or `<your-ip>:<your-port>/auth/admin`
+1. Open the KeyCloak Administration Console at `<your-domain>/auth/admin/` or `<your-ip>:<your-port>/auth/admin/`.
 
 In case you missed the initial password given by the initialization script, the initial
 username and password for the `Master` realm can be found in `flnet_client/env/keycloak-secrets.env` as `KC_BOOTSTRAP_ADMIN_PASSWORD`.
@@ -139,7 +139,7 @@ the initialization script (`~/fl-net/clients`).
 ### Updating an existing Client
 Keycloak imports the `FLNet-Client` realm only on the first start, so realm changes of newer versions do not reach existing Clients automatically.
 Since the backend-for-frontend login, the browser login runs through the `local-learning-api` client. Apply these changes once in the Keycloak admin console
-(`<your-domain>/auth/`, realm `FLNet-Client`, Clients → `local-learning-api`):
+(`<your-domain>/auth/admin/`, realm `FLNet-Client`, Clients → `local-learning-api`):
 - *Standard flow*: enabled
 - *Valid redirect URIs*: `<frontend-address>/local-learning-api/bff/login`
 - *Valid post logout redirect URIs*: `<frontend-address>/`
@@ -307,24 +307,47 @@ The %%DEPLOYED_PRODUCT_NAME%% Client is accessed through a web interface served 
 #### Outgoing network traffic
 The %%DEPLOYED_PRODUCT_NAME%% Client needs to communicate with the %%DEPLOYED_PRODUCT_NAME%% Platform.
 Furthermore, it needs to be able to pull certain docker images to function.
-This leads to the following requirements for outgoing network traffic:
-- The `GLOBAL_DOMAIN` in `FLNet_Client/.env` needs to be reachable 
-on port `443` via `https` and `wss`. 
-Furthermore, the `GLOBAL_DOMAIN` must be reachable on the`GLOBAL_TCP_PORT` from the same `.env` file
-via `tcp` for federated learning.
-- Please make sure `Docker` has access to a DNS server.
-- Please make sure the system correctly keeps time (so has network time protocol access), 
-or issued authorization tokens might immediately expire.
-- Furthermore, the following domains must be whitelisted to pull the docker images used by the %%DEPLOYED_PRODUCT_NAME%% Client:
-  - `ghcr.io/fedlearnnet/` (the %%DEPLOYED_PRODUCT_NAME%% Client images)
-    - If your firewall filters by host name only, also allow `pkg-containers.githubusercontent.com`, from which `ghcr.io` serves the image layers.
-  - `docker.io` (the docker hub registry) and `docker.com` (May be used for authentication and pulling images)
-    - Please also allow all subdomains, as docker uses multiple, e.g. `auth.docker.io` and `registry-1.docker.io`. Alternatively, you can follow the [docker allow list](https://docs.docker.com/desktop/setup/allow-list/), which may cover domains unused by the %%DEPLOYED_PRODUCT_NAME%% Client, but used by docker itself. 
-  - `quay.io` (Red Hat registry for KeyCloak)
-  - `cgr.dev` (chainguard registry for the nginx reverse proxy)
+This leads to the following requirements for outgoing network traffic.
+
+**Always required (while the Client is running)**
+
+| Destination | Port | Used by | Purpose |
+|---|---|---|---|
+| `GLOBAL_DOMAIN` from `FLNet_Client/.env` | `443` (`https`, `wss`) | the server and the Client containers | Platform API, the Client's permanent connection to the Platform, Tool images |
+| `GLOBAL_DOMAIN` from `FLNet_Client/.env` | `GLOBAL_TCP_PORT` from the same `.env` (`tcp`) | the Client containers | relay for federated learning |
+| a DNS server | `53` | the server | name resolution, also for `Docker` |
+| an NTP server, e.g. `pool.ntp.org` | `123` (`udp`) | the server | correct time, otherwise issued authorization tokens might immediately expire |
+
+The Client containers do not need any other destination. The `GLOBAL_DOMAIN` is the only host that must be reachable from the containers.
+
+**Required for installing and updating**
+
+These hosts are only contacted by the server itself, on port `443`, when the `flnet` CLI is installed and when the Docker images are pulled (`flnet client up` on a new or updated Client).
+They can be blocked again once all images are pulled, but are needed for every later update.
+
+| Host | Purpose |
+|---|---|
+| `raw.githubusercontent.com` | `flnet` CLI installation script |
+| `github.com` | `flnet` CLI download |
+| `release-assets.githubusercontent.com` | `flnet` CLI download (redirect target of `github.com`) |
+| `ghcr.io` | %%DEPLOYED_PRODUCT_NAME%% Client images |
+| `pkg-containers.githubusercontent.com` | %%DEPLOYED_PRODUCT_NAME%% Client image layers |
+| `registry-1.docker.io` | Docker Hub registry (PostgreSQL image) |
+| `auth.docker.io` | Docker Hub authentication |
+| `production.cloudfront.docker.com` | Docker Hub image layers |
+| `quay.io` | Red Hat registry (KeyCloak image) |
+| `cdn01.quay.io` | KeyCloak image layers |
+| `cgr.dev` | Chainguard registry (nginx reverse proxy image) |
+| `9236a389bd48b984df91adc1bc924620.r2.cloudflarestorage.com` | nginx reverse proxy image layers (Chainguard's storage) |
+
+Please note:
+- Whitelist host names, not paths. A firewall cannot see the path of an encrypted `https` request, so e.g. `ghcr.io/fedlearnnet/` cannot be whitelisted on its own, only `ghcr.io` as a whole.
+- Whitelist host names, not IP addresses. Most of these hosts are served by content delivery networks whose IP addresses change frequently.
+- Registries may serve image layers from other content delivery hosts depending on your location, e.g. Docker Hub also uses `production.cloudflare.docker.com`. If an image pull fails, the error message names the blocked host. The [Docker allow list](https://docs.docker.com/desktop/setup/allow-list/) covers further domains used by Docker itself.
+- KeyCloak tries to reach `config.liquibase.com` on start up. This is not required and can stay blocked.
 
 We strongly recommend to test deploying the %%DEPLOYED_PRODUCT_NAME%% Client after setting the network
-restrictions, as docker might route anonymous image pull requests through other domains.
+restrictions.
 
 # Troubleshooting
 
