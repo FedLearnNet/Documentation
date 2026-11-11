@@ -93,7 +93,8 @@ A bug in a release (`1.1.0`) that cannot wait for the next one can be fixed by j
 3. Open a pull request into `main` and merge it. The CI publishes `1.1.1` like a release.
 4. Bring the fix to `develop`: merge `main` into a branch from `develop` and open a pull request. If the version line conflicts, keep the version of `develop`.
 
-Only the repositories with the fix need a hotfix release, the others stay on `1.1.0`.
+Please do this with ALL repositiories. For repositories without any changes you can create a new branch from main, change the version and then merge it back into main.
+The CLI deploys with all services using the tag of the version the CLI uses. E.g. CLI of `1.1.1` deploys `orch-api:1.1.1`, `local-learning-api:1.1.1`, `global-learning-api:1.1.1`, etc.
 
 ## Troubleshooting
 **`develop takes X.Y.Z.dev`**: a release version reached `develop`, usually by merging `main` without step 3. Set the next `.dev` version.

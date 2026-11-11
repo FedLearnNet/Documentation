@@ -89,7 +89,7 @@ ENABLE_CONFIG_SYNC=true
 TRACE_PERFORMANCE=false
 ENABLE_PROJECT_STARTUP=false
 
-MODEL_DIR=./
+MODEL_DIR=./model
 DATA_DIR=./data/
 
 WS_URL=%%DEPLOYED_PRODUCT_WS_URL%%/api/testembed/
@@ -106,7 +106,7 @@ Below is an overview of all available configuration options:
 | **`PRIO_LOCAL_CONFIG`**      | `bool` | `false`                              | If `true`, the local `app.yml` has priority over database settings. Useful for local testing.                                               |
 | **`TRACE_PERFORMANCE`**      | `bool` | `true`                               | Enables collection and display of performance metrics in the frontend (e.g. runtime, resource usage).                                       |
 | **`ENABLE_PROJECT_STARTUP`** | `bool` | `true`                               | Controls whether the app should start automatically when a project is launched. Set to `false` if startup should be manual.                 |
-| **`MODEL_DIR`**              | `str`  | `"./"`                               | Filesystem path where models should be stored.                                                                                              |
+| **`MODEL_DIR`**              | `str`  | `"./model"`                          | Filesystem path where models should be stored.                                                                                              |
 | **`DATA_DIR`**               | `str`  | `"./data/"`                          | Filesystem path to the data directory (used for test runs).                                                                                 |
 | **`CONFIG_SETTINGS_PATH`**   | `str`  | `"app.yml"`                        | Path to the YAML file containing the default configuration  [page](app-yml.md) for details).                                               |
 | **`READ_ME_PATH`**           | `str`  | `"README.md"`                        | Path to the README file shown in the UI as app documentation.                                                                               |
