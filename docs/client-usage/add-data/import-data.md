@@ -3,9 +3,13 @@ title: Import data by running a connector
 sidebar_position: 3
 ---
 
+import RunExplainer from '@site/src/components/ConnectorSteps/RunExplainer';
+
 # Import data by running a connector
 
 Creating or importing a connector saves its ETL configuration. You can then add or update patient data by running the connector with a compatible data source.
+
+<RunExplainer />
 
 ## Open and run the connector
 

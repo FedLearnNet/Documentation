@@ -3,9 +3,27 @@ title: Connectors
 sidebar_position: 1
 ---
 
+import ConnectorAnimation from '@site/src/components/ConnectorAnimation';
+
 # Connectors
 
 A **connector** is a reusable import configuration that brings data from a source, such as an Excel file, a CSV file, or a database, into a cohort. It follows the ETL (extract, transform, load) pattern: it defines how data is read from the source, which transformations are applied (for example, converting weight from pounds to kilograms or renaming categories), and how the resulting fields are mapped to the cohort's schema. Running a connector loads new records or updates existing records without requiring the configuration to be recreated for every import.
+
+## How a connector works
+
+The animation follows three example patients from a CSV file into a cohort. Select a step to pause on it.
+
+<ConnectorAnimation />
+
+| Component | Purpose |
+|---|---|
+| **Data source** | Holds the original data: a CSV or Excel file, a ZIP archive, or a database queried with a read-only SQL `SELECT`. |
+| **Extractor** | Reads the source into one table of named columns and rows, merging multiple files or sheets on a shared identifier. |
+| **Transformer** | Optionally converts values into the representation the schema expects, using built-in transformations or app tools. |
+| **Mapper** | Links each column to a schema field and validates every value. Invalid values are rejected individually. |
+| **Cohort** | Receives the result when the connector runs: new patients are added and existing patients are updated. |
+
+The extractor, transformer, and mapper settings together form the saved connector. Saving a connector imports nothing; data moves only when the connector runs.
 
 ## Connector overview
 
