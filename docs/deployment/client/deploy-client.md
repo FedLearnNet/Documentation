@@ -365,3 +365,6 @@ If neither of these containers show any issues, check all further containers.
 Please [contact the developers if issues persist](mailto:info@mail.federated-learning.net) and provide the logs of the containers if you cannot resolve the issues yourself or find a bug in the %%DEPLOYED_PRODUCT_NAME%% Client.
 
 [comment]: <> (TODO: this will be the instance-manager-frontend instead of the reverse-proxy once we integrate!)
+
+## The Client is suddenly misbehabing towards the Platform
+Please go to the Platform welcome page (the `GLOBAL_DOMAIN` from the Client's `.env`) and check if the Platform is reachable. Then please scroll down to the bottom of the page, there the Platforms version is shown. If the Platform is running a newer version than your Client, please update your Client to the same version as the Platform.
