@@ -353,7 +353,6 @@ In addition to the standard variables from the [central tool guide](create-tool.
 
 ```dotenv
 APP_ID=YOUR_APP_ID
-APP_KEY=YOUR_APP_KEY
 ENABLE_CONFIG_SYNC=true
 TRACE_PERFORMANCE=false
 ENABLE_PROJECT_STARTUP=false
@@ -364,8 +363,7 @@ DATA_DIR=./data/
 WS_URL=%%DEPLOYED_PRODUCT_WS_URL%%/api/testembed/
 ```
 
-- **`APP_KEY`** — required for communication with the %%DEPLOYED_PRODUCT_NAME%% networks platform. Each participant authenticates with this key.
-- **`APP_ID`** — used as the client ID in federated communication by default.
+For `/testembed/` development, `APP_ID` is the registered Tool ID. Authenticate to bootstrap `APP_API_KEY`, or use the Platform-provided key. Managed runs inject attempt credentials and relay participant IDs; see [Engine architecture](architecture.md).
 
 ---
 

@@ -239,40 +239,11 @@ An agent does not generate arbitrary shell pipelines. It proposes graph extensio
 
 As a result, agentic planning is constrained by backend workflow semantics.
 
-## Relation to Execution
+## Execution
 
-Persisted workflows are definitions. Execution happens through run-specific objects that materialize the workflow as executable steps.
-
-In the local backend, this handoff is visible in the federated learning run path:
-
-- a workflow node is resolved as a detailed node DTO
-- hyperparameters are converted into runtime config artifacts
-- inputs and upstream outputs are uploaded into controlled runtime volumes
-- orchestrator services execute the node in isolated infrastructure
-- produced files are mapped back through workflow connections
-
-Conceptually:
-
-```mermaid
-flowchart TD
-    WD[Workflow Definition]
-    ND[Detailed Workflow Node]
-    RS[Run Step]
-    CFG[Runtime Config and Inputs]
-    RT[Orchestrated Execution]
-    OUT[Mapped Outputs]
-
-    WD --> ND
-    ND --> RS
-    RS --> CFG
-    CFG --> RT
-    RT --> OUT
-```
-
-This separation matters:
-
-- workflow objects represent durable graph definitions
-- run objects represent one concrete execution of those definitions
+The workflow is a definition; a [run](../execution-model/index.md) materializes it as ordered steps.
+Each step launches attempts, selects a result, and supplies that attempt's outputs to downstream connections.
+See [Federated learning flow](../federated-learning-flow.md) for synchronization across Clients.
 
 ## Security and Trust Model
 

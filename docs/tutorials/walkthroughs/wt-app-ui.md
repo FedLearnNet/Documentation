@@ -43,14 +43,10 @@ Make sure **App Type** dropdown is open or shows the selected value `ANALYSIS` a
 
 ---
 
-## Step 3 — Submit and Note the App ID
+## Step 3 — Submit the Tool
 
-Click **Ceate Tool**. The platform creates the tool entry and routes you to the detail page for your new app.
-
-:::warning
-Copy the Tool ID. You need it in your `.env` file as `APP_ID=27`. Without it your app container cannot authenticate to
-the platform.
-:::
+Click **Create Tool**. The platform creates the Tool and opens its detail page.
+Use its Tool ID as `APP_ID` for `/testembed/` development; managed `/execution/APP/` runs receive an attempt ID automatically.
 
 ![App detail page](/img/screenshots/tutorials/walkthrough/register/3_app_detail_page.png "App detail page")
 

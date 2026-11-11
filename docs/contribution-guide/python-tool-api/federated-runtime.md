@@ -11,8 +11,7 @@ This page explains the inside of the [Python-Tool-API](https://github.com/FedLea
 (`pyfedappwrap`) during a federated run: how the engine starts, which thread owns which job, and how
 data moves between the main classes. For the platform side of a run (global API, local API,
 controller registration, result harvest) see
-[Federated Learning Flow](../backend/federated-learning-flow.md), Phase 5 of which is the
-summary of this page.
+[Federated Learning Flow](../backend/federated-learning-flow.md).
 
 The design follows two principles:
 
@@ -128,11 +127,27 @@ Federated data never goes directly from app to app; it goes through a controller
 |---|---|---|
 | Real run | External controller at `FL_RUN__CONTROLLER_COMM_URL` | Exactly one: this instance's participant |
 | Test run | In-memory `FLNetInMemoryController` | All participants, simulated locally |
-| Test run with `FL_TEST__USE_DOCKERIZED_CONTROLLER=true` | Dockerized controller at `FL_TEST__DOCKERIZED_CONTROLLER_COMM_URL`; the services are started with docker compose if they are not healthy | All participants, simulated locally |
+| Local test with `FL_TEST__USE_DOCKERIZED_CONTROLLER=true` | Existing controller at `FL_TEST__DOCKERIZED_CONTROLLER_COMM_URL` | All participants, simulated locally |
+| Hosted test (`distributedTest=true`) | Fixed platform controller at `FL_RUN__CONTROLLER_COMM_URL`; the backend registers the shared relay channel | One participant per container |
 
 A real run identifies its own participant by `participantId == APP_ID`, by being the only
 participant, or by a unique `hyper_params.app_id` / `hyper_params.local=true` match. Otherwise
 the run fails with an *"identify this app instance"* error.
+
+### Built image tests
+
+For a built tool, **Built image → Federated test experiment → Choose data** opens the existing
+participant setup. Each client can select a file from My Files or upload a CSV, and the chosen
+round count applies to all participants. Each participant gets its own orchestrated container,
+execution credential and volume. Choose **Separate container** for an aggregator without training data,
+or **With client-N** to train and aggregate in that client's container. Two training clients therefore
+use three containers or two, respectively. Test runs upload results, not model files.
+
+The backend uses its fixed relay and controller REST clients to create one channel and sign controller
+certificates. Containers receive only their own startup payload and use the controller address supplied
+by the orchestrator. The runtime never starts infrastructure services. Once all participants finish, or
+one fails, the backend ends the group and cleans up its containers, controller registrations and relay
+channel. Closing an unrelated local engine does not affect these hosted tests.
 
 ## 6. Aggregator Gating
 

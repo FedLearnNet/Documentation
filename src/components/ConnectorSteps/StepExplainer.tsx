@@ -15,6 +15,7 @@ export type ExplainerMode = {
   config?: ConfigItem[];
   examples?: string[];
   note?: ReactNode;
+  animated?: boolean;
   scene: () => ReactNode;
 };
 
@@ -79,13 +80,13 @@ export default function StepExplainer({eyebrow, accent, modes, footer}: Props): 
     <section ref={rootRef} className={clsx(styles.root, !started && styles.paused)} data-accent={accent}>
       <div className={styles.head}>
         <div className={styles.eyebrow}>{eyebrow}</div>
-        <button type="button" className={styles.replay} onClick={() => setRun((r) => r + 1)}>
+        {mode.animated !== false && <button type="button" className={styles.replay} onClick={() => setRun((r) => r + 1)}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
             <path d="M3 12a9 9 0 1 0 3-6.7" strokeLinecap="round" />
             <path d="M3 4v5h5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Replay
-        </button>
+        </button>}
       </div>
 
       {modes.length > 1 && (
