@@ -48,6 +48,13 @@ for the credentials and have them ready, as the next step asks for them.
 We also recommend you first read relevant documentation:
 - [Welcome](../../intro/welcome.md) to understand the Network you're joining.
 - [Requests](../../client-usage/requests/index.md) and [Governance](../../client-usage/governance/index.md) to understand how to manage access to your Client from the network.
+- [Securing access to the Client](#securing-your-client-access-to-the-client-from-other-machines) to understand how to secure access to your Client.
+
+Lastly, the Client initialization script will ask you multiple questions to specify how the client should run. Please have the following information ready:
+- Do you want to use SSL certificates (HTTPS)? If yes, do you have your own or do you want to generate self signed certificates? *Hint: The flnet CLI can generate self signed certificates for you. Make sure you have the IP address of the machine available, this is set as the domain name in the certificate. Please read the [Self signed certificates documentation before deploying](#self-signed-certificates).*
+- Which IP address and port should the Client bind to? *Hint: chose localhost if you only access the Client from the same machine or via an SSH tunnel or use your own reverse proxy*
+- Which domain name should be used to access the Client? *Hint: leave empty if you only access the Client from the same machine or via an SSH tunnel or use your own reverse proxy*
+
 
 ### 1. Initializing the Client folder
 Simply run the initialization command and follow the command line prompts:
@@ -55,17 +62,7 @@ Simply run the initialization command and follow the command line prompts:
 flnet client init
 ``` 
 This can be used to either to the initial setup, to reconfigure your client or to perform a 
-fresh installation of the Client. The script will ask you for the following information:
-- The IP the Client should listen on. Choose 127.0.0.1 if you use your own reverse proxy, 
-a (reverse) ssh tunnel or only access the Client from the machine the Client is running on. 
-- The port the Client should listen on. The port must be free. If you deploy
-onto 0.0.0.0 to allow direct access from the Internet to the Client, we recommend to use
-443 as this is the standard https port. This way you can access your Client via
-`<your-domain>` instead of having to specify a port like `<your-domain:5555>`
-- The domain name used. If you only access the Client from this machine or use a SSH tunnel, this can stay empty.
-However if you want to access it from the Internet/Intranet we recommend to have a domain and ssl certificates to
-secure the connection.
-- The ssl certificate files. Refer to [this section on how to generate these files](#securing-your-client-access-to-the-client-from-other-machines).
+fresh installation of the Client. 
 
 After running the installer, the `flnet_client` folder is ready to be used.
 By default this is stored at `~/fl-net/clients/`, use `flnet client info` to see the path of your client folder.
@@ -158,15 +155,15 @@ the client will automatically start again. If you still notice any issues after 
 please refer to the [troubleshooting section](#the-client-is-misbehaving-after-a-server-restart) below.
 
 ### Securing your Client: Access to the Client from other machines
-Access to the %%DEPLOYED_PRODUCT_NAME%% Client is via a webserver it deploys. If you are planning to access the Client (in the future) only from the same machine where it is running there are no further setup steps needed,
+Access to the %%DEPLOYED_PRODUCT_NAME%% Client is via a webserver it deploys. If you are planning to access the Client only from the same machine where it is running there are no further setup steps needed,
 you can use the machines browser and the address you configured, e.g. `localhost:8250`.
 
 However if you want to access the node from another machine, you should either:
-- [Generate and use SSL certificates](#generating-ssl-certificates-automatically). 
+- [Generate and use SSL certificates](#generating-ssl-certificates). 
 If you don't use a domain but only an IP address, you need to perform some manual steps to make the default NGINX configuration work, refer to [this section](#using-an-ip-address-for-https). 
 - [Use an SSH tunnel and access the node via the tunnel](#using-an-ssh-tunnel)
 
-#### Generating SSL certificates (automatically)
+#### Generating SSL certificates
 SSL certificates are the keys used for the encryption of traffic to/from the %%DEPLOYED_PRODUCT_NAME%% Client.
 The %%DEPLOYED_PRODUCT_NAME%% Client needs these keys to encrypt the traffic, using the NGINX reverse proxy shipped
 with the Client. 
@@ -177,7 +174,7 @@ done by lets encrypt.
 SSL certificates are usually bound to a domain, so please register a domain/subdomain first 
 before continuing. The %%DEPLOYED_PRODUCT_NAME%% Client is then accessed via the browser and this domain.
 
-**If your server is accessible from the internet** 
+##### Let's Encrypt certificates (server accessible from the internet)
 We recommend using `certbot`. After installing certbot, run the following command, replacing
 yourdomain.com with your own domain. This does NOT work with an IP address as domain.
 ```bash
@@ -190,20 +187,33 @@ Please note that the deploy hook will initially fail as the %%DEPLOYED_PRODUCT_N
 you might find error logs in the `certbot` logs. This is not an issue though as the
 %%DEPLOYED_PRODUCT_NAME%% Client is setup in the [next step](#1-initializing-the-client-folder).
 
-**If your server is not accessible from the internet, e.g. it is behind a VPN or demilitarized zone**
-SSL certificate authorities usually verify your domain by sending a request 
-to your server running the %%DEPLOYED_PRODUCT_NAME%% Client.
 
+##### Server not accessible from the internet
+SSL certificate authorities usually verify your domain by sending a request 
+to your server running the %%DEPLOYED_PRODUCT_NAME%% Client, e.g. it is behind a VPN or demilitarized zone.
 If your server is not reachable via the internet this is not possible.
 You have multiple options:
-1. Generate self signed certificates. When you access the %%DEPLOYED_PRODUCT_NAME%% Client via the Browser a 
-security warning will show, but traffic will be encrypted. 
-You can generate self signed SSL certificates via the provided helper:
+1. [Generate self signed certificates](#self-signed-certificates).
+2. Set up an entry in your domain that Let's Encrypt can use to verify your domain. 
+This would be using the [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge).
+For automating the certification renewal, you need to check the API of your domain provider.
+3. Not generate SSL certificates at all and just [use an SSH tunnel for encryption](#using-an-ssh-tunnel).
+For this you need to modify how the computer accessing the %%DEPLOYED_PRODUCT_NAME%% Client node behaves!
+4. Use your own CA Authority to sign the certificates. 
+This completely depends on your own IT infrastructure, so we cannot provide additional help.
+
+##### Self signed certificates
+When you access the %%DEPLOYED_PRODUCT_NAME%% Client via the Browser a 
+security warning will show, but traffic will be encrypted.
+
+During `flnet client init`, set the domain either to the domain you setup or to the IP address and port the client will be accessed with (e.g. `https://<your-ip>:<port>`) and choose `self-signed` as SSL termination.
+If no certificate exists yet, the CLI offers to create it at the end of the setup (this requires `openssl`). If you skipped that, generate it afterwards:
 ```bash
 flnet client certs
 ```
-They will be stored in your client folder under `self_signed_certs/`.
-Make sure to (automatically) renew them before they expire or to set a high expiracy date. 
+The common name and subject alternative names of the certificate must match the domain you access the Client with.
+The certificates are stored in your client folder under `self_signed_certs/`.
+
 The NGINX of the Client is setup strictly and by default not set for self signed certificates.
 Please go to the nginx https config file 
 `nano FLNet_client/nginx_conf_HTTPS.conf`
@@ -217,14 +227,19 @@ following command for the %%DEPLOYED_PRODUCT_NAME%% Client to pick up the new ce
 ```bash
 flnet client restart
 ```
-After generating the certificates you can [initialize and start the Client](#1-initializing-the-client-folder).
-2. You can also setup an entry in your domain that lets encrypt can use to verify your domain. 
-This would be using the [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge).
-For automating the certification renewal, you need to check the API of your domain provider.
-3. Not generate SSL certificates at all and just [use an SSH tunnel for encryption](#using-an-ssh-tunnel).
-For this you need to modify how the computer accessing the %%DEPLOYED_PRODUCT_NAME%% Client node behaves!
-4. Use your own CA Authority to sign the certificates. 
-This completely depends on your own IT infrastructure, so we cannot provide additional help.
+
+Make sure to renew the certificates before they expire or to set a high expiracy date. 
+You can automatically renew them by running the same command again with the flags set correctly, please check `flnet client certs --help` for more information. This will overwrite the existing certificates and the reverse proxy of the Client needs to be restarted afterwards. The browser will show a security warning again, but traffic will be encrypted.
+Example:
+```bash
+flnet client certs --no-input --force --cn <your-ip> --ip <your-ip> --days 365 \
+  && flnet client restart reverse-proxy-encrypted
+```
+To run it automatically, e.g. monthly via `crontab -e` (cron needs the full path to `flnet`, see `which flnet`):
+```bash
+0 3 1 * * /path/to/flnet client certs --no-input --force --days 365 && /path/to/flnet client restart reverse-proxy-encrypted
+```
+If you run several Clients on this machine, add `--name <client-name>` to both commands.
 
 #### Using an IP Address for HTTPS
 If you are using an IP address as the domain using HTTPS, the default NGINX configuration is not set up for this, as it is somewhat unusual. NGINX cannot correctly find the right server block (the right configuration) for IP addresses.
@@ -296,7 +311,7 @@ for apache or `sudo certbot --nginx -d <yourdomain.com>` for nginx.
 This will also automatically update the SSL certificates!
 
 **If your server is not accessible from the internet, e.g. it is behind a VPN or demilitarized zone**
-Refer to the [section on generating SSL certificates](#generating-ssl-certificates-automatically).
+Refer to the [section on generating SSL certificates](#generating-ssl-certificates).
 While this is written for the %%DEPLOYED_PRODUCT_NAME%% Client NGINX reverse proxy, this is fundamentally the same
 with your own reverse proxy.
 
