@@ -4,17 +4,49 @@ sidebar_label: Cohorts
 sidebar_position: 3
 ---
 
+import CohortSchemaAnimation from '@site/src/components/CohortSchemaAnimation';
+import SchemaNodesAnimation from '@site/src/components/CohortSchemaAnimation/SchemaNodesAnimation';
+
 # Cohorts
 
 A **cohort** is a collection of data records managed together within the %%DEPLOYED_PRODUCT_NAME%% Client. It provides a workspace for organizing data, configuring imports, inspecting records, and managing secure federated access. Each cohort is associated with a selected **schema**.
 
-## The role of a schema
+## Schema and cohort
 
-A schema is the cohort's **data contract**. It defines the structure, meaning, data types, and validation rules the system uses to interpret records. Ontology nodes describe the concepts represented by the data, datatype nodes define value representations and validation rules, and schema nodes organize these definitions into a usable structure.
+A **schema** and a **cohort** work together but play different roles. The schema describes *what* data looks like; the cohort *holds* the data. Select a tab to compare them.
 
-Select a schema that covers the information available in your data. Your source data does not need to match the schema exactly: connectors can transform the data during import so that it fits the schema.
+<CohortSchemaAnimation />
 
-If no suitable schema exists, create one on the %%DEPLOYED_PRODUCT_NAME%% Platform using an account with the relevant permissions, or contact someone with the required access to create it for you. Schema creation is not available in the Client.
+| | Schema | Cohort |
+|---|---|---|
+| **Purpose** | Data contract: variables, meaning, data types, and validation rules | Workspace that holds and manages patient records |
+| **Defined in** | %%DEPLOYED_PRODUCT_NAME%% Platform | %%DEPLOYED_PRODUCT_NAME%% Client |
+| **Contains patient data** | No | Yes, stored only in the Client |
+| **Created by** | A Platform user with the required permissions | A Client user, by selecting an existing schema |
+| **Relationship** | Can be used by many cohorts in many Clients | Is based on exactly one schema |
+| **Configured with** | Ontology, datatype, and schema nodes | Connectors, records, queriability, access management, and members |
+
+Because cohorts based on the same schema describe their data the same way, a federated query, statistics request, or training can address the same variable in every cohort. Each cohort still answers from its own records and under its own access and disclosure settings.
+
+### Schema building blocks
+
+A schema is built from three node types.
+
+<SchemaNodesAnimation />
+
+| Node | Defines | Example |
+|---|---|---|
+| **Ontology** | Meaning | Body Weight |
+| **Datatype** | Value type and rules | FLOAT, 0–400 |
+| **Schema** | Field position and number of values | Measurements → Body weight, single value |
+
+Queries match fields by ontology and datatype, so cohorts on different schemas stay comparable where these nodes are shared.
+
+### Choosing a schema
+
+Select a schema that covers the information in your data. Source data does not need to match it exactly: connectors can transform the data during import.
+
+Schemas are created on the %%DEPLOYED_PRODUCT_NAME%% Platform by users with the required permissions, not in the Client.
 
 ## Create a cohort
 

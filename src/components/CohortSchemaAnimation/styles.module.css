@@ -1,0 +1,142 @@
+/* Scene parts specific to the schema and cohort explainer; shell and primitives come from ConnectorSteps */
+
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.55rem 0.6rem;
+}
+
+.node {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding-left: calc(var(--depth, 0) * 1.1rem);
+  font-size: 0.76rem;
+}
+
+.nodeName {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeGroup {
+  color: var(--ca-muted);
+}
+
+.nodeName::before {
+  content: '';
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+}
+
+.nodeGroup::before {
+  border-color: var(--ca-muted);
+  border-radius: 50%;
+}
+
+.blocks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 35%, var(--ca-border));
+  border-radius: 9px;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--ca-muted);
+  background: color-mix(in srgb, var(--c, var(--accent)) 7%, var(--ca-surface));
+}
+
+.block b {
+  font-size: 0.74rem;
+  color: var(--c, var(--accent));
+}
+
+.trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.site {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.55rem;
+}
+
+.siteName {
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.answer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 7px;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--ca-load);
+  background: color-mix(in srgb, var(--ca-load) 11%, transparent);
+}
+
+.answerWithheld {
+  color: var(--ca-error);
+  background: color-mix(in srgb, var(--ca-error) 10%, transparent);
+}
+
+.fanout {
+  position: relative;
+  height: 1.3rem;
+}
+
+.fanout > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--x);
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--ca-track), var(--accent));
+  transform-origin: top;
+}
+
+@container (max-width: 460px) {
+  .blocks,
+  .trio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fanout {
+    display: none;
+  }
+
+  .node {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .node > :nth-child(2) {
+    display: none;
+  }
+}
