@@ -60,7 +60,24 @@ What stays manual: choosing and setting the version number, opening the pull req
 - The Orchestration API starts the Tool-Build-Pipeline image of its own version (`pipeline.image-tag`, default: its version). The tag sent by the Global API is ignored. For a locally built pipeline image, set `PIPELINE_IMAGE_TAG`.
 
 ## Releasing step by step
-The examples release `1.1.0`; replace the numbers with yours. Do every step in **all repositories** listed above, so the whole network stays on the same version.
+The examples release `1.1.0`; replace the numbers with yours. Do every step in **ALL** of the following repositories:
+- `Frontends`
+- `Learning-APIs` (Release after `Python-Tool-API` steps in case of breaking changes in the `Python-Tool-API`.)
+- `Orchestration-API`
+- `Federated-Learning-Communication-API`
+- `Tool-Build-Pipeline`
+- `FL-Net-CLI`
+- `Documentation`
+
+For releasing the `Python-Tool-API` the same steps apply, but it is not required to be released
+with the other repositories as all Tools are built on specific versions of the `Python-Tool-API`.
+
+**Important**: If there are ever breaking changes in the `Python-Tool-API`, then you need to:
+- Release the `Python-Tool-API` as described below.
+- Update **every** affected Tool that would stop working without the updated `Python-Tool-API` version.
+- In the `Learning-APIs` repository there are jsons describing the Tools for auto import.
+These jsons lock the commit hash of the relevant tools repository. You need to update each json
+file with the new commit hash of the updated Tool repository.
 
 ### 1. Develop
 `develop` carries `1.1.0.dev`. Nothing to do: features are merged as described in the [Development workflow](development-workflow.md), and every build is published as `staging` and `1.1.0.dev`.
