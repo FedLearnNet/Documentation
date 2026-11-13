@@ -89,7 +89,7 @@ ENABLE_CONFIG_SYNC=true
 TRACE_PERFORMANCE=false
 ENABLE_PROJECT_STARTUP=false
 
-MODEL_DIR=./
+MODEL_DIR=./model
 DATA_DIR=./data/
 
 WS_URL=%%DEPLOYED_PRODUCT_WS_URL%%/api/testembed/
@@ -99,13 +99,14 @@ Below is an overview of all available configuration options:
 
 | Variable                     | Type   | Default                              | Description                                                                                                                                 |
 |------------------------------|--------|--------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| **`APP_ID`**                 | `str`  | *(no default)*                       | Unique identifier of your app (e.g. the App ID from the FeatureCloud App Store).                                                            |
-| **`APP_KEY`**                | `str?` | `None`                               | Optional API key or secret for authentication.                                                                                              |
+| **`APP_ID`**                 | `str`  | `"1"`                                | Tool ID for `/testembed/` development; injected attempt ID for managed `/execution/APP/` runs. |
+| **`APP_API_KEY`**            | `str?` | `None`                               | Scoped API key; injected for managed runs or bootstrapped after developer login. |
+| **`APP_KEY`**                | `str?` | `None`                               | User bearer token for credential bootstrap; development prompts for login if absent. |
 | **`ENABLE_CONFIG_SYNC`**     | `bool` | `false`                              | If `true`, synchronizes configuration between the frontend and the database. Changes made in the UI will also be written back to `app.yml`. |
 | **`PRIO_LOCAL_CONFIG`**      | `bool` | `false`                              | If `true`, the local `app.yml` has priority over database settings. Useful for local testing.                                               |
 | **`TRACE_PERFORMANCE`**      | `bool` | `true`                               | Enables collection and display of performance metrics in the frontend (e.g. runtime, resource usage).                                       |
 | **`ENABLE_PROJECT_STARTUP`** | `bool` | `true`                               | Controls whether the app should start automatically when a project is launched. Set to `false` if startup should be manual.                 |
-| **`MODEL_DIR`**              | `str`  | `"./"`                               | Filesystem path where models should be stored.                                                                                              |
+| **`MODEL_DIR`**              | `str`  | `"./model"`                          | Filesystem path where models should be stored.                                                                                              |
 | **`DATA_DIR`**               | `str`  | `"./data/"`                          | Filesystem path to the data directory (used for test runs).                                                                                 |
 | **`CONFIG_SETTINGS_PATH`**   | `str`  | `"app.yml"`                        | Path to the YAML file containing the default configuration  [page](app-yml.md) for details).                                               |
 | **`READ_ME_PATH`**           | `str`  | `"README.md"`                        | Path to the README file shown in the UI as app documentation.                                                                               |

@@ -81,7 +81,8 @@ loads the others via `quarkus.config.locations=security.properties,openapi.prope
 ## Detailed documentation
 - [Environment secrets](env-secrets.md): the secrets each service needs for local development
 - [Pipeline integration and local testing](tool-build-pipeline.md): SAST contracts, run modes, local registry and images, scheduled rescans, and container lifecycle cleanup
-- [Federated learning flow](federated-learning-flow.md): the complete life cycle of a federated learning run across all services
+- [Execution model](execution-model/index.md): runs, steps, attempts, internal events, Tool callbacks, and results
+- [Federated learning flow](federated-learning-flow.md): participant synchronization, relay setup, and message paths
 - `global-learning-api`: [Configuration](global-learning-api/config.md), [Workflow system](global-learning-api/workflow-system.md), [Query creation](global-learning-api/query-creation.md), [Multi-agent analysis system](global-learning-api/data-analysis-agent.md)
 - `local-learning-api`: [Configuration](local-learning-api/config.md), [ETL pipeline](local-learning-api/etl-pipeline.md), [Patient store](local-learning-api/patient-store.md), [Query translation and privacy](local-learning-api/query-translation-and-privacy.md)
 - [Authentication](../auth.md): the Keycloak clients, roles, backend-for-frontend login and security defaults of the backend services

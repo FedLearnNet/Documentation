@@ -3,10 +3,6 @@ title: ETL Pipeline
 description: Detailed guide to local connector extraction, table storage, transformation, mapping, and patient loading.
 ---
 
-:::caution Not yet on `main`
-This page describes the disk-backed connector import (`TableDataFileHandler`, `ConnectorLoadModeBO`), which currently only exists on the unmerged `feature/etl-file-based` branch. This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so class names, file paths, and behavior may differ from the current code.
-:::
-
 # ETL Pipeline
 
 The Local Learning API connector import is an ETL pipeline:
@@ -99,8 +95,8 @@ There are two supported input families:
 For file uploads, `ConnectorExtractBO` loads the stored file through `ConnectorFilesBO`, then calls
 `FileHandlerBO.getFirstTableData`.
 
-For app-based extractors, the extractor app is started through `ConnectorRunExecutionRunBO`. The app uploads an output
-file, and `ConnectorRunExecutionOutputAwaiter` returns the resulting `TableDataFileHandler`.
+App-based extractors use `ConnectorAppRunBO` to start a `PROCESSING` [execution](../execution-model/index.md).
+`awaitOutput` returns the uploaded tabular output for import.
 
 At the end of extraction, `ConnectorRunETLBO` has one table object:
 
@@ -375,10 +371,8 @@ This is the critical memory difference from the old implementation.
 
 ### App-Based Transformers
 
-App-based transformers are executed through the connector execution subsystem.
-
-The app is started with `ConnectorRunExecutionRunBO`, and the importer waits for uploaded tabular output through
-`ConnectorRunExecutionOutputAwaiter`.
+App-based transformers use `ConnectorAppRunBO`. Transformer sessions reuse one attempt across batches;
+`FINISH_RUN` ends a batch, while `endSession` ends the attempt.
 
 When the app returns output, that output becomes the new `TableDataFileHandler` for the remaining pipeline stages.
 

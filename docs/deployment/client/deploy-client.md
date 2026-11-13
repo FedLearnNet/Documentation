@@ -48,6 +48,13 @@ for the credentials and have them ready, as the next step asks for them.
 We also recommend you first read relevant documentation:
 - [Welcome](../../intro/welcome.md) to understand the Network you're joining.
 - [Requests](../../client-usage/requests/index.md) and [Governance](../../client-usage/governance/index.md) to understand how to manage access to your Client from the network.
+- [Securing access to the Client](#securing-your-client-access-to-the-client-from-other-machines) to understand how to secure access to your Client.
+
+Lastly, the Client initialization script will ask you multiple questions to specify how the client should run. Please have the following information ready:
+- Do you want to use SSL certificates (HTTPS)? If yes, do you have your own or do you want to generate self signed certificates? *Hint: The flnet CLI can generate self signed certificates for you. Make sure you have the IP address of the machine available, this is set as the domain name in the certificate. Please read the [Self signed certificates documentation before deploying](#self-signed-certificates).*
+- Which IP address and port should the Client bind to? *Hint: chose localhost if you only access the Client from the same machine or via an SSH tunnel or use your own reverse proxy*
+- Which domain name should be used to access the Client? *Hint: leave empty if you only access the Client from the same machine or via an SSH tunnel or use your own reverse proxy*
+
 
 ### 1. Initializing the Client folder
 Simply run the initialization command and follow the command line prompts:
@@ -55,17 +62,7 @@ Simply run the initialization command and follow the command line prompts:
 flnet client init
 ``` 
 This can be used to either to the initial setup, to reconfigure your client or to perform a 
-fresh installation of the Client. The script will ask you for the following information:
-- The IP the Client should listen on. Choose 127.0.0.1 if you use your own reverse proxy, 
-a (reverse) ssh tunnel or only access the Client from the machine the Client is running on. 
-- The port the Client should listen on. The port must be free. If you deploy
-onto 0.0.0.0 to allow direct access from the Internet to the Client, we recommend to use
-443 as this is the standard https port. This way you can access your Client via
-`<your-domain>` instead of having to specify a port like `<your-domain:5555>`
-- The domain name used. If you only access the Client from this machine or use a SSH tunnel, this can stay empty.
-However if you want to access it from the Internet/Intranet we recommend to have a domain and ssl certificates to
-secure the connection.
-- The ssl certificate files. Refer to [this section on how to generate these files](#securing-your-client-access-to-the-client-from-other-machines).
+fresh installation of the Client. 
 
 After running the installer, the `flnet_client` folder is ready to be used.
 By default this is stored at `~/fl-net/clients/`, use `flnet client info` to see the path of your client folder.
@@ -95,7 +92,7 @@ First, you need to update the initial admin account created for you in the `Mast
 Please access the Client. If you gave a domain, use the domain name. 
 Otherwise use the given IP and port. 
 
-1. Access the Client at `<your-domain>/auth/admin/` or `<your-ip>:<your-port>/auth/admin`
+1. Open the KeyCloak Administration Console at `<your-domain>/auth/admin/` or `<your-ip>:<your-port>/auth/admin/`.
 
 In case you missed the initial password given by the initialization script, the initial
 username and password for the `Master` realm can be found in `flnet_client/env/keycloak-secrets.env` as `KC_BOOTSTRAP_ADMIN_PASSWORD`.
@@ -139,7 +136,7 @@ the initialization script (`~/fl-net/clients`).
 ### Updating an existing Client
 Keycloak imports the `FLNet-Client` realm only on the first start, so realm changes of newer versions do not reach existing Clients automatically.
 Since the backend-for-frontend login, the browser login runs through the `local-learning-api` client. Apply these changes once in the Keycloak admin console
-(`<your-domain>/auth/`, realm `FLNet-Client`, Clients → `local-learning-api`):
+(`<your-domain>/auth/admin/`, realm `FLNet-Client`, Clients → `local-learning-api`):
 - *Standard flow*: enabled
 - *Valid redirect URIs*: `<frontend-address>/local-learning-api/bff/login`
 - *Valid post logout redirect URIs*: `<frontend-address>/`
@@ -158,15 +155,15 @@ the client will automatically start again. If you still notice any issues after 
 please refer to the [troubleshooting section](#the-client-is-misbehaving-after-a-server-restart) below.
 
 ### Securing your Client: Access to the Client from other machines
-Access to the %%DEPLOYED_PRODUCT_NAME%% Client is via a webserver it deploys. If you are planning to access the Client (in the future) only from the same machine where it is running there are no further setup steps needed,
+Access to the %%DEPLOYED_PRODUCT_NAME%% Client is via a webserver it deploys. If you are planning to access the Client only from the same machine where it is running there are no further setup steps needed,
 you can use the machines browser and the address you configured, e.g. `localhost:8250`.
 
 However if you want to access the node from another machine, you should either:
-- [Generate and use SSL certificates](#generating-ssl-certificates-automatically). 
+- [Generate and use SSL certificates](#generating-ssl-certificates). 
 If you don't use a domain but only an IP address, you need to perform some manual steps to make the default NGINX configuration work, refer to [this section](#using-an-ip-address-for-https). 
 - [Use an SSH tunnel and access the node via the tunnel](#using-an-ssh-tunnel)
 
-#### Generating SSL certificates (automatically)
+#### Generating SSL certificates
 SSL certificates are the keys used for the encryption of traffic to/from the %%DEPLOYED_PRODUCT_NAME%% Client.
 The %%DEPLOYED_PRODUCT_NAME%% Client needs these keys to encrypt the traffic, using the NGINX reverse proxy shipped
 with the Client. 
@@ -177,7 +174,7 @@ done by lets encrypt.
 SSL certificates are usually bound to a domain, so please register a domain/subdomain first 
 before continuing. The %%DEPLOYED_PRODUCT_NAME%% Client is then accessed via the browser and this domain.
 
-**If your server is accessible from the internet** 
+##### Let's Encrypt certificates (server accessible from the internet)
 We recommend using `certbot`. After installing certbot, run the following command, replacing
 yourdomain.com with your own domain. This does NOT work with an IP address as domain.
 ```bash
@@ -190,20 +187,33 @@ Please note that the deploy hook will initially fail as the %%DEPLOYED_PRODUCT_N
 you might find error logs in the `certbot` logs. This is not an issue though as the
 %%DEPLOYED_PRODUCT_NAME%% Client is setup in the [next step](#1-initializing-the-client-folder).
 
-**If your server is not accessible from the internet, e.g. it is behind a VPN or demilitarized zone**
-SSL certificate authorities usually verify your domain by sending a request 
-to your server running the %%DEPLOYED_PRODUCT_NAME%% Client.
 
+##### Server not accessible from the internet
+SSL certificate authorities usually verify your domain by sending a request 
+to your server running the %%DEPLOYED_PRODUCT_NAME%% Client, e.g. it is behind a VPN or demilitarized zone.
 If your server is not reachable via the internet this is not possible.
 You have multiple options:
-1. Generate self signed certificates. When you access the %%DEPLOYED_PRODUCT_NAME%% Client via the Browser a 
-security warning will show, but traffic will be encrypted. 
-You can generate self signed SSL certificates via the provided helper:
+1. [Generate self signed certificates](#self-signed-certificates).
+2. Set up an entry in your domain that Let's Encrypt can use to verify your domain. 
+This would be using the [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge).
+For automating the certification renewal, you need to check the API of your domain provider.
+3. Not generate SSL certificates at all and just [use an SSH tunnel for encryption](#using-an-ssh-tunnel).
+For this you need to modify how the computer accessing the %%DEPLOYED_PRODUCT_NAME%% Client node behaves!
+4. Use your own CA Authority to sign the certificates. 
+This completely depends on your own IT infrastructure, so we cannot provide additional help.
+
+##### Self signed certificates
+When you access the %%DEPLOYED_PRODUCT_NAME%% Client via the Browser a 
+security warning will show, but traffic will be encrypted.
+
+During `flnet client init`, set the domain either to the domain you setup or to the IP address and port the client will be accessed with (e.g. `https://<your-ip>:<port>`) and choose `self-signed` as SSL termination.
+If no certificate exists yet, the CLI offers to create it at the end of the setup (this requires `openssl`). If you skipped that, generate it afterwards:
 ```bash
 flnet client certs
 ```
-They will be stored in your client folder under `self_signed_certs/`.
-Make sure to (automatically) renew them before they expire or to set a high expiracy date. 
+The common name and subject alternative names of the certificate must match the domain you access the Client with.
+The certificates are stored in your client folder under `self_signed_certs/`.
+
 The NGINX of the Client is setup strictly and by default not set for self signed certificates.
 Please go to the nginx https config file 
 `nano FLNet_client/nginx_conf_HTTPS.conf`
@@ -217,14 +227,19 @@ following command for the %%DEPLOYED_PRODUCT_NAME%% Client to pick up the new ce
 ```bash
 flnet client restart
 ```
-After generating the certificates you can [initialize and start the Client](#1-initializing-the-client-folder).
-2. You can also setup an entry in your domain that lets encrypt can use to verify your domain. 
-This would be using the [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge).
-For automating the certification renewal, you need to check the API of your domain provider.
-3. Not generate SSL certificates at all and just [use an SSH tunnel for encryption](#using-an-ssh-tunnel).
-For this you need to modify how the computer accessing the %%DEPLOYED_PRODUCT_NAME%% Client node behaves!
-4. Use your own CA Authority to sign the certificates. 
-This completely depends on your own IT infrastructure, so we cannot provide additional help.
+
+Make sure to renew the certificates before they expire or to set a high expiracy date. 
+You can automatically renew them by running the same command again with the flags set correctly, please check `flnet client certs --help` for more information. This will overwrite the existing certificates and the reverse proxy of the Client needs to be restarted afterwards. The browser will show a security warning again, but traffic will be encrypted.
+Example:
+```bash
+flnet client certs --no-input --force --cn <your-ip> --ip <your-ip> --days 365 \
+  && flnet client restart reverse-proxy-encrypted
+```
+To run it automatically, e.g. monthly via `crontab -e` (cron needs the full path to `flnet`, see `which flnet`):
+```bash
+0 3 1 * * /path/to/flnet client certs --no-input --force --days 365 && /path/to/flnet client restart reverse-proxy-encrypted
+```
+If you run several Clients on this machine, add `--name <client-name>` to both commands.
 
 #### Using an IP Address for HTTPS
 If you are using an IP address as the domain using HTTPS, the default NGINX configuration is not set up for this, as it is somewhat unusual. NGINX cannot correctly find the right server block (the right configuration) for IP addresses.
@@ -296,7 +311,7 @@ for apache or `sudo certbot --nginx -d <yourdomain.com>` for nginx.
 This will also automatically update the SSL certificates!
 
 **If your server is not accessible from the internet, e.g. it is behind a VPN or demilitarized zone**
-Refer to the [section on generating SSL certificates](#generating-ssl-certificates-automatically).
+Refer to the [section on generating SSL certificates](#generating-ssl-certificates).
 While this is written for the %%DEPLOYED_PRODUCT_NAME%% Client NGINX reverse proxy, this is fundamentally the same
 with your own reverse proxy.
 
@@ -307,24 +322,47 @@ The %%DEPLOYED_PRODUCT_NAME%% Client is accessed through a web interface served 
 #### Outgoing network traffic
 The %%DEPLOYED_PRODUCT_NAME%% Client needs to communicate with the %%DEPLOYED_PRODUCT_NAME%% Platform.
 Furthermore, it needs to be able to pull certain docker images to function.
-This leads to the following requirements for outgoing network traffic:
-- The `GLOBAL_DOMAIN` in `FLNet_Client/.env` needs to be reachable 
-on port `443` via `https` and `wss`. 
-Furthermore, the `GLOBAL_DOMAIN` must be reachable on the`GLOBAL_TCP_PORT` from the same `.env` file
-via `tcp` for federated learning.
-- Please make sure `Docker` has access to a DNS server.
-- Please make sure the system correctly keeps time (so has network time protocol access), 
-or issued authorization tokens might immediately expire.
-- Furthermore, the following domains must be whitelisted to pull the docker images used by the %%DEPLOYED_PRODUCT_NAME%% Client:
-  - `ghcr.io/fedlearnnet/` (the %%DEPLOYED_PRODUCT_NAME%% Client images)
-    - If your firewall filters by host name only, also allow `pkg-containers.githubusercontent.com`, from which `ghcr.io` serves the image layers.
-  - `docker.io` (the docker hub registry) and `docker.com` (May be used for authentication and pulling images)
-    - Please also allow all subdomains, as docker uses multiple, e.g. `auth.docker.io` and `registry-1.docker.io`. Alternatively, you can follow the [docker allow list](https://docs.docker.com/desktop/setup/allow-list/), which may cover domains unused by the %%DEPLOYED_PRODUCT_NAME%% Client, but used by docker itself. 
-  - `quay.io` (Red Hat registry for KeyCloak)
-  - `cgr.dev` (chainguard registry for the nginx reverse proxy)
+This leads to the following requirements for outgoing network traffic.
+
+**Always required (while the Client is running)**
+
+| Destination | Port | Used by | Purpose |
+|---|---|---|---|
+| `GLOBAL_DOMAIN` from `FLNet_Client/.env` | `443` (`https`, `wss`) | the server and the Client containers | Platform API, the Client's permanent connection to the Platform, Tool images |
+| `GLOBAL_DOMAIN` from `FLNet_Client/.env` | `GLOBAL_TCP_PORT` from the same `.env` (`tcp`) | the Client containers | relay for federated learning |
+| a DNS server | `53` | the server | name resolution, also for `Docker` |
+| an NTP server, e.g. `pool.ntp.org` | `123` (`udp`) | the server | correct time, otherwise issued authorization tokens might immediately expire |
+
+The Client containers do not need any other destination. The `GLOBAL_DOMAIN` is the only host that must be reachable from the containers.
+
+**Required for installing and updating**
+
+These hosts are only contacted by the server itself, on port `443`, when the `flnet` CLI is installed and when the Docker images are pulled (`flnet client up` on a new or updated Client).
+They can be blocked again once all images are pulled, but are needed for every later update.
+
+| Host | Purpose |
+|---|---|
+| `raw.githubusercontent.com` | `flnet` CLI installation script |
+| `github.com` | `flnet` CLI download |
+| `release-assets.githubusercontent.com` | `flnet` CLI download (redirect target of `github.com`) |
+| `ghcr.io` | %%DEPLOYED_PRODUCT_NAME%% Client images |
+| `pkg-containers.githubusercontent.com` | %%DEPLOYED_PRODUCT_NAME%% Client image layers |
+| `registry-1.docker.io` | Docker Hub registry (PostgreSQL image) |
+| `auth.docker.io` | Docker Hub authentication |
+| `production.cloudfront.docker.com` | Docker Hub image layers |
+| `quay.io` | Red Hat registry (KeyCloak image) |
+| `cdn01.quay.io` | KeyCloak image layers |
+| `cgr.dev` | Chainguard registry (nginx reverse proxy image) |
+| `9236a389bd48b984df91adc1bc924620.r2.cloudflarestorage.com` | nginx reverse proxy image layers (Chainguard's storage) |
+
+Please note:
+- Whitelist host names, not paths. A firewall cannot see the path of an encrypted `https` request, so e.g. `ghcr.io/fedlearnnet/` cannot be whitelisted on its own, only `ghcr.io` as a whole.
+- Whitelist host names, not IP addresses. Most of these hosts are served by content delivery networks whose IP addresses change frequently.
+- Registries may serve image layers from other content delivery hosts depending on your location, e.g. Docker Hub also uses `production.cloudflare.docker.com`. If an image pull fails, the error message names the blocked host. The [Docker allow list](https://docs.docker.com/desktop/setup/allow-list/) covers further domains used by Docker itself.
+- KeyCloak tries to reach `config.liquibase.com` on start up. This is not required and can stay blocked.
 
 We strongly recommend to test deploying the %%DEPLOYED_PRODUCT_NAME%% Client after setting the network
-restrictions, as docker might route anonymous image pull requests through other domains.
+restrictions.
 
 # Troubleshooting
 
@@ -342,3 +380,6 @@ If neither of these containers show any issues, check all further containers.
 Please [contact the developers if issues persist](mailto:info@mail.federated-learning.net) and provide the logs of the containers if you cannot resolve the issues yourself or find a bug in the %%DEPLOYED_PRODUCT_NAME%% Client.
 
 [comment]: <> (TODO: this will be the instance-manager-frontend instead of the reverse-proxy once we integrate!)
+
+## The Client is suddenly misbehabing towards the Platform
+Please go to the Platform welcome page (the `GLOBAL_DOMAIN` from the Client's `.env`) and check if the Platform is reachable. Then please scroll down to the bottom of the page, there the Platforms version is shown. If the Platform is running a newer version than your Client, please update your Client to the same version as the Platform.

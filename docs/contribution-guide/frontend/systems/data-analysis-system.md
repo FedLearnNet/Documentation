@@ -3,7 +3,9 @@ title: Data Analysis System
 sidebar_position: 4
 ---
 
-This is one of the heavier shared systems in the repo. It covers model workflows, predictions, execution inputs and outputs, file handling during runs, and chat around a run.
+This system covers model workflows, predictions, run inputs/outputs, files, and chat.
+
+Run state follows the backend [execution model](../../backend/execution-model/index.md): `run → steps → attempts`. DTOs and selection helpers live in `dto/execution-run.ts`; logs, metrics, and outputs belong to attempts.
 
 ## Where it lives
 

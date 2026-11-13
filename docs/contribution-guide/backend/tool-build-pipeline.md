@@ -45,21 +45,14 @@ Fill in the Global API's `.env` and `orch_secrets.env` from their examples as de
 
 ```bash
 ./mvnw -Dmaven.test.skip=true install
-cd ../Orchestration-API
-./mvnw -Dmaven.test.skip=true package
-cd ../Tool-Build-Pipeline
-docker build -t localhost:5001/flnet/tool-build-pipeline:dev .
-cd ../Learning-APIs/global-learning-api
+cd global-learning-api
 ../mvnw quarkus:dev
 ```
 
-Quarkus starts the Compose dependencies and builds the Orchestration API image from its local
-packaged artifacts. The pipeline image is already available in the host Docker daemon; once the
-registry is running, publish it locally from another terminal:
-
-```bash
-docker push localhost:5001/flnet/tool-build-pipeline:dev
-```
+Quarkus starts the Compose dependencies using the Orchestration API's `staging` image from GHCR.
+The Orchestration API pulls the pipeline builder from
+`ghcr.io/fedlearnnet/tool-build-pipeline/pipeline:staging`. The local registry stores the tool
+images produced by the pipeline.
 
 For later starts, run from `Learning-APIs`:
 
@@ -71,9 +64,9 @@ cd global-learning-api
 | Component | Address or image |
 | --- | --- |
 | Global API | `http://localhost:8080` |
-| Orchestration API | `http://localhost:8191`, built from the sibling repository |
+| Orchestration API | `http://localhost:8191`, `staging` image from GHCR |
 | Registry | `localhost:5001` |
-| Pipeline image | `localhost:5001/flnet/tool-build-pipeline:dev` |
+| Pipeline image | `ghcr.io/fedlearnnet/tool-build-pipeline/pipeline:staging` |
 | Published tool images | `localhost:5001/flnet/tools/<slug>:<commit>` |
 | Global API database | `localhost:5433` |
 | Controller | `http://localhost:8192` |
@@ -92,8 +85,9 @@ The development Compose file uses anonymous registry access and host-native buil
 
 | Setting | Local value | Purpose |
 | --- | --- | --- |
-| `%dev.flnet.pipeline.builder.image` | `localhost:5001/flnet/tool-build-pipeline:dev` | Select the locally built pipeline. |
-| `PIPELINE_IMAGE_PREFIX` | `localhost:5001/flnet/tool-build-pipeline` | Allow the Orchestration API to pull this builder repository. |
+| `%dev.flnet.pipeline.builder.image` | `ghcr.io/fedlearnnet/tool-build-pipeline/pipeline:staging` | Select the pipeline builder from GHCR. |
+| `PIPELINE_IMAGE_PREFIX` | `ghcr.io/fedlearnnet/tool-build-pipeline/pipeline` | Allow the Orchestration API to pull this builder repository. |
+| `PIPELINE_IMAGE_TAG` | `staging` | Select the builder tag independently of the Orchestration API version. |
 | `ORCH_DOCKER__PRIVATE__REGISTRY_URL` | `localhost:5001` | Configure the local registry in the Orchestration API. |
 | `ORCH_DOCKER__PRIVATE__REGISTRY_API_URL` | `http://registry:5000` | Reach the registry's HTTP API from inside the Orchestration API container for the admin inventory. |
 | `PIPELINE_DOCKER_REGISTRY` | `localhost:5001` | Registry for built tool images. |
@@ -103,6 +97,13 @@ The development Compose file uses anonymous registry access and host-native buil
 | `PIPELINE_USE_BUILDX` | `false` | Build on the host architecture through its Docker daemon. |
 | `PIPELINE_COSIGN_SIGN` | `false` | Leave local test images unsigned. |
 | `PIPELINE_HOST_REMOVE` | `false` | Disable Docker's automatic container removal; lifecycle cleanup still runs. |
+| `CONTAINER_NETWORK_ALWAYS_BRIDGE` | `true` | Keep tool containers attached to the shared network so they can reach the Learning API on the development host. |
+
+Orchestration API startup prints its Maven application version and warns when the version ends in
+`dev`, indicating a development build that may be unstable. It also warns whenever
+`container.network.always-bridge` is enabled: attaching containers to non-internal networks can
+give them internet and host access even when their tool access flags deny it. This override is
+intended only for local development.
 
 The local Compose configuration overrides registry credentials with empty values. The
 `orch_secrets.env` file can supply `PIPELINE_REPO_TOKEN` for private tool repositories.
@@ -150,16 +151,15 @@ For API checks without starting imported builds automatically, start from `globa
 ../mvnw quarkus:dev -Dflnet.tool-imports.build-on-import=NEVER
 ```
 
-Check the registry and the Orchestration API's view of the builder image:
+Check the local tool registry and the builder image manifest on GHCR:
 
 ```bash
 curl --fail http://localhost:5001/v2/
-curl --fail --get \
-  --data-urlencode 'name=localhost:5001/flnet/tool-build-pipeline:dev' \
-  http://localhost:8191/docker/image/exists
+docker manifest inspect ghcr.io/fedlearnnet/tool-build-pipeline/pipeline:staging
 ```
 
-The image lookup should return `true`. For startup or pull errors, inspect:
+The manifest command should return the published image manifest. The Orchestration API's
+`/docker/image/exists` endpoint checks tool images in the private registry. For startup or pull errors, inspect:
 
 ```bash
 docker compose -f global-learning-api/compose-devservices.yml --profile dev logs orch-api registry
@@ -167,8 +167,9 @@ docker compose -f global-learning-api/compose-devservices.yml --profile dev logs
 
 Run this Compose command from `Learning-APIs`, or supply an absolute Compose file path. If the
 stack was started by Quarkus, pass its generated Compose project name with `-p`.
-After Orchestration API source changes, stop dev mode, package that API again, and rebuild its
-Compose service with `docker compose ... up -d --build orch-api` using that same project name.
+After changing the Orchestration API's Compose environment, recreate its service with
+`docker compose ... up -d orch-api` using that same project name. To use a newly published
+Orchestration API image, pull it before recreating the service.
 
 ## Startup imports and the official registry
 

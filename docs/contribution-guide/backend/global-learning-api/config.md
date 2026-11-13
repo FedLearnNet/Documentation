@@ -183,7 +183,7 @@ for the policy table and report handling.
 - Type: `String`
 - Default: none in code, set in the shipped `flnet.properties`
 - Required: effectively yes for pipeline build flows
-- Profile overrides: `%dev=localhost:5001/flnet/tool-build-pipeline:dev`
+- Profile overrides: `%dev=ghcr.io/fedlearnnet/tool-build-pipeline/pipeline:staging`
 - Purpose: Defines the container image used by the pipeline builder integration.
 - Runtime effect: Changing this value switches the build image used for pipeline generation and execution preparation. This directly affects available tooling, runtime compatibility, and reproducibility.
 - Allowed values: A valid container image reference

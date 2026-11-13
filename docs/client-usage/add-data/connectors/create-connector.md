@@ -5,6 +5,10 @@ sidebar_position: 2
 
 import mergeFilesImage from '@site/static/img/screenshots/tutorials/walkthrough/client-usage/merge-files.png';
 import saveConnectorImage from '@site/static/img/screenshots/tutorials/walkthrough/client-usage/save-connector.png';
+import SourceExplainer from '@site/src/components/ConnectorSteps/SourceExplainer';
+import HeaderExplainer from '@site/src/components/ConnectorSteps/HeaderExplainer';
+import TransformExplainer from '@site/src/components/ConnectorSteps/TransformExplainer';
+import MappingExplainer from '@site/src/components/ConnectorSteps/MappingExplainer';
 
 # Create a connector from scratch
 
@@ -15,6 +19,8 @@ Open the cohort's [connector overview](index.md), select **Add Connector**, and 
 ## 1. Select the data source
 
 The first step determines where the connector obtains its input data.
+
+<SourceExplainer />
 
 ![Connector source selection showing file import and available extractor tools](/img/screenshots/tutorials/walkthrough/client-usage/connector-select-source.png)
 
@@ -57,6 +63,8 @@ The **Specify Headers** step provides a preview of the input before transformati
 
 Review the column names and rename them where necessary. The resulting names are used in transformations and schema mapping.
 
+<HeaderExplainer />
+
 ### Merge multiple files or sheets
 
 If a ZIP source contains multiple files, or an Excel workbook uses multiple sheets, they must be merged into one connector input. This step is mandatory before columns from the separate files or sheets become available together in the transformation and mapping steps.
@@ -75,6 +83,8 @@ Use identifier columns that represent the same entity in every file or sheet, ev
 
 Transformations are optional operations applied after extraction and before schema mapping and validation. Use them to convert the source into the representation expected by the schema—for example, to normalize boolean values, convert units or dates, split combined values, replace placeholders, or reshape the data.
 
+<TransformExplainer />
+
 ![Transformation selection showing built-in transformations and app tools](/img/screenshots/tutorials/walkthrough/client-usage/transformations.png)
 
 Two transformation sources are available:
@@ -89,6 +99,8 @@ After adding a transformation, review its output before continuing. The transfor
 ## 5. Map source fields to the schema
 
 The mapper associates each source column with the patient field represented by a schema node. Select **Map to Field** for a column and choose the corresponding field from the cohort's schema. A source column can be mapped to one schema field.
+
+<MappingExplainer />
 
 ![Schema mapping step showing source columns, sample values, field mappings, and validation status](/img/screenshots/tutorials/walkthrough/client-usage/map-fields.png)
 
