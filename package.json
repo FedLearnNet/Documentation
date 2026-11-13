@@ -24,8 +24,8 @@
     "@mdx-js/react": "^3.1.1",
     "clsx": "^2.1.1",
     "prism-react-renderer": "^2.4.1",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
@@ -34,7 +34,7 @@
     "@docusaurus/tsconfig": "^3.10.2",
     "@docusaurus/types": "^3.10.2",
     "docusaurus-plugin-rangefind": "^0.3.1",
-    "rangefind": "^0.3.24",
+    "rangefind": "^0.5.0",
     "typescript": "~7.0.2"
   },
   "browserslist": {
