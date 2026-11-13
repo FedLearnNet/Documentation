@@ -33,7 +33,22 @@ const sidebars: SidebarsConfig = {
             label: 'Client usage',
             items: [
                 'client-usage/welcome',
-                'client-usage/cohorts',
+                {
+                    type: 'category',
+                    label: 'Cohorts',
+                    link: {type: 'doc', id: 'client-usage/cohorts/index'},
+                    items: [
+                        {
+                            type: 'category',
+                            label: 'Patient data',
+                            link: {type: 'doc', id: 'client-usage/cohorts/patient-data/index'},
+                            items: [
+                                'client-usage/cohorts/patient-data/statistics',
+                                'client-usage/cohorts/patient-data/custom-statistics',
+                            ],
+                        },
+                    ],
+                },
                 {
                     type: 'category',
                     label: 'Add data to a cohort',
@@ -111,6 +126,17 @@ const sidebars: SidebarsConfig = {
     ],
     tutorialsSidebar: [
         'tutorials/tutorial-overview',
+        {
+            type: 'category',
+            label: 'Slides',
+            link: {type: 'doc', id: 'tutorials/slides/index'},
+            items: [
+                'tutorials/slides/client',
+                'tutorials/slides/queries',
+                'tutorials/slides/statistics',
+                'tutorials/slides/training',
+            ],
+        },
         {
             type: 'category',
             label: 'Hackathon: Hospital Readmission',

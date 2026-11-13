@@ -12,7 +12,7 @@ function OntologyScene() {
   ];
   return (
     <>
-      <span className={s.label}>Schema nodes in three schemas</span>
+      <span className={s.label}>The same field in three schemas</span>
       <div className={c.trio}>
         {fields.map(([schema, name], i) => (
           <div key={schema} className={clsx(s.card, s.in)} style={at(100 + i * 200)}>
@@ -91,7 +91,7 @@ function DatatypeScene() {
         </div>
       </div>
       <div className={clsx(s.caption, s.fade)} style={at(3500)}>
-        Same concept, two representations.
+        Same meaning, two formats.
       </div>
     </>
   );
@@ -139,7 +139,7 @@ function SchemaNodeScene() {
         </div>
       </div>
       <div className={clsx(s.caption, s.fade)} style={at(3800)}>
-        A single field holds one value per patient; a list field holds several.
+        Single: one value per patient. List: several.
       </div>
     </>
   );
@@ -150,7 +150,7 @@ const modes: ExplainerMode[] = [
     key: 'ontology',
     label: 'Ontology',
     title: 'What a value means',
-    text: 'An ontology node names a medical concept. Fields with the same ontology node mean the same thing, whatever they are called.',
+    text: 'Names a medical concept. Fields with the same ontology node mean the same thing, whatever their name.',
     examples: ['SNOMED CT', 'LOINC', 'ICD-10', 'RxNorm'],
     scene: OntologyScene,
   },
@@ -158,7 +158,7 @@ const modes: ExplainerMode[] = [
     key: 'datatype',
     label: 'Datatype',
     title: 'How a value looks',
-    text: 'A datatype node sets the value type and the rules every value must pass.',
+    text: 'Sets the value type and the rules every value must pass.',
     config: [
       {name: 'Type', text: 'INT, FLOAT, BOOLEAN, STRING, DATE, DATE_TIME, CATEGORICAL, FILE'},
       {name: 'Rules', text: 'MIN, MAX, MINLENGTH, MAXLENGTH, PATTERN, required'},
@@ -170,9 +170,9 @@ const modes: ExplainerMode[] = [
     key: 'schema',
     label: 'Schema node',
     title: 'Where a value goes',
-    text: 'A schema node joins one ontology node and one datatype node into a field and places it in the schema tree.',
+    text: 'Joins one ontology node and one datatype node into a field and places it in the tree.',
     config: [
-      {name: 'Group', text: 'Organizes fields; holds no value'},
+      {name: 'Group', text: 'Holds fields, no value'},
       {name: 'Single', text: 'One value per patient'},
       {name: 'List', text: 'Several values per patient'},
     ],
@@ -180,6 +180,8 @@ const modes: ExplainerMode[] = [
   },
 ];
 
-export default function SchemaNodesAnimation(): ReactNode {
-  return <StepExplainer eyebrow="Schema building blocks" accent="map" modes={modes} />;
+/** `only` limits the explainer to the given mode keys, e.g. for a single slide. */
+export default function SchemaNodesAnimation({only}: {only?: string[]}): ReactNode {
+  const shown = only ? modes.filter((m) => only.includes(m.key)) : modes;
+  return <StepExplainer eyebrow="Schema building blocks" accent="map" modes={shown} />;
 }

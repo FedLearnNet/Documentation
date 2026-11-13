@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Add data to a cohort
 
-An existing cohort is a prerequisite for adding data. If necessary, [create a cohort based on an available schema](../cohorts.md#create-a-cohort) before continuing. The selected schema defines the structure, meaning, and validation rules for the cohort's data.
+An existing cohort is a prerequisite for adding data. If necessary, [create a cohort based on an available schema](../cohorts/index.md#create-a-cohort) before continuing. The selected schema defines the structure, meaning, and validation rules for the cohort's data.
 
 Data can be added in two ways:
 

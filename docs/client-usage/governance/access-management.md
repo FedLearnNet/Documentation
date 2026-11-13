@@ -8,7 +8,7 @@ import addPermissionImage from '@site/static/img/screenshots/tutorials/walkthrou
 
 # Access management
 
-Data in your Client is organized into [cohorts](../cohorts.md). **Permissions** control who can train on the data of a cohort and how your Client participates in queries and requests for that cohort. A permission defines:
+Data in your Client is organized into [cohorts](../cohorts/index.md). **Permissions** control who can train on the data of a cohort and how your Client participates in queries and requests for that cohort. A permission defines:
 
 - Whether federated queries are answered, how often they may arrive, and the minimum number of records a query or statistics result must contain.
 - Whether each type of request is **accepted automatically**, **rejected automatically**, or **left for manual review** in the [Requests](../requests/index.md) menu.
@@ -49,7 +49,7 @@ To change a permission, select the edit icon in its row. To remove it, select th
 | **Automatic statistics access for** | `None` leaves statistics requests for manual review. `All` approves them automatically. |
 | **Automatic metrics access for** | `None` leaves metrics requests for manual review. `All` approves them automatically. See [Metrics requests](../requests/metrics-requests.md) for who may submit them. |
 
-Which variables of a cohort can be queried, and how, is set separately in the cohort's **Queriability** tab. See [Cohorts](../cohorts.md).
+Which variables of a cohort can be queried, and how, is set separately in the cohort's **Queriability** tab. See [Cohorts](../cohorts/index.md).
 
 ## How permissions decide the outcome
 

@@ -224,6 +224,8 @@ const modes: ExplainerMode[] = [
   },
 ];
 
-export default function MappingExplainer(): ReactNode {
-  return <StepExplainer eyebrow="Step 5 · Map to the schema" accent="map" modes={modes} />;
+/** `only` limits the explainer to the given mode keys, e.g. for a single slide. */
+export default function MappingExplainer({only}: {only?: string[]}): ReactNode {
+  const shown = only ? modes.filter((m) => only.includes(m.key)) : modes;
+  return <StepExplainer eyebrow="Step 5 · Map to the schema" accent="map" modes={shown} />;
 }

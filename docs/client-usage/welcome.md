@@ -24,7 +24,7 @@ As the IT administrator of the Client:
 
 As the data administrator adding and managing data:
 
-1. [Create a cohort](cohorts.md#create-a-cohort).
+1. [Create a cohort](cohorts/index.md#create-a-cohort).
 2. [Import data](add-data/index.md).
 3. [Create and edit data records manually](add-data/manual-patient-management.md).
 

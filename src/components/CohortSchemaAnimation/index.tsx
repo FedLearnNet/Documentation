@@ -24,7 +24,7 @@ function SchemaCard({delay = 0, compact = false}: {delay?: number; compact?: boo
     <div className={clsx(s.card, s.in)} style={at(delay)}>
       <div className={s.cardHead}>
         <span>Platform · Schema · {SCHEMA}</span>
-        <span className={s.tag}>data contract</span>
+        <span className={s.tag}>template</span>
       </div>
       {compact ? (
         <div className={s.row} style={{padding: '0.45rem 0.6rem'}}>
@@ -121,7 +121,7 @@ function CohortScene() {
             ⇣ Connector run
           </span>
           <span className={clsx(s.caption, s.fade)} style={at(2000)}>
-            records are validated against the schema
+            values are checked against the schema
           </span>
         </div>
         <div className={s.tblScroll}>
@@ -151,7 +151,7 @@ function CohortScene() {
         </div>
       </div>
       <div className={clsx(s.caption, s.fade)} style={at(4200)}>
-        The cohort holds the records, its connectors, and its access settings. All of them stay in the Client.
+        Records, connectors, and access settings stay in the Client.
       </div>
     </>
   );
@@ -160,8 +160,8 @@ function CohortScene() {
 type Site = [clinic: string, cohort: string, patients: number, answer: string | null];
 
 const sites: Site[] = [
-  ['Clinic A', 'Heart failure 2024', 412, 'n = 187'],
-  ['Clinic B', 'Cardio registry', 958, 'n = 431'],
+  ['Clinic A', 'Heart failure 2024', 412, '≈ 190'],
+  ['Clinic B', 'Cardio registry', 958, '≈ 440'],
   ['Clinic C', 'HF follow-up', 31, null],
 ];
 
@@ -196,7 +196,7 @@ function SharedScene() {
           Federated query · <b>Body weight</b> &gt; 80 kg
         </span>
         <span className={clsx(s.caption, s.fade)} style={at(2300)}>
-          same variable in every cohort
+          same field in every cohort
         </span>
       </div>
       <div className={c.trio}>
@@ -211,8 +211,7 @@ function SharedScene() {
         ))}
       </div>
       <div className={clsx(s.caption, s.fade)} style={at(4100)}>
-        One schema, three cohorts. Each cohort answers from its own records under its own disclosure control. Clinic C
-        rejects the query: fewer records match than its configured minimum.
+        Counts are rounded up. Clinic C has too few matches and rejects the query.
       </div>
     </>
   );
@@ -222,44 +221,46 @@ const modes: ExplainerMode[] = [
   {
     key: 'schema',
     label: 'Schema',
-    title: 'A schema describes data; it holds none',
-    text: 'A schema is a shared data contract defined on the Platform. It lists the variables a cohort can hold, what each one means, and which values are valid.',
+    title: 'Describes data, holds none',
+    text: 'A shared template on the Platform. It lists the fields, what they mean, and which values are valid.',
     config: [
-      {name: 'Ontology node', text: 'The concept behind a variable, such as body weight or diagnosis.'},
-      {name: 'Datatype node', text: 'The value representation and rules, such as FLOAT in kg with MIN and MAX.'},
-      {name: 'Schema node', text: 'Arranges variables into groups and marks single-value or list fields.'},
+      {name: 'Ontology node', text: 'What a field means, e.g. body weight.'},
+      {name: 'Datatype node', text: 'Value type and rules, e.g. FLOAT in kg, 0–400.'},
+      {name: 'Schema node', text: 'Places the field in a group, as single value or list.'},
     ],
-    note: 'Schemas are created on the Platform. The Client selects an existing schema but cannot create one.',
+    note: 'Schemas are created on the Platform. The Client only selects them.',
     scene: SchemaScene,
   },
   {
     key: 'cohort',
     label: 'Cohort',
-    title: 'A cohort is a local workspace with data',
-    text: 'A cohort is created in the Client and is based on exactly one schema. It holds patient records whose values fit the schema, plus everything needed to manage them.',
+    title: 'A local collection of patients',
+    text: 'Created in the Client from one schema. Holds the patient records and their settings.',
     config: [
-      {name: 'Schema', text: 'Selected on creation; defines every field its records can hold.'},
-      {name: 'Records', text: 'Added through connectors or manual record entry.'},
-      {name: 'Settings', text: 'Details, queriability, access management, and members belong to the cohort.'},
+      {name: 'Schema', text: 'Chosen at creation. Defines the fields.'},
+      {name: 'Records', text: 'Added by connector or by hand.'},
+      {name: 'Settings', text: 'Details, queriability, access, members.'},
     ],
-    note: 'Creating a cohort imports no data. Data arrives only when a connector runs or records are entered.',
+    note: 'Creating a cohort imports nothing. Records arrive when a connector runs or someone enters them.',
     scene: CohortScene,
   },
   {
     key: 'shared',
     label: 'One schema, many cohorts',
     title: 'Shared structure, local data',
-    text: 'Cohorts in different Clients that use the same schema describe their data the same way. The Platform can address one variable in all of them, while each cohort keeps its own records and rules.',
+    text: 'Clinics on the same schema use the same fields. The Platform can ask about one field everywhere. Each clinic keeps its own records and rules.',
     config: [
-      {name: 'Shared', text: 'The schema: variables, meaning, data types, and validation rules.'},
-      {name: 'Local', text: 'The cohort: records, connectors, queriability, and disclosure control.'},
-      {name: 'Matching', text: 'Variables are matched by their ontology and datatype nodes, so cohorts on related schemas stay partially comparable.'},
+      {name: 'Shared', text: 'The schema: fields, meaning, types, rules.'},
+      {name: 'Local', text: 'The cohort: records, connectors, access rules.'},
+      {name: 'Matching', text: 'By ontology and datatype. Related schemas are partly comparable.'},
     ],
-    note: 'Patient records never leave the Client. Only answers allowed by the cohort’s settings are returned.',
+    note: 'Patient records never leave the Client. Only answers the cohort allows go out.',
     scene: SharedScene,
   },
 ];
 
-export default function CohortSchemaAnimation(): ReactNode {
-  return <StepExplainer eyebrow="Schema · cohort" accent="map" modes={modes} />;
+/** `only` limits the explainer to the given mode keys, e.g. for a single slide. */
+export default function CohortSchemaAnimation({only}: {only?: string[]}): ReactNode {
+  const shown = only ? modes.filter((m) => only.includes(m.key)) : modes;
+  return <StepExplainer eyebrow="Schema · cohort" accent="map" modes={shown} />;
 }

@@ -50,8 +50,10 @@ flowchart TD
 
 ## Pipeline modes, scan reports, and rescans
 
-The pipeline list offers **Build and publish** (`ALL`).
+The pipeline list offers **Build only** (`BUILD_ONLY`, preselected) and **Build and publish** (`ALL`).
 Model contexts with uploaded files also offer **Local build from uploaded files** (`LOCAL_BUILD`).
+**Vulnerability rescan** (`SCAN_ONLY`) appears once the list holds a successful build for the
+same version.
 The selected mode is sent as `runMode` and displayed in the pipeline list and detail view.
 
 `pipeline-publish-info-detail` displays SAST alongside vulnerability and malware results. SAST uses
@@ -61,7 +63,7 @@ clean scan.
 
 `app-detail-config/components/app-edit` opens the scan-results dialog when the user clicks the
 Docker image badge. It passes the publish information and app version ID to
-`pipeline-publish-info-dialog`, which owns the frontend's only **Rescan vulnerabilities** action.
+`pipeline-publish-info-dialog`, which owns the **Rescan vulnerabilities** action.
 The dialog projects that button into the **Vulnerability scan** panel header; other uses of the
 publish-info detail component do not receive a rescan action.
 The dialog creates an `APP` pipeline with `runMode: SCAN_ONLY` and opens its live details.

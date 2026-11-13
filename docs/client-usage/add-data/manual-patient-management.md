@@ -7,7 +7,7 @@ sidebar_position: 5
 
 Patient records can be created and edited directly within a cohort in the %%DEPLOYED_PRODUCT_NAME%% Client. Manual entry uses the cohort's selected schema to structure patient data and does not require a connector.
 
-Before adding records, [create a cohort based on an available schema](../cohorts.md#create-a-cohort).
+Before adding records, [create a cohort based on an available schema](../cohorts/index.md#create-a-cohort).
 
 ## Open the patient list
 

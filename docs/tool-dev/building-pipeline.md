@@ -13,12 +13,14 @@ For the local development stack and implementation details, see
 
 ## Run modes
 
-Choose **Run mode** when starting a build in the global frontend. The list and detail views show
-the selected mode. Manual vulnerability rescans start from the scan-results dialog.
+Choose **Run mode** when starting a build in the global frontend. **Build only** is preselected.
+The list and detail views show the selected mode. Manual vulnerability rescans start from the
+scan-results dialog or, once an image exists, from the run-mode selector.
 
 | Mode | Frontend label | Purpose |
 | --- | --- | --- |
-| `ALL` | Build and publish | Clone the tool repository, build and validate an image, then push it to the configured registry. This is the default. |
+| `BUILD_ONLY` | Build only | Runs as `ALL` and updates the current unpublished version. Publishing stays a separate action. Default in the frontend. |
+| `ALL` | Build and publish | Clone the tool repository, build and validate an image, then push it to the configured registry. Default for API requests without `runMode`. |
 | `LOCAL_BUILD` | Local build from uploaded files | Build from the API-provided ZIP and keep the image on the Docker host. Available for model pipelines with uploaded files. |
 | `SCAN_ONLY` | Rescan vulnerabilities (scan-results dialog) | Pull a previously built image and check it for newly disclosed vulnerabilities. Requires an existing image. |
 

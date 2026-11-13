@@ -254,6 +254,8 @@ const modes: ExplainerMode[] = [
   },
 ];
 
-export default function RunExplainer(): ReactNode {
-  return <StepExplainer eyebrow="Run the connector" accent="load" modes={modes} />;
+/** `only` limits the explainer to the given mode keys, e.g. for a single slide. */
+export default function RunExplainer({only}: {only?: string[]}): ReactNode {
+  const shown = only ? modes.filter((m) => only.includes(m.key)) : modes;
+  return <StepExplainer eyebrow="Run the connector" accent="load" modes={shown} />;
 }

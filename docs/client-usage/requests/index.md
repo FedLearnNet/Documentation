@@ -40,4 +40,4 @@ Queries from users who are not permitted to query a cohort are also rejected aut
 ## Related reading
 
 - [Governance](../governance/index.md)
-- [Cohorts](../cohorts.md)
+- [Cohorts](../cohorts/index.md)

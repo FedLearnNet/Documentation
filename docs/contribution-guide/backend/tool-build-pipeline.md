@@ -206,6 +206,7 @@ do not override the existing checks for an active pipeline or a version already 
 `PipelineCreateDTO.runMode` defaults to `ALL`. The Global API stores it on the pipeline and returns
 it in pipeline DTOs. `StartPipelineDTO` carries the same enum to the Orchestration API, which sets
 `RUN_MODE=ALL`, `RUN_MODE=LOCAL_BUILD`, or `RUN_MODE=SCAN_ONLY` in the builder container.
+`BUILD_ONLY` is stored on the pipeline but sent to the Orchestration API as `ALL`.
 
 The pipeline record and its mode-specific steps are persisted together in the creation transaction
 before an automatically started run is sent to the Orchestration API.
