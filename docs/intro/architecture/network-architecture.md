@@ -30,7 +30,7 @@ As the Platform is deployed as a multi service enseble, the following services a
 - Data Modeler API
 - Relay Server
 - Orch API
-- LINK_PLATFORM
+- Reverse proxy (NGINX)
 
 More information on the Platform's internal structure and its services can be found in the [Platform technical architecture](technical-architecture-platform.md).
 
