@@ -83,7 +83,6 @@ Key fields include:
 - `federatedAppVersionId`
 - `modelSubId`
 - `imageName`
-- `oldFCVersion`
 - incoming and outgoing connections
 
 The important design point is that a node does not only point to a logical tool. It points to an admitted versioned artifact or model-backed execution unit that the platform can resolve and execute.

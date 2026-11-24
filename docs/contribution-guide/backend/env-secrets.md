@@ -20,15 +20,15 @@ The `local-learning`, `global-learning`, and `data-modeler` modules live in the
 |---|:---:|:---:|:---:|:---:|
 | `QUARKUS_OIDC_CREDENTIALS_SECRET` | ✓ | ✓ | | |
 | `QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET` | ✓ | ✓ | | |
-| `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` | | ✓ | | |
+| `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` | ✓ | ✓ | | |
 | `UMLS_API_KEY` | | | ✓ | |
-| `ORCH_DOCKER__GHCR__REGISTRY_USERNAME` | ✓ | ✓ | | ✓ |
-| `ORCH_DOCKER__GHCR__REGISTRY_PASSWORD` | ✓ | ✓ | | ✓ |
-| `PIPELINE_DOCKER_PASSWORD` | ✓ | ✓ | | ✓ |
-| `PIPELINE_REPO_TOKEN` | ✓ | ✓ | | ✓ |
+| `PIPELINE_DOCKER_PASSWORD` | | | | ✓ |
+| `PIPELINE_REPO_TOKEN` | | optional | | optional |
 
 No token is needed for issue reporting: *Report an issue* in the frontends opens a prefilled issue on
 [FedLearnNet/.github](https://github.com/FedLearnNet/.github/issues/new) that the user submits with their own GitHub account.
+
+No registry credentials are needed: the pipeline image on ghcr.io is public, and the local Compose registry (`localhost:5001`) is anonymous.
 
 ## local-learning
 
@@ -36,21 +36,31 @@ This file should be named: `.env`
 ```env
 QUARKUS_OIDC_CREDENTIALS_SECRET=SECRET
 QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET=SECRET
+QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=TOKEN
 ```
 
-Plus the shared [orch secrets](#orch-secrets) below, name this `orch_secrets.env` (template: `orch_secrets.env.example`).
+The global login for the dev profile defaults to the `test` user in `flnet.properties`.
+
+`compose-devservices.yml` also expects an `orch_secrets.env` (template: `orch_secrets.env.example`). It can stay empty:
+the orch-api builds code transformers in local-build mode, which needs no registry login.
 
 ## global-learning
 
 This file should be named: `.env`
 
 ```env
+QUARKUS_OIDC_CREDENTIALS_SECRET=SECRET
+QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET=SECRET
 QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=TOKEN
-QUARKUS_OIDC_CREDENTIALS_SECRET=TOKEN
-QUARKUS_KEYCLOAK_ADMIN_CLIENT_CLIENT_SECRET=TOKEN
 ```
 
-Plus the shared [orch secrets](#orch-secrets) below, name this `orch_secrets.env` (template: `orch_secrets.env.example`).
+Plus `orch_secrets.env` (template: `orch_secrets.env.example`), used by `compose-devservices.yml` to start the orch-api as a Quarkus Dev Service.
+Tool images are pushed to the anonymous local registry, so only the repository token remains:
+
+```env
+# optional, only needed to clone private tool repositories
+PIPELINE_REPO_TOKEN=TOKEN
+```
 
 ## data-modeler
 
@@ -61,29 +71,9 @@ UMLS_API_KEY=TOKEN
 
 ## orch-api
 
-The orch-api requires the shared [orch secrets](#orch-secrets) listed below.
-
-This file should be named: `.env`
+This file should be named: `.env` (template: `.env.example`, which also holds the non-secret registry URLs)
 ```env
-# only needed while the pipeline image on ghcr.io is private
-ORCH_DOCKER__GHCR__REGISTRY_USERNAME=USER
-ORCH_DOCKER__GHCR__REGISTRY_PASSWORD=TOKEN
-
 PIPELINE_DOCKER_PASSWORD=TOKEN
-PIPELINE_REPO_TOKEN=TOKEN
-```
-
-## Orch Secrets
-
-Both `local-learning` and `global-learning` need these in addition to their own variables, in a file named `orch_secrets.env`.
-They are used by `compose-devservices.yml` to start the orch-api as a Quarkus Dev Service.
-The `orch-api` project itself also requires the same set in its `.env`.
-
-```env
-# only needed while the pipeline image on ghcr.io is private
-ORCH_DOCKER__GHCR__REGISTRY_USERNAME=USER
-ORCH_DOCKER__GHCR__REGISTRY_PASSWORD=TOKEN
-
-PIPELINE_DOCKER_PASSWORD=TOKEN
+# optional, only needed to clone private tool repositories
 PIPELINE_REPO_TOKEN=TOKEN
 ```
