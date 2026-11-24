@@ -17,7 +17,7 @@ Navigate to **`/app`** in the frontend and click **"New Tool"**.
 You will see a form like this:
 
 - **Name** - AgglomerativeClustering
-- **Image Name** - gitlab.cosy.bio:5050/cosybio/federated-learning/federated_db/apps/agglomerative-clustering/model:latest
+- **Image Name** - agglomerative-clustering:9a503b51824d0b9e6a7ed6e2837bc6b5d194f74f
 - **Tool Type** - ANALYSIS
 - **Slug** - agglomerativeclustering
 - **Short Description** - A AgglomerativeClustering
