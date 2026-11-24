@@ -7,7 +7,7 @@ sidebar_position: 4
 
 This document describes how data flows through a Client during normal operation.
 
-The document assumes that you have already read the [network architecture](network-architecture.md) and the [technical architecture of the Client](technical-architecture-client.md). The technical architecture explains the components shown below; this document focuses on how data moves between them.
+The document assumes that you have already read the [network architecture](network-architecture.md) and the [technical architecture of the Client](technical-architecture-client.md). The technical architecture explains the components shown below; this document focuses on how data moves between them. The exact fields sent to the Platform are listed in [Data sent from Client to Platform](data-flow-client-dtos.md).
 
 ## Overview
 
