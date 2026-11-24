@@ -46,7 +46,7 @@ jobs:
           persist-credentials: false
 
       # setup-node registers TypeScript problem matchers, so type errors appear as annotations
-      - uses: actions/setup-node@v7.0.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: lts/*
           cache: npm
