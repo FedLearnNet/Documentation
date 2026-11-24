@@ -40,21 +40,10 @@ There are two common ways to manage dependencies:
 Create a requirements.txt file in your app folder:
 
 ```txt
-# Core framework (from TestPyPI)
---extra-index-url https://test.pypi.org/simple/
-pyfedappwrap>=0.1.0
+# FL-Net tool SDK from PyPI, imported as `pyfedappwrap`
+FL-Net-Python-Tool-API~=0.7.16
 
-# Dependencies required by pyfedappwrap (automatically installed, but listed for clarity)
-websockets~=15.0.1
-pydantic-yaml==1.3.0
-PyYAML~=6.0.2
-watchdog~=5.0.3
-pydantic~=2.9.2
-pydantic-settings~=2.6.0
-pydantic_yaml~=1.3.0
-requests~=2.32.3
-validators~=0.35.0
-
+# Add the dependencies of your tool below
 scikit-learn
 matplotlib
 ```

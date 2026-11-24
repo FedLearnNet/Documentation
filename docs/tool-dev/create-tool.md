@@ -42,7 +42,7 @@ There are two common ways to manage dependencies:
 
 ```bash
 python3 -m pip install --upgrade pip
-python3 -m pip install --extra-index-url https://test.pypi.org/simple/ pyfedappwrap
+python3 -m pip install "FL-Net-Python-Tool-API~=0.7.16"
 ```
 
 ### Option B: Use a requirements.txt (recommended)
@@ -50,20 +50,10 @@ python3 -m pip install --extra-index-url https://test.pypi.org/simple/ pyfedappw
 Create a requirements.txt file in your app folder:
 
 ```txt
-# Core framework (from TestPyPI)
---extra-index-url https://test.pypi.org/simple/
-pyfedappwrap>=0.6.40
+# FL-Net tool SDK from PyPI, imported as `pyfedappwrap`
+FL-Net-Python-Tool-API~=0.7.16
 
-# Dependencies required by pyfedappwrap (automatically installed, but listed for clarity)
-websockets~=15.0.1
-pydantic-yaml==1.3.0
-PyYAML~=6.0.2
-watchdog~=5.0.3
-pydantic~=2.9.2
-pydantic-settings~=2.6.0
-pydantic_yaml~=1.3.0
-requests~=2.32.3
-validators~=0.35.0
+# Add the dependencies of your tool below
 ```
 
 Then install everything with:
@@ -460,7 +450,7 @@ If you are writing your app in R, use the R base image instead:
 
 ```dockerfile
 # Use the base Python wrapper image
-FROM gitlab.cosy.bio:5050/cosybio/federated-learning/federated_db/pyfedappwrap/base-python:0.6.40
+FROM ghcr.io/fedlearnnet/python-tool-api/base-python:0.7.16
 
 # Become Root for installing
 USER 0
@@ -485,7 +475,7 @@ If you are writing your app in R, use the R base image instead:
 
 ```dockerfile
 # Use the base R wrapper image
-FROM gitlab.cosy.bio:5050/cosybio/federated-learning/federated_db/pyfedappwrap/base-r:latest
+FROM ghcr.io/fedlearnnet/python-tool-api/base-r:0.7.16
 
 # SAME as python
 ```

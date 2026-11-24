@@ -35,7 +35,7 @@ All communication is handled automatically through the `communicator` object tha
 Before starting, make sure you have:
 
 - Completed the basic [Create a New Tool](create-tool.md) guide (tool registration, environment setup, folder structure).
-- **Python 3.11+** with `pyfedappwrap>=0.6.40` installed.
+- **Python 3.11+** with `FL-Net-Python-Tool-API~=0.7.16` (`pyfedappwrap`) installed.
 - A registered **App ID** from the platform.
 
 ---
