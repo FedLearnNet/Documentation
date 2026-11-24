@@ -21,7 +21,7 @@ The Client is a single-host deployment composed of a small set of runtime servic
 ### FL-Net provided services
 1. Local Learning API [Java;Quarkus]: the main local backend service. It manages patient data, data harmonization, DDQ, statistics, local auditing, access control, and federated requests.
 2. Orch API [Java;Quarkus]: the orchestration service for ETL and FL workFLows. It prepares the execution environment, starts Tool containers, monitors their status, and returns results to the Local Learning API. To manage Tool containers, it runs as root with access to the host's Docker socket. See the [security model](security-model.md) for the trust implications of this.
-3. Instance Manager Frontend [Angular]: the user-facing web interface for local administrators and data managers. It provides access to the Client UI and routes requests to the appropriate backend service.
+3. Instance Manager Frontend [Angular]: the user-facing web interface for local administrators and data managers. It provides access to the Client UI. It is a static web app served by its own NGINX container, which sits behind the NGINX reverse proxy that routes requests to the appropriate backend service.
 4. Controller [Go]: the local FL communication component. It handles the secure exchange of model updates and other FL messages between locally running Tools and the Platform-side federated learning channel.
 
 ### Third-party services
