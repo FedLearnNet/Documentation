@@ -7,7 +7,7 @@ sidebar_position: 4
 
 This document describes how data flows through a Client during normal operation.
 
-The document assumes that you have already read the [network architecture](network-architecture.md) and the [technical architecture of the Client](technical-architecture-client.md). The technical architecture explains the components shown below; this document focuses on how data moves between them.
+The document assumes that you have already read the [network architecture](network-architecture.md) and the [technical architecture of the Client](technical-architecture-client.md). The technical architecture explains the components shown below; this document focuses on how data moves between them. The exact fields sent to the Platform are listed in [Data sent from Client to Platform](data-flow-client-dtos.md).
 
 ## Overview
 
@@ -73,7 +73,7 @@ The Data Holder (Admin) is advised to use the Instance Manager Frontend to:
 
 Furthermore, if the federated features are enabled, the Local Learning API on startup connects to the Platform creating the previously mentioned Local Leaning API boundary.
 This data flow via this connection is discussed in the further chapters of this document.
-In this stage, only technical information is exchanged, e.g. ping/pong keep-alive messages, which continue for the whole lifetime of the connection.
+In this stage, only technical information is exchanged, e.g. ping/pong keep-alive messages, which continue for the whole lifetime of the connection, and the Client's GPU availability and hardware info (name, driver, memory, utilization), resent every 5 minutes.
 
 ```mermaid
 flowchart LR
@@ -190,6 +190,7 @@ The Local Learning API and Controller both connect to the Platform, but they do 
 These form the **Local Learning API** and **Controller** boundaries, respectively.
 
 The Local Learning API always authenticates with a dedicated Client account on the Platform. The account's token is sent in the `Authorization` header of the websocket handshake and the connection is re-established with a fresh token before it expires.
+On connect, the Local Learning API sends its [system info](data-flow-client-dtos.md#system_info), [current learnings](data-flow-client-dtos.md#current_learnings) and [TRE sources](data-flow-client-dtos.md#tre_sources).
 
 The Controller uses mTLS and [API Key](#details-api-keys) based application layer authentication towards the Platform. Authentication is mutual: the Controller verifies the Relay Server's TLS certificate (public CA and hostname) and a per-run Relay key presented by the Relay Server.
 
@@ -256,6 +257,8 @@ The Relay Server's management API (create run, sign CSR, stop run) has no authen
 Before data can be ingested, the Data Holder creates a cohort through the Instance Manager Frontend. To populate the cohort configuration, the Local Learning API pulls the Schemas available on the Platform as a seperate request. The Data Holder then selects a Schema in the frontend.
 
 When the cohort is created, the Local Learning API sends a subscription request to the Platform confirming that the Client subscribes to the selected schema. If the cohort is deleted later, the Local Learning API sends the corresponding unsubscribe request. 
+
+For cohorts linking an external database (TRE), the Local Learning API sends a TRE source description to the Platform on every change: name, description, database type, access mode, Tool, hyperparameters and synthetic test data. An uploaded test data file is stored on the Platform. Connection details and credentials are not sent. Fields: [TRE_SOURCES](data-flow-client-dtos.md#tre_sources).
 
 All schema-related requests use the Client’s identity. When the Client subscribes to a schema, the Platform hashes this identity and stores it in that schema’s subscription list.
 
@@ -400,7 +403,7 @@ sequenceDiagram
     L->>L: Apply disclosure controls (per requesting user: is allowed, min. record count, rate limit) and log hit patient ids
     L-->>P: Permitted result
 ```
-How the query is treated, from applying privacy controls to rejecting it, depends on the setup permissions, see the [access management documentation](/docs/client-usage/governance/access-management.md) for details. 
+How the query is treated, from applying privacy controls to rejecting it, depends on the setup permissions, see the [access management documentation](/docs/client-usage/governance/access-management.md) for details. Fields of the result: [EXISTING_QUERY](data-flow-client-dtos.md#existing_query).
 
 ## 5. Federated statistics
 
@@ -422,7 +425,7 @@ sequenceDiagram
     L-->>P: Permitted result
 ```
 
-The permission system handles the approval and privacy settings, see [access management documentation](/docs/client-usage/governance/access-management.md) for details.
+The permission system handles the approval and privacy settings, see [access management documentation](/docs/client-usage/governance/access-management.md) for details. Fields of the result: [DATA_STATISTICS](data-flow-client-dtos.md#data_statistics).
 
 ## 6. Federated learning
 
@@ -432,6 +435,8 @@ Once approved, the flow into the Tool and it's execution is the one already desc
 In difference to an ETL Tool, the Controller is also attached to the Tool's network, and the Tool communicates with it to exchange model updates and other FL messages over the **federated communication channel**, connecting the participants of the FL. 
 
 The Local Learning API generates a random ID (UUID) per FL experiment, which the Global Learning API uses to identify that Client's federated learning status updates, restricting identification across multiple experiments via logs.
+If the Client coordinates the run, the Local Learning API also uploads the trained model to the Platform.
+Fields sent: [LEARNING_QUERY](data-flow-client-dtos.md#learning_query) on approval, [CURRENT_LEARNINGS](data-flow-client-dtos.md#current_learnings) on approval or stop, [UPDATE_LEARNING](data-flow-client-dtos.md#update_learning) on step status changes, [RELAY_CERT](data-flow-client-dtos.md#relay_cert) for Relay Server steps, model upload via [REST](data-flow-client-dtos.md#rest-requests).
 
 This is the second and last path over which data can leave a Client, and it crosses the Controller boundary rather than the Local Learning API boundary:
 As FL messages are inherently more sensitive than the the other request types, messages sent from a Client to the aggregator or to another Client are additionally to the transport encryption also machine to machine encrypted, with only the sending Clients Controller and the receiving aggregators/other Clients Controller able to decrypt them. Each Controller generates an X25519 key pair per run; each message is encrypted with AES-256-GCM using a key derived (SHA-256) from an ephemeral X25519 key exchange with the recipient. The public keys are distributed via the Relay Server, which therefore has to be trusted for key distribution. Routing metadata (e.g. sender and recipient IDs) is not end-to-end encrypted.
@@ -489,7 +494,7 @@ flowchart LR
     PLATFORMNODE <-->|Federated learning communication channel; Client to aggregator machine to machine encrypted, aggregator broadcasts TLS only| AGGREGATOR
 ```
 
-Patient-level training data therefore never leaves the Client: the Local Learning API boundary carries only the initial request and approval, and the Controller boundary carries only the resulting model update, never the source records.
+Patient-level training data therefore never leaves the Client: the Local Learning API boundary carries only the initial request, approval and the coordinator's trained model, and the Controller boundary carries only the resulting model update, never the source records.
 
 The Controller/Tool also report workflow status and progress back to the Local Learning API — this status information is separate from, and does not include, the model-data exchange itself. Separately, the local metrics the Tool produces for this run are persisted through the ordinary volume path, the same as an ETL Tool's output — this is what a later [federated metrics request](#7-federated-metrics) actually retrieves.
 
@@ -511,6 +516,8 @@ Who can make the request depends on how the run's resulting Inference Tool was p
 - If it isn't, only the user who originally started the federated learning run can request them.
 
 The metrics themselves were already computed and persisted locally as part of the federated learning run (§5); this request only governs whether, and to whom, that already-computed local result may be disclosed.
+
+Instead of the metrics, a request may ask for the run's outputs: on approval, the output files of every finished step are uploaded to the Platform. Fields: [RUN_METRICS](data-flow-client-dtos.md#run_metrics).
 
 ## 8. User exports
 
@@ -560,7 +567,7 @@ Reasoning about Client data flow comes down to two different kinds of boundary: 
 | Boundary | Crosses to/from | Carries |
 |---|---|---|
 | **NGINX** | Data Holder ↔ Client | All human/browser access: login, uploads, exports, admin actions |
-| **Local Learning API** | Client ↔ Platform | Schema pulls, schema subscriptions/unsubscriptions, federated queries, and federated statistics, learning, and metrics requests, plus their results |
+| **Local Learning API** | Client ↔ Platform | Schema pulls, schema subscriptions/unsubscriptions, federated queries, and federated statistics, learning, and metrics requests, plus their results, approved run outputs, the coordinator's trained model, TRE source descriptions and GPU info |
 | **Controller** | Client ↔ Platform | Federated-learning training communication only (model updates), over its own dedicated channel |
 | **Orch API** | Client ↔ Platform | Pulls required Tool images from the Tool registry, which is part of the Platform and served under `/v2/` of the Platform domain |
 
