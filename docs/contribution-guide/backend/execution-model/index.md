@@ -7,7 +7,7 @@ slug: /contribution-guide/backend/execution-model
 
 import ExecutionAnimation from '@site/src/components/ExecutionAnimation';
 
-Training, analysis, import Tools, and tests share this model. **Global** is the Platform API; **Local** is the Client API; **Orch API** manages Docker containers.
+Training, analysis, import Tools, and tests share this model. **Global** is the Platform API; **Local** is the Client API; **Orch API** manages Tool containers, as Docker containers or, with the [Kubernetes backend](kubernetes-backend.md), as Kubernetes Jobs.
 
 ## Run → step → attempt
 
@@ -30,6 +30,10 @@ Training, analysis, import Tools, and tests share this model. **Global** is the 
 - [Processing](processing.md)
 - [Tool tests](tool-tests.md)
 - [Hosted engine](hosted-engine.md)
+
+## Execution backends
+
+Orch API runs Tools on Docker by default. Set `orch.execution-backend=kubernetes` to run them as Kubernetes Jobs instead; see [Kubernetes backend](kubernetes-backend.md).
 
 ## ORM and storage
 
