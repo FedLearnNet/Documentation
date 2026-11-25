@@ -82,4 +82,5 @@ Ask these questions early:
 
 ## Next step
 
-Once you have identified relevant datasets, continue with [Use found data for federated data analysis](create-fl-project.md).
+- Build and execute cohort discovery queries in [Creating queries](user-guide/queries/index.md) (including [conditions & advanced filters](user-guide/queries/conditions-and-filters.md), [groups & temporal relationships](user-guide/queries/groups-and-temporal-relations.md), and [results, privacy & troubleshooting](user-guide/queries/results-privacy-and-json.md)).
+- Once you have identified relevant datasets and verified cohort sizes, continue with [Use found data for federated data analysis](create-fl-project.md).
