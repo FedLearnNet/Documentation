@@ -12,6 +12,19 @@ Your Clients data is stored in
 - environment variables storing network settings and secrets such as database secrets
 - nginx configuration files storing further network settings
 
+## With flnet
+
+```bash
+flnet client backup            # the databases, in backups/backup_<date>_<time>
+flnet client backup --all      # also configuration and secrets
+flnet client restore <backup>
+```
+
+An admin can do the same in the **Admin Center** under **Updates & backups**. Open a backup there to see where it is on
+the server; one taken on the installed version can be restored there as well. `restore` puts back what the backup
+holds. Updates always back up everything, see [Updating a Client or Platform](../updating.md). The script below
+still works as well.
+
 ## Create Local Database Backups
 
 ### Using the provided create-backup.sh script

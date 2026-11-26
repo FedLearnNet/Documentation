@@ -182,13 +182,4 @@ If you use certbot, you can use the `--deploy-hook` option to automatically relo
 Make sure to test the restart commands before you setup the hook, as it's easy to make a mistake in e.g. container names.
 
 ### Updating the FLNet Platform
-The FLNet Platform is deployed via docker compose.
-We currently don'y have a specific update functionality.
-You may use e.g. watchtower to automatically update the images.
-
-Manual update:
-
-```sh
-docker compose pull
-docker compose up -d
-```
+From the Admin Center, see [Updating a Client or Platform](updating.md).

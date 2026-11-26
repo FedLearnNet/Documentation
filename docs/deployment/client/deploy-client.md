@@ -79,6 +79,8 @@ cd <path-to-client-folder>
 docker compose up -d
 ```
 
+Stopping, logs, backups and updates: see [Everyday commands](../flnet-commands.md).
+
 The first start up might take upto a few minutes.
 
 ### 3. The initial setup of the Client
