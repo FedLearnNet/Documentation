@@ -3,160 +3,88 @@ title: Query System
 sidebar_position: 5
 ---
 
-:::caution Not yet on `main`
-This page describes the temporal query model (`CreateTemporalQueryDTO`, `QueryGroup`, `TemporalRelation`). This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so class names, file paths, and behavior may differ from the current code.
-:::
+# Query System
 
-The query system is split across both apps.
+The query system spans `global-app`, `shared-lib`, and `local-app` in `frontend-shared`:
 
-- In `global-app`, it shows up as the `find-data` area with a query builder.
-- In `local-app`, it shows up as reusable query detail cards and query log dialogs used inside patient, training, and log views.
+- In **`global-app`**, it powers the **Find Data** (`find-data`) workspace, the interactive **Lang2Query** tree builder, JSON request preview, version history, and cross-clinic statistics panel.
+- In **`shared-lib`** and **`local-app`**, it provides reusable query summary/detail cards and local query-log inspection dialogs used across patient, training, and governance views.
 
 ## Where it lives
 
-- global query flow: `projects/global-app/src/app/modules/find-data`
-- DTOs (source of truth): `projects/global-app/src/app/modules/find-data/dto/query.ts`
-- API service: `projects/global-app/src/app/modules/find-data/services/query.service.ts`
-- DTO converter (legacy items → temporal group): `projects/global-app/src/app/modules/find-data/services/query-dto-converter.ts`
-- local reusable query UI: `projects/local-app/src/app/modules/query`
-- local query log DTO mirror: `projects/local-app/src/app/modules/logs/dto/query.ts`
+| Area | Path in `frontend-shared` |
+| --- | --- |
+| Global Find Data module & routes | `projects/global-app/src/app/modules/find-data/` |
+| Lang2Query wire types | `projects/global-app/src/app/modules/find-data/dto/lang2-query.ts` |
+| Query API DTOs (`QueryDTO`, `QueryDetailDTO`, `QueryOperatorTypes`) | `projects/global-app/src/app/modules/find-data/dto/query.ts` |
+| UI tree draft model (`QueryGroupNode`, `QueryLeafNode`) | `projects/global-app/src/app/modules/find-data/models/query-tree.ts` |
+| Operator catalog per `DataTypes` | `projects/global-app/src/app/modules/find-data/configs/query-option.ts` |
+| Combination & auto-reset rules (`patchLeaf`) | `projects/global-app/src/app/modules/find-data/helpers/query-tree.rules.ts` |
+| Tree validation (`validateQueryTree`) | `projects/global-app/src/app/modules/find-data/helpers/query-tree.validator.ts` |
+| Wire serializer & hydrator (`serializeQueryTree`, `hydrateQueryTree`) | `projects/global-app/src/app/modules/find-data/helpers/query-tree.serializer.ts` |
+| Derived run status (`draft`, `pending`, `finished`, `failed`) | `projects/global-app/src/app/modules/find-data/helpers/query-status.ts` |
+| HTTP + SSE client | `projects/global-app/src/app/modules/find-data/services/query.service.ts` |
+| Shared query overview & detail cards | `projects/shared-lib/src/lib/modules/query/` |
+| Local query log detail dialog | `projects/local-app/src/app/modules/query/` |
+| UI translations (`QUERY_BUILDER`, `QUERY_STATUS`) | `projects/shared-lib/src/assets/i18n/en.json` |
 
-## The temporal query model
-
-The backend accepts a single shape — `CreateTemporalQueryDTO`:
-
-```ts
-interface CreateTemporalQueryDTO {
-  name: string;
-  description: string;
-  groupId?: string;
-  query: QueryGroup;          // case cohort, required
-  controlQuery?: QueryGroup;  // control cohort, optional
-}
-
-interface QueryGroup {
-  connectingOperator: 'AND' | 'OR';
-  temporalRelations: TemporalRelation[];
-  conditions: QueryCondition[];        // ITEM or nested GROUP
-}
-```
-
-A `QueryCondition` is either:
-- an `ITEM` carrying a `QueryItemCondition` with `ontologyId`, `operator`, `value`, `timeFilter`, optional `atLeast`/`atMost`, and optional `label`; or
-- a `GROUP` that recurses with its own `connectingOperator`/`conditions`/`temporalRelations`.
-
-`TemporalRelation` links two sibling conditions by index:
-
-```ts
-interface TemporalRelation {
-  sourceConditionIdx: number;
-  targetConditionIdx: number;
-  relationship: 'SAME' | 'BEFORE' | 'AFTER';
-  atLeast?: number;
-  atMost?: number;
-}
-```
-
-For full semantics see `projects/global-app/src/app/modules/find-data/dto/temporal_query_dto.md`.
-
-## API surface (global-learning-api)
-
-All temporal endpoints live under `/query` and are consumed by `QueryService`:
-
-| Method | Path                              | Request body              | Notes                                                |
-| ------ | --------------------------------- | ------------------------- | ---------------------------------------------------- |
-| GET    | `/query`                          | —                         | List latest version per groupId.                    |
-| GET    | `/query/sse`                      | —                         | Server-sent stream of query updates.                 |
-| GET    | `/query/clients`                  | —                         | List connected federated clients.                    |
-| GET    | `/query/{id}`                     | —                         | Single query (returns `QueryDetailDTO`).             |
-| POST   | `/query`                          | `CreateTemporalQueryDTO`  | Create a new query (201 on success).                 |
-| POST   | `/query/fire`                     | `CreateTemporalQueryDTO`  | Create + broadcast in one step.                      |
-| POST   | `/query/{id}/fire`                | `{}`                      | Re-broadcast an existing query (creates rerun copy). |
-| POST   | `/query/{id}/fire-data-statistics`| `{}`                      | Request fresh statistics for an existing query.      |
-| DELETE | `/query/{id}`                     | —                         | Delete a query the caller owns and hasn't fired.     |
-
-**There is no PUT update path anymore.** When the user edits a query, the service creates a new version under the same `groupId`. `getAllQueries()` always returns only the most recent version per group, so the editing experience still feels like an update.
-
-The response is a `QueryDTO` that includes both counts:
-
-```ts
-interface QueryDTO {
-  ...
-  result?: number;        // case cohort patient count
-  resultControl?: number; // control cohort patient count; only present when controlQuery was set
-  temporalQuery: QueryGroup;
-  temporalControlQuery?: QueryGroup;
-}
-```
-
-## DTO conversion layer
-
-The query builder UI still keeps an internal `QueryItemDTO[]` representation. `query-dto-converter.ts` wraps that into a `QueryGroup` at submit time:
-
-```ts
-const dto: CreateTemporalQueryDTO = buildTemporalCreateDto({
-  name,
-  description,
-  legacyItems: this.queryList,
-  groupId: this.data.queryData?.groupId,
-});
-this.queryService.createQuery(dto).subscribe(/* … */);
-```
-
-When you change the builder to emit a `QueryGroup` directly, pass it as `caseQuery` (and optionally `controlQuery`) on `buildTemporalCreateDto` and stop using `legacyItems`. The converter is the only place that needs to go away when the migration completes.
-
-## System boundary
-
-Start here when the change is about building queries, showing query details, or reusing query UI inside local workflows.
-
-Do not start here for schema semantics or cohort ownership. Those often belong to [Data modeling system](data-modeling-system.md) or [Local operations system](local-operations-system.md).
-
-## System shape
+## Frontend data flow
 
 ```mermaid
 flowchart TD
-  A[Find data query builder] -- CreateTemporalQueryDTO --> S[QueryService]
-  S -- POST /query, /query/fire --> G[global-learning-api]
-  G -- broadcast --> L[local-learning-api]
-  L -- QueryClientResponseDTO(count, controlCount) --> G
-  G --> A
-  A --> B[Query detail page]
-  B --> C[Reusable local query UI]
-  C --> D[Patient views]
-  C --> E[Training views]
-  C --> F[Log views]
+  Catalog["QueryBuilderService (ontology + datatype catalog)"] --> Group["query-builder-group / query-builder-item"]
+  Group -->|"patchLeaf + validateQueryTree"| Draft["QueryGroupNode (UI state)"]
+  Draft -->|"serializeQueryTree"| Wire["Lang2Group JSON (query-json-preview & API body)"]
+  Wire -->|"QueryService (POST / PUT / fire)"| GlobalAPI["global-learning-api (/query)"]
+  GlobalAPI -->|"GET /query/sse"| Dashboard["find-data-dashboard & query-detail-page"]
+  GlobalAPI --> SharedCards["shared-lib query cards & local-app log dialogs"]
 ```
 
-## What this means for contributors
+## Two-layer model: UI draft tree vs. Lang2Query wire JSON
 
-This is not a single route-owned feature. Part of it is a top-level page, and part of it is embedded UI reused inside other systems.
+Instead of mutating raw backend DTOs directly in Angular forms, `find-data` separates the **editable UI tree** from the **wire format**:
 
-That has two consequences:
+1. **UI draft state (`models/query-tree.ts`):**
+   - `QueryGroupNode` holds `connectingOperator` (`'$and' | '$or'`), `children` (`QueryNode[]`), `relations` (`TemporalRelationDraft[]`), and UI `collapsed` state. Reordering or removing children automatically shifts `TemporalRelationDraft` `source` and `target` indexes (`insertChild`, `removeChild`, `moveChild`).
+   - `QueryLeafNode` stores structured form state (`ontologyId`, `dataTypeId`, `catalogType`, `operator`, `value`, `datatypeHint`, `valueMode`, `deltaInterval`, `timeFilterChoice`, `timeAfter`, `timeBefore`, `timeAggregation`, `timeWindow`, `timeWindowCount`, `valueAggregation`, `atLeast`, `atMost`).
+2. **Constraint transitions (`helpers/query-tree.rules.ts`):**
+   - `patchLeaf` enforces mutual exclusions immediately as the user clicks segmented controls (for example, selecting `has_changed` forces `valueMode: 'delta'` and clears aggregations; selecting `timeAggregation: 'within'` sets `valueAggregation: 'average'` and `valueMode: 'absolute'`).
+3. **Validation (`helpers/query-tree.validator.ts`):**
+   - `validateQueryTree` returns path-tagged `QueryTreeIssue` items (`missing-catalog`, `missing-operator`, `missing-value`, `integer-value`, `within-requires-average`, `date-after`, `at-least-above-at-most`, `relation-same-endpoint`, etc.) that gate the **Save** and **Send Request to All Clinics** buttons.
+4. **Serialization & hydration (`helpers/query-tree.serializer.ts`):**
+   - `serializeQueryTree(group)` emits snake_case `Lang2Group` / `Lang2Leaf` JSON (`connecting_operator`, `ontology_id`, `data_type_id`, `value_mode`, `time_filter`, `time_aggregation_method`, `value_aggregation_method`, `temporal_relations`), feeding both `QueryService` requests and `<app-query-json-preview>`.
+   - `hydrateQueryTree(wire, configs)` parses stored `QueryDTO.query` payloads back into `QueryGroupNode` when opening a query or rendering version outlines.
 
-- route work starts in `find-data`
-- query presentation work often starts in `local-app/modules/query`
+## Derived status model (`helpers/query-status.ts`)
+
+`QueryDTO` has boolean flags (`hasFired`, `hasResult`) rather than a backend status enum. Both the workspace table and detail page compute badges via `queryStatus(query)`:
+
+- **`finished` (`GREEN`):** `hasResult && typeof result === 'number' && Number.isFinite(result)`
+- **`failed` (`RED`):** `error?.trim()` is non-empty or `hasResult` is true without a numeric `result`
+- **`pending` (`BLUE`, pulsing indicator):** `hasFired` is true while awaiting the first clinic reply
+- **`draft` (`GRAY`):** unfired saved query
+
+## Key UI components
+
+- `find-data-dashboard`: Workspace table with live `/query/sse` updates, client-side filtering, context menu for drafts (**Edit**, **Run query**, **Delete**, **Go to project**), and creation dialog launcher.
+- `query-detail`: Modal dialog used when creating a new query or editing directly from the workspace table.
+- `query-detail-page`: Full route (`/find-data/:id`) with **Overview**, **Query Builder**, **Versions** (read-only timeline built from `QueryDetailDTO.olderQueries`), and **Statistics** (`query-statistics-panel`) tabs.
+- `query-builder-group`, `query-builder-item`, `query-interval-field`, `query-json-preview`: Recursive tree editor components.
 
 ## What to edit for common tasks
 
 | Task | Start here |
 | --- | --- |
-| change the query builder flow | `projects/global-app/src/app/modules/find-data/components` |
-| add a new endpoint or rename one | `query.service.ts`, then mirror in [`backend/global-learning-api`](../../backend/global-learning-api/query-creation.md) |
-| add a new operator, aggregation, or temporal relation to the DTO | `dto/query.ts` + `dto/temporal_query_dto.md`, then update [`backend/local-learning-api`](../../backend/local-learning-api/query-translation-and-privacy.md) |
-| change query cards used in local screens | `projects/local-app/src/app/modules/query/components` |
-| change how query logs are shown in patient or log views | the consuming component in `patient` or `logs`, plus the shared query component if needed |
+| Add a new operator to the UI | `dto/query.ts` + `dto/lang2-query.ts` + `configs/query-option.ts` + `helpers/query-tree.rules.ts` + `helpers/query-operator.helper.ts`, then mirror in [`local-learning-api`](../../backend/local-learning-api/query-translation-and-privacy.md) |
+| Change longitudinal combination rules | `helpers/query-tree.rules.ts` (`patchLeaf`) + `helpers/query-tree.validator.ts` + unit tests in `helpers/query-tree.spec.ts` |
+| Change wire JSON serialization or human-readable summaries | `helpers/query-tree.serializer.ts` |
+| Change status badge derivation | `helpers/query-status.ts` + `helpers/query-status.spec.ts` |
+| Change shared or local query cards/log dialogs | `projects/shared-lib/src/lib/modules/query` and `projects/local-app/src/app/modules/query` |
 
 ## Adjacent systems
 
-- backend handling and persistence: [Global learning API · query creation](../../backend/global-learning-api/query-creation.md)
-- SQL translation and privacy rounding: [Local learning API · query translation & privacy](../../backend/local-learning-api/query-translation-and-privacy.md)
-- schema or datatype changes that affect query behavior often require [Data modeling system](data-modeling-system.md)
-- local query consumers in patient, training, or logs often require checks in [Local operations system](local-operations-system.md)
-
-## Practical rule
-
-If you are changing query composition, start global.
-
-If you are changing query display inside local workflows, start local.
-
-If a field on the DTO changes, update **all three** of: frontend `query.ts`, backend DTO classes, and `temporal_query_dto.md`.
+- Global persistence, versioning, and SSE: [Global learning API · Query creation & broadcasting](../../backend/global-learning-api/query-creation.md)
+- SQL compilation, cohort scoping, and privacy: [Local learning API · Query translation & privacy](../../backend/local-learning-api/query-translation-and-privacy.md)
+- Schema and ontology catalog semantics: [Data modeling system](data-modeling-system.md)
+- Local request/governance consumers: [Local operations system](local-operations-system.md)
+- End-user Query Builder documentation: [Creating queries](../../../platform-usage/user-guide/queries/index.md)

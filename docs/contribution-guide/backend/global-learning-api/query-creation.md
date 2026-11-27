@@ -3,132 +3,95 @@ title: Query creation & broadcasting
 sidebar_position: 7
 ---
 
-:::caution Not yet on `main`
-This page describes the temporal query model (`CreateTemporalQueryDTO`, `QueryGroup`, `TemporalRelation`). This functionality is not part of the `main` or `develop` branches of the FedLearnNet repositories yet, so class names, file paths, and behavior may differ from the current code.
-:::
+# Query creation & broadcasting
 
-This page describes how the global-learning-api turns a `CreateTemporalQueryDTO` from the frontend into a persisted query and then broadcasts it to the federated local clients.
+This page describes how `global-learning-api` persists **Lang2Query** definitions (`QueryCreateDTO` / `QueryDTO` carrying `Lang2QueryNodeDTO`), manages immutable version chains via `groupId`, broadcasts fired queries to connected clinic nodes over WebSockets, and streams aggregated counts back to the frontend over Server-Sent Events (SSE).
 
 ## Source files
 
-| Role             | Path                                                                              |
-| ---------------- | --------------------------------------------------------------------------------- |
-| REST interface   | `learning-apis/global-learning-api/.../api/query/QueryService.java`              |
-| REST impl        | `learning-apis/global-learning-api/.../api/query/QueryServiceImpl.java`          |
-| Business logic   | `learning-apis/global-learning-api/.../api/query/QueryBO.java`                   |
-| MapStruct mapper | `learning-apis/global-learning-api/.../api/query/QueryMapper.java`               |
-| JPA entity       | `learning-apis/global-learning-api/.../api/query/QueryEntity.java`               |
-| Panache repo     | `learning-apis/global-learning-api/.../api/query/QueryAO.java`                   |
-| Response handler | `learning-apis/global-learning-api/.../api/query/response/QueryResponseBO.java`  |
-| Federated wsc.   | `learning-apis/global-learning-api/.../api/feddbclient/FLNetClientBroadcastBO.java` |
-
-The DTO classes themselves live in `core-learning-api` under `bio.cosy.feddb.core.api.query` and `bio.cosy.feddb.core.api.query.temporal`.
+| Role | Path |
+| --- | --- |
+| REST interface | `global-learning-api/.../api/query/QueryService.java` |
+| REST implementation | `global-learning-api/.../api/query/QueryServiceImpl.java` |
+| Business logic | `global-learning-api.../api/query/QueryBO.java` |
+| MapStruct mapper | `global-learning-api/.../api/query/QueryMapper.java` |
+| JPA entity | `global-learning-api/.../api/query/QueryEntity.java` |
+| Panache repository | `global-learning-api/.../api/query/QueryAO.java` |
+| Clinic reply handler | `global-learning-api/.../api/query/response/QueryResponseBO.java` |
+| Federated broadcast | `global-learning-api/.../api/feddbclient/FLNetClientBroadcastBO.java` |
+| Shared DTOs & serializer | `core-learning-api/src/main/java/bio/cosy/feddb/core/api/query/` (`QueryDTO`, `Lang2QueryNodeDTO`, `TemporalRelationDTO`, `Lang2QueryDocuments`) |
 
 ## Lifecycle
 
 ```mermaid
 sequenceDiagram
   participant FE as Frontend (QueryService)
-  participant API as global-learning-api
-  participant DB as Postgres (queries table)
-  participant WS as Federated client (local-learning-api)
+  participant API as global-learning-api (QueryBO)
+  participant DB as PostgreSQL (queries)
+  participant WS as Connected Clinics (local-learning-api)
 
-  FE->>API: POST /query/fire { CreateTemporalQueryDTO }
-  API->>API: validate (query required, controlQuery optional)
-  API->>DB: INSERT QueryEntity (temporal_query_string, temporal_control_query_string?)
-  API->>FE: 201 CREATED { QueryDTO with id, globalUniqueId, groupId }
-  API->>WS: broadcast existing query (hasFired = true)
-  WS-->>API: QueryClientResponseDTO { count, controlCount?, error? }
-  API->>DB: UPDATE result, resultControl, hasResult
-  API->>FE: SSE update via /query/sse
+  FE->>API: POST /query/fire (QueryCreateDTO)
+  API->>DB: INSERT QueryEntity (group_id, global_unique_id, query_string, has_fired=true)
+  API-->>FE: 200 OK QueryDTO (hasFired=true, hasResult=false)
+  API->>WS: WebSocket EXISTING_QUERY broadcast
+  WS-->>API: QueryClientResponseDTO (type, globalUniqueQueryId, count, error)
+  API->>DB: UPDATE result = coalesce(result, 0) + count, has_result = true (and error if ERROR)
+  API-->>FE: SSE event via GET /query/sse
 ```
 
-## Endpoints
+## REST endpoints (`/query`)
 
-The interface declares only temporal endpoints; the legacy simple-query DTOs and the PUT update path are gone.
+| Method | Path | Request / Return | Behavior |
+| --- | --- | --- | --- |
+| `GET` | `/query` | `List<QueryDTO>` | Returns the **latest version** per `groupId` owned by the caller's `keycloakId`. |
+| `GET` | `/query/sse` | `Multi<QueryDTO>` | SSE stream emitting updates for the caller's queries when they represent the latest version of their `groupId`. |
+| `GET` | `/query/clients` | `List<String>` | Lists active WebSocket client connection IDs. |
+| `GET` | `/query/tre-sources` | `List<TreSourceDTO>` | Lists external TRE databases offered by connected clients. |
+| `GET` | `/query/{id}` | `QueryDetailDTO` | Returns the query, `olderQueries` in the same `groupId`, and `enhancedQuery` leaves enriched from `datamodeler-api`. |
+| `GET` | `/query/{id}/systems` | `List<QueryResponseDTO>` | Returns responding partner systems (`count > 0`, `error == null`). Per-client count, hardware info, and client name are stripped unless the client supports `ExecutionMode.TRE`. |
+| `POST` | `/query` | `QueryCreateDTO` → `201 QueryDTO` | Creates an unfired draft (`hasFired = false`, `hasResult = false`). |
+| `PUT` | `/query/{id}` | `QueryDTO` → `200 QueryDTO` | Creates a new draft version in the same `groupId` (`createVersionFromRequest`) with a fresh `globalUniqueId`. |
+| `POST` | `/query/fire` | `QueryCreateDTO` → `200 QueryDTO` | Persists a new row (preserving `groupId` when supplied) and immediately broadcasts it (`hasFired = true`). |
+| `POST` | `/query/{id}/fire` | `200 QueryDTO` | Fires an unfired draft in place; if already fired (`source.isHasFired()`), clones a new rerun version (`createVersionFromEntity`) in the same `groupId` and fires that copy. |
+| `POST` | `/query/{id}/fire-data-statistics` | `200 QueryDTO` | Assigns a new `latestDataStatisticsRequest` UUID + timestamp and broadcasts `ProjectFederatedRequestDataStatisticsDTO`. |
+| `DELETE` | `/query/{id}` | `200` | Deletes the query row only if owned by the caller and `!hasFired` (throws `NotAllowedException` once fired). |
 
-```java
-@POST                                  Response create(@Valid CreateTemporalQueryDTO dto);
-@POST @Path("/fire")                   QueryDTO createAndRun(@Valid CreateTemporalQueryDTO dto);
-@POST @Path("/{id}/fire")              QueryDTO fireQuery(@PathParam("id") Long id);
-@POST @Path("/{id}/fire-data-statistics") QueryDTO fireDataStatistics(@PathParam("id") Long id);
-@GET                                   List<QueryDTO> list();
-@GET  @Path("/sse")                    Multi<QueryDTO> listSSE();
-@GET  @Path("/{id}")                   QueryDetailDTO retrieve(@PathParam("id") Long id);
-@DELETE @Path("/{id}")                 Response delete(@PathParam("id") Long id);
-```
+## Persistence (`queries` table)
 
-To edit a query, the frontend re-creates it under the same `groupId`. `list()` and `listSSE()` collapse versions per group and return only the latest, which is why the editing UX still looks like an update from the user's side.
+`QueryEntity` stores the Lang2Query document as serialized JSON text via `Lang2QueryDocuments`:
 
-## Persistence
+| Column | Type | Notes |
+| --- | --- | --- |
+| `group_id` | `VARCHAR` (not null) | Shared across edits and reruns of the same logical query. |
+| `global_unique_id` | `VARCHAR` (unique, not null) | Unique execution identifier per version row, correlated with clinic replies. |
+| `query_string` | `TEXT` | JSON representation of `Lang2QueryNodeDTO` serialized by `Lang2QueryDocuments.toQueryString`. |
+| `result` | `INTEGER` | Accumulated privacy-filtered patient count across responding clinics (`null` before first reply). |
+| `error` | `TEXT` | Latest clinic error message when a `FedDBClientResponseType.ERROR` reply arrives. |
+| `has_fired` | `BOOLEAN` | `true` once broadcast via `FLNetClientBroadcastBO.fireExistingQuery`. |
+| `has_result` | `BOOLEAN` | `true` once at least one clinic reply has been processed. |
+| `latest_data_statistics_request` | `UUID` | Correlation ID for the latest cross-clinic statistics request. |
 
-`QueryEntity` stores the temporal payloads as JSON text:
+## Versioning semantics
 
-| Column                          | Type | Notes                                                  |
-| ------------------------------- | ---- | ------------------------------------------------------ |
-| `temporal_query_string`         | TEXT | Required JSON for the case `QueryGroup`.               |
-| `temporal_control_query_string` | TEXT | Optional JSON for the control `QueryGroup`.            |
-| `result`                        | INT  | Patient count for the case cohort, set on response.    |
-| `result_control`                | INT  | Patient count for the control cohort, set on response. Null when no control query. |
-| `has_fired`, `has_result`       | BOOL | Status flags driven by `QueryBO`.                      |
-| `group_id`, `global_unique_id`  | TEXT | Versioning identifiers.                                |
+Fired queries are immutable audit records:
 
-`QueryMapper.queryGroupToJsonString` / `jsonStringToQueryGroup` perform the (de)serialisation via Jackson. Two parallel mappings exist: one for the case payload, one for the control payload.
+1. **Draft edits (`PUT /query/{id}`):** `QueryBO.update` copies `groupId` and `keycloakId` from the source entity into a new `QueryEntity` row (`hasFired = false`, `hasResult = false`, new `globalUniqueId`).
+2. **Reruns (`POST /query/{id}/fire` on a fired query):** `QueryBO.fireQuery` clones a fresh row in the same `groupId` before setting `hasFired = true` and broadcasting, ensuring prior clinic replies remain attached to the older version's `globalUniqueId`.
+3. **List & SSE collapsing:** `QueryBO.getAll` keeps only the newest row per `groupId`, and `QueryServiceImpl.listSSE` filters the `queries` reactive channel with `QueryBO.isLatestVersion`. Historical versions are exposed through `QueryDetailDTO.olderQueries`.
 
-## Create path in `QueryBO`
+## Handling clinic replies (`QueryResponseBO`)
 
-```java
-public QueryDTO createTemporal(CreateTemporalQueryDTO request, String keycloakId) {
-    validateTemporalRequest(request);
-    return persistTemporal(request, keycloakId, request.getGroupId());
-}
+Connected clinics reply asynchronously on the WebSocket with `QueryClientResponseDTO`:
 
-public QueryDTO createAndRunTemporal(CreateTemporalQueryDTO request, String keycloakId, Set<String> roles) {
-    validateTemporalRequest(request);
-    QueryDTO dto = persistTemporal(request, keycloakId, request.getGroupId());
-    return fireQuery(dto, roles);
-}
-```
-
-`validateTemporalRequest` throws `BadRequestException` when `query` is missing; `controlQuery` is genuinely optional and the rest of the pipeline treats `null` the same as "no control cohort". `persistTemporal` allocates a new `globalUniqueId` (UUID), keeps the `groupId` (or allocates one), and persists via `QueryMapper.createDtoToEntity`.
-
-## Broadcast and counts
-
-`fireQuery(QueryDTO, Set<String> roles)` sets `hasFired = true`, persists via `update`, then calls `FLNetClientBroadcastBO.fireExistingQuery(query)`. The federated clients receive the full `QueryDTO` and run it locally (see [Local learning API · query translation & privacy](../local-learning-api/query-translation-and-privacy.md)).
-
-Replies arrive on a websocket as a `QueryClientResponseDTO`:
-
-```java
-class QueryClientResponseDTO {
-    FedDBClientResponseType type;
-    String globalUniqueQueryId;
-    Long count;          // case
-    Long controlCount;   // null when no control query
-    String error;
-}
-```
-
-`QueryResponseBO.saveResponse` writes the result to `query_result` and then asks `QueryBO.setCount(globalUniqueId, count, controlCount)` to increment `result` and `result_control` atomically. The two counts are kept in lockstep so a frontend reading `QueryDTO` always sees both values from the same response.
-
-`QueryAO.updateCountsByGlobalUniqueId` falls back to the single-count update when `controlCount` is null, so existing federated clients that don't speak the control field still work.
-
-## Validation rules
-
-- `query` must be non-null. Returns 400 otherwise.
-- `controlQuery` is optional. When null, the response will have `resultControl = null`.
-- The body is structurally validated by Bean Validation (`@Valid`). Field-level errors (missing operator, malformed `temporalRelations`) are surfaced by the **local** translator, not here — see [the local doc](../local-learning-api/query-translation-and-privacy.md).
-- `groupId` may be passed by the client to express "this is a new version of an existing query". If omitted, a fresh UUID is assigned.
-
-## Versioning
-
-Every save creates a new `QueryEntity` row. `groupId` ties versions together; `findAllVersionsByGroupIdForUser` powers the "older versions" list returned by `GET /query/{id}` in `QueryDetailDTO.olderQueries`. Refiring an already-fired query also creates a fresh `createVersionFromEntity` row so reruns are first-class.
+- **Positive count (`type != ERROR` and `count > 0`):** Persists a `QueryResponseEntity` (including `supportedModes`, connection ID, and optional `clientName` when `shareName` is true) and atomically increments `queries.result = coalesce(result, 0) + count` while setting `hasResult = true`.
+- **Error reply (`type == ERROR`):** Treats the clinic's count contribution as `0`, updates `hasResult = true` (initializing `result` to `0` if no positive count arrived yet), and records the clinic's message via `QueryBO.setError(globalUniqueId, error)`.
+- Every count or error update emits the refreshed `QueryDTO` onto the `@Channel("queries")` emitter so active `/query/sse` subscribers update immediately.
 
 ## Where to start when changing things
 
-| Task                                              | Start here                                          |
-| ------------------------------------------------- | --------------------------------------------------- |
-| Add a new field to the temporal DTO               | `core-learning-api/.../api/query/temporal/*.java` + mapping in `QueryMapper` |
-| Add a new endpoint                                | `QueryService.java` interface, then `QueryServiceImpl.java` + `QueryBO.java` |
-| Change persistence (add a column)                 | `QueryEntity.java`; `drop-and-create` in tests/dev means Hibernate auto-applies |
-| Change the federated wire format                  | `QueryClientResponseDTO` (core) **and** the local handler in lockstep |
-| Add a new count semantic (e.g. "third cohort")    | `QueryDTO`, `QueryEntity`, `QueryAO.updateCountsByGlobalUniqueId`, `QueryResponseBO.saveResponse` |
+| Task | Start here |
+| --- | --- |
+| Add or modify a Lang2Query node field | `Lang2QueryNodeDTO.java` + `Lang2QueryDocuments.java` (`core-learning-api`), then [`QueryBuilderBO`](../local-learning-api/query-translation-and-privacy.md) and [`frontend/systems/query-system`](../../frontend/systems/query-system.md) |
+| Add or change a `/query` endpoint | `QueryService.java` → `QueryServiceImpl.java` → `QueryBO.java` |
+| Adjust per-system TRE filtering | `QueryResponseBO.getSystems` |
+| User-facing behavior & recipes | [Creating queries user guide](../../../platform-usage/user-guide/queries/index.md) |

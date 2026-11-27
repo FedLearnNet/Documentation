@@ -44,6 +44,10 @@ If something expected is missing, the cause is often a permission boundary rathe
 
 ## Main areas of the platform
 
+### Find Data (Query workspace)
+
+The **Find Data** area lets you compose semantic cohort queries, broadcast them to connected clinics for privacy-filtered patient counts, and request cross-clinic summary statistics before launching a project.
+
 ### Tool-Store
 
 The Tool-Store is the entry point for discovering tools, models, and reusable workflows.
@@ -63,6 +67,7 @@ The platform keeps execution visible through statuses, runtime messages, and pro
 ## Recommended next pages
 
 - [User installation and access](installation.md)
+- [Creating queries](queries/index.md)
 - [Workflow guide](workflow.md)
 - [Running apps](running-apps.md)
 - [Tool-Store](tool-store.md)
